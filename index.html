@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fading XO</title>
+<meta name="description" content="Tic-tac-toe where each player keeps only 3 marks. Play with friends online, on one device, or against a perfect computer.">
+<style>
+:root{
+  --bg:#f6f4ef; --card:#ffffff; --ink:#1d1d1f; --muted:#6b6b70; --line:#d9d5cc;
+  --x:#e0533d; --o:#2f6fdb; --win:#1f9d55; --lose:#c62828; --draw:#8a8a8f;
+  --shadow:0 6px 24px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#141416; --card:#1f1f23; --ink:#f2f2f4; --muted:#a0a0a8; --line:#34343a;
+    --x:#ff6b55; --o:#5b93ff; --win:#3ecf7a; --lose:#ff5c5c; --draw:#9a9aa2;
+    --shadow:0 6px 24px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141416; --card:#1f1f23; --ink:#f2f2f4; --muted:#a0a0a8; --line:#34343a;
+  --x:#ff6b55; --o:#5b93ff; --win:#3ecf7a; --lose:#ff5c5c; --draw:#9a9aa2;
+  --shadow:0 6px 24px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+main{max-width:980px;margin:0 auto;display:grid;gap:20px;grid-template-columns:minmax(0,1fr) 320px}
+@media (max-width:820px){main{grid-template-columns:minmax(0,1fr)}}
+header{max-width:980px;margin:0 auto 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:28px;margin:0;letter-spacing:-.02em}
+h1 span.x{color:var(--x)} h1 span.o{color:var(--o)}
+h2{font-size:18px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button,.btn{border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 14px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer}
+.tabs button[aria-pressed="true"],.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.status{font-size:20px;font-weight:650;min-height:32px;text-align:center;margin:6px 0 12px}
+.status .x{color:var(--x)} .status .o{color:var(--o)}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(100%,420px);margin:0 auto;aspect-ratio:1}
+.cell{position:relative;border:none;border-radius:14px;background:var(--bg);cursor:pointer;font-size:clamp(48px,14vw,92px);font-weight:800;color:var(--ink);display:flex;align-items:center;justify-content:center;transition:background .15s,transform .1s;padding:0}
+.cell:hover:not(:disabled){background:color-mix(in srgb,var(--bg) 85%,var(--ink))}
+.cell:active:not(:disabled){transform:scale(.97)}
+.cell:disabled{cursor:default}
+.cell.X{color:var(--x)} .cell.O{color:var(--o)}
+.cell.old{opacity:.32;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.18}}
+.cell.winline{background:color-mix(in srgb,var(--win) 22%,var(--bg))}
+.cell .age{position:absolute;top:6px;right:9px;font-size:12px;font-weight:600;color:var(--muted)}
+.cell .hint{position:absolute;bottom:6px;left:0;right:0;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.hint.W{color:var(--win)} .hint.L{color:var(--lose)} .hint.D{color:var(--draw)}
+.score{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;text-align:center;margin-top:16px}
+.score b{font-size:28px;display:block}
+.score .x{color:var(--x)} .score .o{color:var(--o)}
+.muted{color:var(--muted);font-size:14px}
+label{font-size:14px}
+select,input[type=text]{font:inherit;font-size:14px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+input[type=text]{width:100%}
+.panel{display:grid;gap:12px;align-content:start;align-self:start}
+.sep{height:1px;background:var(--line);margin:4px 0}
+.link{word-break:break-all;font-size:13px;background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:8px}
+ul{padding-left:18px;margin:6px 0}
+li{margin:3px 0}
+.analysis{max-width:980px;margin:20px auto 0}
+.analysis p{margin:8px 0}
+.mini{display:inline-grid;grid-template-columns:repeat(3,22px);gap:2px;vertical-align:middle;margin:0 6px}
+.mini i{width:22px;height:22px;border-radius:4px;background:var(--bg);border:1px solid var(--line);font-style:normal;font-size:11px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.mini i.W{background:color-mix(in srgb,var(--win) 30%,var(--bg))}
+.mini i.D{background:color-mix(in srgb,var(--draw) 25%,var(--bg))}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px}
+footer{max-width:980px;margin:20px auto 0;text-align:center}
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="x">X</span><span class="o">O</span> Fade</h1>
+  <div class="row">
+    <button class="btn" id="themeBtn" type="button">Theme</button>
+  </div>
+</header>
+
+<main>
+  <section class="card">
+    <div class="tabs" role="group" aria-label="Game mode">
+      <button type="button" data-mode="local" aria-pressed="true">Same device</button>
+      <button type="button" data-mode="ai" aria-pressed="false">Vs computer</button>
+      <button type="button" data-mode="online" aria-pressed="false">Online with a friend</button>
+    </div>
+    <div class="status" id="status" aria-live="polite"></div>
+    <div class="board" id="board"></div>
+    <div class="score">
+      <div class="x"><b id="sx">0</b><span id="nx">X</span></div>
+      <div class="muted">vs</div>
+      <div class="o"><b id="so">0</b><span id="no">O</span></div>
+    </div>
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn primary" id="newBtn" type="button">New round</button>
+      <button class="btn" id="undoBtn" type="button">Undo</button>
+      <button class="btn" id="resetScore" type="button">Reset score</button>
+    </div>
+  </section>
+
+  <aside class="card panel">
+    <div id="aiPanel" hidden>
+      <h2>Computer</h2>
+      <div class="row">
+        <label for="level">Level</label>
+        <select id="level">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="perfect">Perfect</option>
+        </select>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label for="youAre">You play</label>
+        <select id="youAre">
+          <option value="X">X (first)</option>
+          <option value="O">O (second)</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="onlinePanel" hidden>
+      <h2>Online room</h2>
+      <p class="muted" style="margin:0 0 8px">Create a room and send the link to your friend. You play over a direct browser connection. No account needed.</p>
+      <div class="row">
+        <button class="btn primary" id="createRoom" type="button">Create room</button>
+        <button class="btn" id="leaveRoom" type="button" hidden>Leave</button>
+      </div>
+      <div id="roomInfo" style="margin-top:10px" hidden>
+        <div class="muted">Share this link:</div>
+        <div class="link" id="roomLink"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="copyLink" type="button">Copy link</button>
+          <button class="btn" id="shareLink" type="button" hidden>Share</button>
+        </div>
+      </div>
+      <div class="sep" style="margin:12px 0"></div>
+      <label for="joinCode">Or join with a room code</label>
+      <div class="row" style="margin-top:6px;flex-wrap:nowrap">
+        <input type="text" id="joinCode" placeholder="e.g. K7Q2MD" autocomplete="off" maxlength="6" style="text-transform:uppercase">
+        <button class="btn" id="joinBtn" type="button">Join</button>
+      </div>
+      <p class="muted" id="netStatus" style="margin:10px 0 0">Not connected.</p>
+    </div>
+
+    <div>
+      <h2>Rules</h2>
+      <ul class="muted">
+        <li>Get 3 in a row to win.</li>
+        <li>Each player keeps at most 3 marks.</li>
+        <li>When you place your 4th mark, your oldest one disappears.</li>
+        <li>Your oldest mark blinks when it is about to go.</li>
+      </ul>
+      <div class="row" style="margin-top:6px">
+        <label for="ruleSel">Fade rule</label>
+        <select id="ruleSel">
+          <option value="A">Oldest blocks its cell (standard)</option>
+          <option value="B">Oldest leaves first (cell reusable)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+    <label class="toggle"><input type="checkbox" id="showHints"> Show solver hints on empty cells</label>
+    <label class="toggle"><input type="checkbox" id="showAge" checked> Show mark order numbers</label>
+    <label class="toggle"><input type="checkbox" id="altStart" checked> Alternate who starts each round</label>
+  </aside>
+</main>
+
+<section class="card analysis">
+  <h2>Can this game be won?</h2>
+  <p>Yes. I solved every reachable position (66,682 of them) with a full retrograde analysis. Under the standard rule, the first player has a forced win.</p>
+  <ul>
+    <li>Open on an edge (top, left, right or bottom middle). Every reply by O loses with perfect play.</li>
+    <li>Opening in the center or a corner only leads to a draw.</li>
+    <li>The fastest forced win takes 13 plies: 7 moves by X, 6 by O.</li>
+    <li>Of all positions, 45,709 are wins for the player to move, 13,388 are losses, and 7,585 are draws.</li>
+  </ul>
+  <p>First move value for X:
+    <span class="mini" aria-label="corners and center draw, edges win"><i class="D">D</i><i class="W">W</i><i class="D">D</i><i class="W">W</i><i class="D">D</i><i class="W">W</i><i class="D">D</i><i class="W">W</i><i class="D">D</i></span>
+    W = forced win, D = draw.
+  </p>
+  <p>The exact rule matters. If your oldest mark leaves before you place, so you can put the new mark on the same cell, the game turns back into a draw, like classic tic-tac-toe. Switch the fade rule in the panel and turn on solver hints to see the difference.</p>
+  <p class="muted">Classic tic-tac-toe is a draw because the board fills up. Here the board never fills, so the side to move keeps the initiative and can build double threats that cannot both be blocked.</p>
+</section>
+
+<footer class="muted">Fading XO. Online play uses a peer to peer connection through PeerJS.</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(() => {
+"use strict";
+const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+/* ---------- Solver ---------- */
+function winLine(p){if(p.length<3)return null;for(const L of LINES)if(L.every(c=>p.includes(c)))return L;return null}
+function legal(me,op,rule){
+  const occ=new Set(op);
+  const mine=(rule==="B"&&me.length===3)?me.slice(1):me;
+  mine.forEach(c=>occ.add(c));
+  const r=[];for(let c=0;c<9;c++)if(!occ.has(c))r.push(c);return r;
+}
+function place(me,c){const n=me.concat([c]);return n.length>3?n.slice(1):n}
+const key=(me,op)=>me.join("")+"|"+op.join("");
+const solved={};
+function solve(rule){
+  if(solved[rule])return solved[rule];
+  const states=new Map(); // key -> {me,op,succ:[], winNow}
+  const q=[[[],[]]];states.set(key([],[]),null);
+  const list=[];
+  while(q.length){
+    const [me,op]=q.pop();const k=key(me,op);
+    const s={me,op,succ:[],winNow:false};states.set(k,s);list.push(k);
+    for(const c of legal(me,op,rule)){
+      const nm=place(me,c);
+      if(winLine(nm)){s.winNow=true;continue}
+      const nk=key(op,nm);s.succ.push(nk);
+      if(!states.has(nk)){states.set(nk,null);q.push([op,nm])}
+    }
+  }
+  const pred=new Map(),cnt=new Map(),val=new Map(),dist=new Map();
+  for(const k of list){pred.set(k,[]);}
+  for(const k of list){const s=states.get(k);cnt.set(k,s.succ.length);for(const n of s.succ)pred.get(n).push(k)}
+  const queue=[];
+  for(const k of list){const s=states.get(k);
+    if(s.winNow){val.set(k,"W");dist.set(k,1);queue.push(k)}
+    else if(s.succ.length===0){val.set(k,"L");dist.set(k,0);queue.push(k)}}
+  for(let i=0;i<queue.length;i++){const k=queue[i];const v=val.get(k);
+    for(const p of pred.get(k)){if(val.has(p))continue;
+      if(v==="L"){val.set(p,"W");dist.set(p,dist.get(k)+1);queue.push(p)}
+      else{const c=cnt.get(p)-1;cnt.set(p,c);if(c===0){val.set(p,"L");dist.set(p,dist.get(k)+1);queue.push(p)}}}}
+  return solved[rule]={val,dist};
+}
+/* evaluate each legal move for the mover: result from mover's view */
+function evalMoves(me,op,rule){
+  const {val,dist}=solve(rule);const out=[];
+  for(const c of legal(me,op,rule)){
+    const nm=place(me,c);
+    if(winLine(nm)){out.push({c,v:"W",d:1});continue}
+    const nk=key(op,nm);const ov=val.get(nk)||"D";
+    out.push({c,v:ov==="W"?"L":ov==="L"?"W":"D",d:(dist.get(nk)??99)+1});
+  }
+  return out;
+}
+function pickMove(me,op,rule,level){
+  const ms=evalMoves(me,op,rule);
+  const rnd=a=>a[Math.floor(Math.random()*a.length)];
+  const wins=ms.filter(m=>m.v==="W"),draws=ms.filter(m=>m.v==="D"),losses=ms.filter(m=>m.v==="L");
+  const immediate=ms.filter(m=>m.d===1&&m.v==="W");
+  const best=()=>{
+    if(wins.length){const md=Math.min(...wins.map(m=>m.d));return rnd(wins.filter(m=>m.d===md)).c}
+    if(draws.length)return rnd(draws).c;
+    const mx=Math.max(...losses.map(m=>m.d));return rnd(losses.filter(m=>m.d===mx)).c;
+  };
+  if(level==="perfect")return best();
+  if(immediate.length)return immediate[0].c;
+  // block opponent's immediate win when possible
+  const safe=ms.filter(m=>{const nm=place(me,m.c);return !legal(op,nm,rule).some(c=>winLine(place(op,c)))});
+  if(level==="medium")return Math.random()<.6?best():(safe.length?rnd(safe).c:rnd(ms).c);
+  return Math.random()<.5&&safe.length?rnd(safe).c:rnd(ms).c;
+}
+
+/* ---------- Game state ---------- */
+let mode="local",rule=store.get("xo.rule","A");
+let marks={X:[],O:[]},turn="X",starter="X",over=false,winCells=null,history=[];
+let score=store.get("xo.score",{X:0,O:0});
+const names={X:"X",O:"O"};
+let me=null; // in online mode, which side I control
+let aiSide="O";
+$("ruleSel").value=rule;
+$("showHints").checked=store.get("xo.hints",false);
+$("showAge").checked=store.get("xo.age",true);
+$("altStart").checked=store.get("xo.alt",true);
+$("level").value=store.get("xo.level","medium");
+
+const boardEl=$("board");
+const cells=[];
+for(let i=0;i<9;i++){const b=document.createElement("button");b.className="cell";b.type="button";b.setAttribute("aria-label","Cell "+(i+1));b.addEventListener("click",()=>onCell(i));boardEl.appendChild(b);cells.push(b)}
+
+function other(s){return s==="X"?"O":"X"}
+function newRound(st){
+  marks={X:[],O:[]};over=false;winCells=null;history=[];
+  turn=starter=st||starter;render();maybeAI();
+}
+function applyMove(c){
+  if(over)return false;
+  const opp=marks[other(turn)];
+  if(!legal(marks[turn],opp,rule).includes(c))return false;
+  history.push({X:marks.X.slice(),O:marks.O.slice(),turn});
+  marks[turn]=place(marks[turn],c);
+  const wl=winLine(marks[turn]);
+  if(wl){over=true;winCells=wl;score[turn]++;store.set("xo.score",score)}
+  else turn=other(turn);
+  render();return true;
+}
+function onCell(c){
+  if(over)return;
+  if(mode==="ai"&&turn===aiSide)return;
+  if(mode==="online"){if(!conn||!connOpen||turn!==me)return;if(applyMove(c))send({t:"move",c});return}
+  if(applyMove(c))maybeAI();
+}
+let aiTimer=null;
+function maybeAI(){
+  clearTimeout(aiTimer);
+  if(mode!=="ai"||over||turn!==aiSide)return;
+  aiTimer=setTimeout(()=>{const c=pickMove(marks[turn],marks[other(turn)],rule,$("level").value);applyMove(c)},420);
+}
+function render(){
+  const legalSet=new Set(over?[]:legal(marks[turn],marks[other(turn)],rule));
+  const showHints=$("showHints").checked&&!over&&(mode!=="online");
+  const hints=showHints?Object.fromEntries(evalMoves(marks[turn],marks[other(turn)],rule).map(m=>[m.c,m])):{};
+  const showAge=$("showAge").checked;
+  const myTurnOK=!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(turn!==me||!connOpen));
+  for(let i=0;i<9;i++){
+    const b=cells[i];let side=null,idx=-1;
+    for(const s of ["X","O"]){const k=marks[s].indexOf(i);if(k>=0){side=s;idx=k}}
+    b.className="cell"+(side?" "+side:"");
+    b.innerHTML="";
+    if(side){
+      b.append(side);
+      if(!over&&side===turn&&marks[side].length===3&&idx===0)b.classList.add("old");
+      if(showAge){const a=document.createElement("span");a.className="age";a.textContent=idx+1;b.appendChild(a)}
+      b.setAttribute("aria-label",`Cell ${i+1}: ${side}${idx===0&&marks[side].length===3?" (oldest)":""}`);
+    }else b.setAttribute("aria-label",`Cell ${i+1}: empty`);
+    if(hints[i]){const h=document.createElement("span");h.className="hint "+hints[i].v;
+      h.textContent=hints[i].v==="W"?"win"+(hints[i].d<99?" "+Math.ceil(hints[i].d/2):""):hints[i].v==="L"?"lose":"draw";
+      h.title=hints[i].v==="W"?"Forced win in "+Math.ceil(hints[i].d/2)+" of your moves":"";b.appendChild(h)}
+    if(winCells&&winCells.includes(i))b.classList.add("winline");
+    b.disabled=over||!legalSet.has(i)||!myTurnOK;
+  }
+  const st=$("status");
+  const nm=s=>`<span class="${s.toLowerCase()}">${esc(names[s])}</span>`;
+  if(over)st.innerHTML=`${nm(turn)} wins!`;
+  else if(mode==="online"&&!connOpen)st.innerHTML=`<span class="muted">Create or join a room to start</span>`;
+  else if(mode==="online")st.innerHTML=turn===me?`Your turn (${nm(turn)})`:`Waiting for ${nm(turn)}`;
+  else if(mode==="ai")st.innerHTML=turn===aiSide?`Computer is thinking…`:`Your turn (${nm(turn)})`;
+  else st.innerHTML=`${nm(turn)} to move`;
+  $("sx").textContent=score.X;$("so").textContent=score.O;
+  $("nx").textContent=names.X;$("no").textContent=names.O;
+  $("undoBtn").disabled=mode==="online"||history.length===0;
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+function nextStarter(){return $("altStart").checked?other(starter):starter}
+$("newBtn").addEventListener("click",()=>{
+  if(mode==="online"){if(!connOpen)return;const s=nextStarter();newRound(s);send({t:"new",starter:s});return}
+  if(mode==="ai"){aiSide=other($("youAre").value);}
+  newRound(history.length||over?nextStarter():starter);
+});
+$("undoBtn").addEventListener("click",()=>{
+  if(mode==="online"||!history.length)return;
+  clearTimeout(aiTimer);
+  const steps=(mode==="ai"&&history.length>=2&&!(over&&turn!==aiSide))?2:1;
+  for(let k=0;k<steps&&history.length;k++){
+    if(over){score[turn]--;store.set("xo.score",score)}
+    const h=history.pop();marks={X:h.X,O:h.O};turn=h.turn;over=false;winCells=null;
+  }
+  render();maybeAI();
+});
+$("resetScore").addEventListener("click",()=>{score={X:0,O:0};store.set("xo.score",score);render()});
+$("ruleSel").addEventListener("change",e=>{rule=e.target.value;store.set("xo.rule",rule);
+  if(mode==="online"&&connOpen){if(isHost){send({t:"rule",rule});newRound("X");send({t:"new",starter:"X"})}else{e.target.value=rule=hostRule}}
+  else newRound("X")});
+for(const id of ["showHints","showAge","altStart"])$(id).addEventListener("change",e=>{store.set("xo."+({showHints:"hints",showAge:"age",altStart:"alt"})[id],e.target.checked);render()});
+$("level").addEventListener("change",e=>store.set("xo.level",e.target.value));
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===m));
+  $("aiPanel").hidden=m!=="ai";$("onlinePanel").hidden=m!=="online";
+  if(m==="ai"){aiSide=other($("youAre").value);names.X=aiSide==="X"?"Computer":"You";names.O=aiSide==="O"?"Computer":"You"}
+  else if(m==="local"){names.X="X";names.O="O"}
+  else setOnlineNames();
+  newRound("X");
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(mode==="online"&&b.dataset.mode!=="online")leave();setMode(b.dataset.mode)}));
+$("youAre").addEventListener("change",()=>setMode("ai"));
+
+/* ---------- Online (PeerJS) ---------- */
+let peer=null,conn=null,connOpen=false,isHost=false,hostRule="A";
+const PREFIX="fadexo-v1-";
+function code(){const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function net(msg){$("netStatus").textContent=msg}
+function setOnlineNames(){names.X=me==="X"?"You":(me?"Friend":"X");names.O=me==="O"?"You":(me?"Friend":"O")}
+function send(o){if(conn&&connOpen)conn.send(o)}
+function noPeer(){if(typeof Peer==="undefined"){net("Online play could not load. Check your connection and reload.");return true}return false}
+function createRoom(){
+  if(noPeer())return;leave();
+  const c=code();isHost=true;me="X";
+  peer=new Peer(PREFIX+c);
+  net("Creating room…");
+  peer.on("open",()=>{
+    const url=location.origin+location.pathname+"?room="+c;
+    $("roomLink").textContent=url;$("roomInfo").hidden=false;$("leaveRoom").hidden=false;
+    $("shareLink").hidden=!navigator.share;
+    net("Room "+c+" is ready. Waiting for your friend…");
+  });
+  peer.on("connection",cn=>{
+    if(conn&&connOpen){cn.on("open",()=>{cn.send({t:"full"});setTimeout(()=>cn.close(),300)});return}
+    bind(cn);
+  });
+  peer.on("error",err=>{if(err.type==="unavailable-id"){createRoom()}else net("Error: "+err.type)});
+}
+function joinRoom(c){
+  c=(c||"").trim().toUpperCase();if(!c)return;
+  if(noPeer())return;leave();
+  isHost=false;me="O";
+  peer=new Peer();net("Connecting to room "+c+"…");$("leaveRoom").hidden=false;
+  peer.on("open",()=>bind(peer.connect(PREFIX+c,{reliable:true})));
+  peer.on("error",err=>net(err.type==="peer-unavailable"?"Room "+c+" not found. Check the code.":"Error: "+err.type));
+}
+function bind(cn){
+  conn=cn;
+  cn.on("open",()=>{connOpen=true;setOnlineNames();
+    net("Connected. "+(isHost?"You are X.":"You are O."));
+    if(isHost){send({t:"hello",rule});score={X:0,O:0};newRound("X")}
+    render();});
+  cn.on("data",onData);
+  cn.on("close",()=>{connOpen=false;net("Your friend left the room.");render()});
+}
+function onData(m){
+  if(!m||typeof m!=="object")return;
+  if(m.t==="hello"&&(m.rule==="A"||m.rule==="B")){rule=hostRule=m.rule;$("ruleSel").value=rule;score={X:0,O:0};newRound("X")}
+  else if(m.t==="rule"&&(m.rule==="A"||m.rule==="B")){rule=hostRule=m.rule;$("ruleSel").value=rule}
+  else if(m.t==="move"&&Number.isInteger(m.c)&&turn!==me)applyMove(m.c);
+  else if(m.t==="new"&&(m.starter==="X"||m.starter==="O"))newRound(m.starter);
+  else if(m.t==="full")net("That room already has two players.");
+}
+function leave(){
+  connOpen=false;try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
+  conn=null;peer=null;me=null;$("roomInfo").hidden=true;$("leaveRoom").hidden=true;net("Not connected.");
+}
+$("createRoom").addEventListener("click",createRoom);
+$("leaveRoom").addEventListener("click",()=>{leave();setOnlineNames();render()});
+$("joinBtn").addEventListener("click",()=>joinRoom($("joinCode").value));
+$("joinCode").addEventListener("keydown",e=>{if(e.key==="Enter")joinRoom(e.target.value)});
+$("copyLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("roomLink").textContent);$("copyLink").textContent="Copied"}catch(e){$("copyLink").textContent="Copy failed"}setTimeout(()=>$("copyLink").textContent="Copy link",1500)});
+$("shareLink").addEventListener("click",()=>{navigator.share&&navigator.share({title:"Fading XO",text:"Play XO with me",url:$("roomLink").textContent}).catch(()=>{})});
+
+/* ---------- Theme ---------- */
+const root=document.documentElement;
+const savedTheme=store.get("xo.theme",null);if(savedTheme)root.dataset.theme=savedTheme;
+$("themeBtn").addEventListener("click",()=>{
+  const dark=root.dataset.theme?root.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;
+  root.dataset.theme=dark?"light":"dark";store.set("xo.theme",root.dataset.theme)});
+
+/* ---------- Boot ---------- */
+const room=new URLSearchParams(location.search).get("room");
+if(room){setMode("online");$("joinCode").value=room.toUpperCase();joinRoom(room)}
+else setMode("local");
+})();
+</script>
+</body>
+</html>
