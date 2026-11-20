@@ -33,6 +33,18 @@ h1{font-size:28px;margin:0;letter-spacing:-.02em}
 h1 span.x{color:var(--x)} h1 span.o{color:var(--o)}
 h2{font-size:18px;margin:0 0 10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow)}
+.card.game{display:grid;isolation:isolate;padding:0;overflow:hidden;border-radius:20px}
+.game>.layer{grid-area:1/1;min-width:0;min-height:0;isolation:isolate;background:var(--card);padding:18px}
+.game>.result{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.result-kicker{margin:0;font-size:13px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.result-title{margin:0;font-size:clamp(36px,8vw,56px);line-height:1.1;letter-spacing:-.02em}
+.result-title .x{color:var(--x)} .result-title .o{color:var(--o)}
+.result-score{margin:0;font-size:18px;color:var(--muted)}
+.result-score b{color:var(--ink)}
+.mini-board{display:grid;grid-template-columns:repeat(3,44px);gap:6px}
+.mini-board i{width:44px;height:44px;border-radius:10px;background:var(--bg);font-style:normal;font-weight:800;font-size:24px;display:flex;align-items:center;justify-content:center}
+.mini-board i.X{color:var(--x)} .mini-board i.O{color:var(--o)}
+.mini-board i.win{background:color-mix(in srgb,var(--win) 25%,var(--bg))}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
 .tabs button,.btn{border:1px solid var(--line);background:transparent;color:var(--ink);padding:8px 14px;border-radius:999px;font:inherit;font-size:14px;cursor:pointer}
 .tabs button[aria-pressed="true"],.btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -83,7 +95,8 @@ footer{max-width:980px;margin:20px auto 0;text-align:center}
 </header>
 
 <main>
-  <section class="card">
+  <section class="card game" id="gameCard">
+   <div class="layer" id="playLayer">
     <div class="tabs" role="group" aria-label="Game mode">
       <button type="button" data-mode="local" aria-pressed="true">Same device</button>
       <button type="button" data-mode="ai" aria-pressed="false">Vs computer</button>
@@ -101,6 +114,17 @@ footer{max-width:980px;margin:20px auto 0;text-align:center}
       <button class="btn" id="undoBtn" type="button">Undo</button>
       <button class="btn" id="resetScore" type="button">Reset score</button>
     </div>
+   </div>
+   <div class="layer result" id="resultLayer" aria-live="polite" inert aria-hidden="true" style="opacity:0;pointer-events:none">
+    <p class="result-kicker" id="resKicker">Round over</p>
+    <h2 class="result-title" id="resTitle"></h2>
+    <div class="mini-board" id="resBoard" aria-hidden="true"></div>
+    <p class="result-score" id="resScore"></p>
+    <div class="row" style="justify-content:center">
+      <button class="btn primary" id="playAgain" type="button">Play again</button>
+      <button class="btn" id="seeBoard" type="button">See board</button>
+    </div>
+   </div>
   </section>
 
   <aside class="card panel">
@@ -345,6 +369,7 @@ function render(){
   $("sx").textContent=score.X;$("so").textContent=score.O;
   $("nx").textContent=names.X;$("no").textContent=names.O;
   $("undoBtn").disabled=mode==="online"||history.length===0;
+  syncWave();
 }
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
@@ -398,7 +423,7 @@ const BROKERS=customBroker?[customBroker]:[
 ];
 const TOPIC="xnofade/v1/";
 const JOIN_TIMEOUT=20000,PING_EVERY=4000,PEER_LOST=12000;
-let clients=[],room=null,isHost=false,partner=null,partnerSeen=0,connOpen=false;
+let rejected=false,clients=[],room=null,isHost=false,partner=null,partnerSeen=0,connOpen=false;
 let myId=null,seq=0,version=0,seen=new Set(),pingTimer=null,joinTimer=null,joinDeadline=0;
 function code(){const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
@@ -418,7 +443,7 @@ function adopt(s,v){
   if(s.score&&Number.isInteger(s.score.X)&&Number.isInteger(s.score.O))score={X:s.score.X,O:s.score.O};
   history=[];version=v;saveSession();render();
 }
-function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,version,state:snapshot()}))}catch(e){}}
+function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,partner,version,state:snapshot()}))}catch(e){}}
 function clearSession(){try{sessionStorage.removeItem("xo.online")}catch(e){}}
 
 function publish(o){
@@ -475,6 +500,8 @@ function begin(c,host,restore){
   leave(true);
   room=c;isHost=host;me=host?"X":"O";
   myId=(restore&&restore.myId)||rid();seq=Math.floor(Math.random()*1e6);seen=new Set();
+  if(restore&&typeof restore.partner==="string"){partner=restore.partner;partnerSeen=Date.now()}
+  rejected=false;
   setOnlineNames();
   $("leaveRoom").hidden=false;
   if(host){$("roomLink").textContent=linkFor(c);$("roomInfo").hidden=false;$("shareLink").hidden=!navigator.share}
@@ -492,7 +519,7 @@ function begin(c,host,restore){
     joinDeadline=Date.now()+JOIN_TIMEOUT;
     clearInterval(joinTimer);
     joinTimer=setInterval(()=>{
-      if(partner){clearInterval(joinTimer);return}
+      if(partner||rejected){clearInterval(joinTimer);return}
       if(Date.now()>joinDeadline){net("No answer from room "+room+". Check the code, and make sure your friend still has the game open. Still trying…");joinDeadline=Infinity}
       if(liveBrokers())sendJoin();
     },2000);
@@ -527,10 +554,10 @@ function onMessage(m){
     if(Number.isInteger(m.v))adopt(m.s,m.v);
     return;
   }
-  if(!isHost&&m.t==="full"){net("That room already has two players.");clearInterval(joinTimer);return}
+  if(!isHost&&m.t==="full"){if(!partner||!connOpen){rejected=true;net("That room already has two players.");clearInterval(joinTimer)}return}
   if(!fromPartner){
     // host came back after a refresh: ask again
-    if(!isHost&&m.t==="ping"&&partnerStale)sendJoin();
+    if(!isHost&&!rejected&&m.t==="ping"&&partnerStale)sendJoin();
     return;
   }
   if(m.t==="bye"){connOpen=false;partnerSeen=0;net("Your friend left the room.");render();return}
@@ -540,7 +567,7 @@ function onMessage(m){
   if(m.t==="state"&&Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
 }
 function markSeen(){
-  partnerSeen=Date.now();
+  partnerSeen=Date.now();saveSession();
   if(!connOpen){connOpen=true;updateNetStatus();render()}
 }
 
@@ -565,6 +592,53 @@ $("joinBtn").addEventListener("click",()=>joinRoom($("joinCode").value));
 $("joinCode").addEventListener("keydown",e=>{if(e.key==="Enter")joinRoom(e.target.value)});
 $("copyLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("roomLink").textContent);$("copyLink").textContent="Copied"}catch(e){$("copyLink").textContent="Copy failed"}setTimeout(()=>$("copyLink").textContent="Copy link",1500)});
 $("shareLink").addEventListener("click",()=>{navigator.share&&navigator.share({title:"X n O",text:"Play XO with me",url:$("roomLink").textContent}).catch(()=>{})});
+
+/* ---------- Result wave (distortion-waves, MIT) ---------- */
+/* When a round ends, a colourful ring opens from the winning move and carries
+   the board into a result card. Play again collapses it back. Without WebGL 2
+   or with reduced motion the library crossfades. If the module fails to load,
+   the card simply appears. */
+const gameCard=$("gameCard"),playLayer=$("playLayer"),resultLayer=$("resultLayer");
+let wave=null,waveShown=false,reviewing=false,waveTimer=null;
+import("./wave.js").then(m=>{
+  try{wave=new m.WaveController(gameCard,playLayer,resultLayer);wave.update({type:"center",palette:"colorful",revealed:waveShown,onFinish:focusResult})}
+  catch(e){wave=null}
+}).catch(()=>{});
+function fillResult(){
+  const who=names[turn];
+  $("resKicker").textContent=mode==="online"||mode==="ai"?(who==="You"?"Victory":"Round lost"):"Round over";
+  $("resTitle").innerHTML=who==="You"?`<span class="${turn.toLowerCase()}">You win!</span>`:`<span class="${turn.toLowerCase()}">${esc(who)}</span> wins`;
+  const rb=$("resBoard");rb.innerHTML="";
+  for(let i=0;i<9;i++){const el=document.createElement("i");const s=marks.X.includes(i)?"X":marks.O.includes(i)?"O":"";
+    el.textContent=s;if(s)el.className=s;if(winCells&&winCells.includes(i))el.classList.add("win");rb.appendChild(el)}
+  $("resScore").innerHTML=`${esc(names.X)} <b>${score.X}</b> : <b>${score.O}</b> ${esc(names.O)}`;
+}
+function showResult(show){
+  waveShown=show;
+  if(show)fillResult();
+  if(wave){
+    const last=marks[turn][marks[turn].length-1];
+    wave.update({type:"center",palette:"colorful",revealed:show,source:show&&last!=null?cells[last]:undefined,onFinish:focusResult});
+  }else{
+    resultLayer.style.opacity=show?"1":"0";resultLayer.style.pointerEvents=show?"auto":"none";
+    resultLayer.toggleAttribute("inert",!show);playLayer.toggleAttribute("inert",show);
+    show?resultLayer.removeAttribute("aria-hidden"):resultLayer.setAttribute("aria-hidden","true");
+  }
+  if(show&&!wave)focusResult(true);
+}
+function focusResult(revealed){if(revealed&&waveShown)$("playAgain").focus({preventScroll:true})}
+function syncWave(){
+  const want=over&&!reviewing;
+  if(!over)reviewing=false;
+  if(want&&!waveShown){
+    if(!waveTimer)waveTimer=setTimeout(()=>{waveTimer=null;if(over&&!reviewing&&!waveShown)showResult(true)},650);
+  }else if(!want){
+    clearTimeout(waveTimer);waveTimer=null;
+    if(waveShown)showResult(false);
+  }
+}
+$("playAgain").addEventListener("click",()=>$("newBtn").click());
+$("seeBoard").addEventListener("click",()=>{reviewing=true;syncWave()});
 
 /* ---------- Theme ---------- */
 const root=document.documentElement;
