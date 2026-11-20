@@ -57,11 +57,10 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 /* the logo: a monochrome X and O that write themselves again on hover.
    The X turns a quarter on a spring while its strokes redraw one after the
    other, and the O is drawn from the top with a small swell, like a pen. */
-.mark{width:40px;height:40px;border-radius:12px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--hair);display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background-color .2s ease,scale .2s var(--out)}
-.mark:hover{background:var(--chip-2)}
+.mark{width:48px;height:44px;display:flex;align-items:center;justify-content:flex-start;color:var(--ink);cursor:pointer;transition:scale .2s var(--out)}
 .mark:active{scale:.92}
-.mark svg{width:26px;height:19px;overflow:visible}
-.mark path,.mark circle{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:1 1}
+.mark svg{width:38px;height:27px;overflow:visible}
+.mark path,.mark circle{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-dasharray:1 1}
 .mark .gx{transform-box:fill-box;transform-origin:center;transition:transform .7s var(--spring)}
 .mark .lo{transform-box:fill-box;transform-origin:center;transform:rotate(-90deg)}
 .mark:hover .gx,.mark.intro .gx{transform:rotate(90deg)}
@@ -249,10 +248,6 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .join-head label{font-size:16px;font-weight:500;letter-spacing:-.01em}
 
 /* ---------- toast ---------- */
-.toast{position:fixed;z-index:60;top:18px;left:50%;display:flex;align-items:center;gap:10px;height:44px;padding:0 18px 0 6px;border-radius:999px;background:var(--slab);box-shadow:0 0 0 1px color-mix(in srgb,var(--friend) 35%,transparent),0 12px 40px rgba(0,0,0,.35);font-weight:500;white-space:nowrap;transform:translate(-50%,-140%) scale(.9);opacity:0;transition:transform .6s var(--spring),opacity .25s ease;pointer-events:none}
-.toast.show{transform:translate(-50%,0) scale(1);opacity:1}
-.toast .orb{width:32px;height:32px}
-.toast.plain{padding-left:18px}
 
 /* ---------- dialogs ---------- */
 .scrim{position:fixed;inset:0;z-index:40;background:var(--scrim);opacity:0;transition:opacity .3s var(--out);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
@@ -373,16 +368,50 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 [data-mode="online"][data-phase="lobby"] #newBtn,[data-mode="online"][data-phase="toss"] #newBtn{display:none}
 
 /* ---------- a request from your friend ---------- */
-.ask{position:fixed;z-index:62;top:16px;left:50%;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:8px 8px 8px 8px;border-radius:999px;background:var(--slab);box-shadow:0 0 0 1px color-mix(in srgb,var(--friend) 40%,transparent),0 16px 48px rgba(0,0,0,.4);transform:translateX(-50%);animation:askin .6s var(--spring) both}
-.ask .orb{width:34px;height:34px}
-.ask .t{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
-.ask .btn{height:36px;padding:0 14px;font-size:13px}
-.res-ask{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,260px);animation:meta .3s var(--out) both}
-.res-ask p{margin:0;font-weight:500}
-.res-ask .row{display:flex;gap:8px;width:100%}
-.res-ask .row .btn{flex:1 1 0}
 .btn.waiting{opacity:1;cursor:default}
 .btn.waiting .lbl{animation:breathe 1s ease-in-out infinite alternate}
+
+
+/* ---------- requests: a toast stack, white so it cannot be missed ---------- */
+/* Newest in front, the ones before it tucked behind with a sliver of each
+   showing, a step smaller each. Point at the stack and it fans into a list;
+   move away and it gathers back up. Every move is the same spring, a touch
+   under critical so it settles with a hint of give. The cards are white in
+   both themes: on the dark board that is the one thing on screen that is
+   not part of the game, which is the point of a request. */
+.tst{position:fixed;z-index:62;top:max(14px,env(safe-area-inset-top));left:50%;width:min(420px,calc(100vw - 24px));translate:-50% 0;pointer-events:none;
+  --tst-slab:#ffffff;--tst-ink:#17181a;--tst-mute:color-mix(in srgb,#17181a 52%,#fff);--tst-wash:color-mix(in srgb,#17181a 6%,#fff);transition:height .45s cubic-bezier(.3,1.15,.5,1)}
+.tst-toast{position:absolute;left:0;top:0;width:100%;height:68px;display:flex;align-items:center;gap:12px;padding:0 10px 0 14px;border-radius:22px;background:var(--tst-slab);color:var(--tst-ink);overflow:hidden;pointer-events:auto;transform-origin:50% 100%;
+  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 50px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.3,1.15,.5,1),opacity .25s ease,background-color .22s ease,translate .22s cubic-bezier(.4,0,1,1)}
+:root[data-theme="light"] .tst-toast{box-shadow:0 0 0 1px rgba(0,0,0,.08),0 18px 50px rgba(0,0,0,.14)}
+.tst-toast.enter{opacity:0;transform:translateY(-24px) scale(.96)}
+.tst-toast.leave{opacity:0;translate:70px 0}
+.tst:not([data-open]) .tst-toast:not([data-front]){background:var(--tst-wash)}
+.tst-toast>*{transition:opacity .22s ease}
+.tst:not([data-open]) .tst-toast:not([data-front])>*{opacity:0}
+.tst-icon{flex:none;width:36px;height:36px;border-radius:99px;display:grid;place-items:center;background:var(--tst-wash)}
+.tst-icon svg{width:18px;height:18px}
+.tst-toast[data-kind="again"] .tst-icon{color:#1f9d55;background:color-mix(in srgb,#1f9d55 12%,#fff)}
+.tst-toast[data-kind="reset"] .tst-icon{color:#d08a0e;background:color-mix(in srgb,#e09a12 14%,#fff)}
+.tst-toast[data-kind="rule"] .tst-icon{color:#2f6fdb;background:color-mix(in srgb,#2f6fdb 12%,#fff)}
+.tst-toast[data-kind="out"] .tst-icon{color:var(--tst-mute)}
+.tst-toast[data-kind="out"] .tst-icon svg{animation:spin 1.4s linear infinite}
+.tst-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.tst-text b{font-size:14px;font-weight:600;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.tst-text span{font-size:13px;line-height:17px;color:var(--tst-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tst-act{flex:none;height:34px;padding:0 16px;border:0;border-radius:999px;background:var(--tst-ink);color:#fff;font-size:13px;font-weight:500;transition:scale .16s var(--out),opacity .16s}
+.tst-act:hover{opacity:.88}.tst-act:active{scale:.96}
+.tst-x{flex:none;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:999px;background:none;color:var(--tst-mute);transition:background-color .16s ease,color .16s ease,scale .16s var(--out)}
+.tst-x:hover{background:var(--tst-wash);color:var(--tst-ink)}.tst-x:active{scale:.9}
+.tst-x svg{width:16px;height:16px}
+.tst-act:focus-visible,.tst-x:focus-visible{outline:none;box-shadow:0 0 0 2px #2f6fdb}
+.tst-bar{position:absolute;left:14px;right:14px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--tst-wash);overflow:hidden}
+.tst-bar i{position:absolute;inset:0;background:color-mix(in srgb,var(--tst-ink) 30%,transparent);transform-origin:left;animation:countdown linear both}
+.tst-toast[data-kind="again"] .tst-bar i{background:#1f9d55}
+/* while your friend is asking, the room says so: the glow turns amber and breathes */
+.glow .gk{background:radial-gradient(min(720px,95vw) circle at 50% 54%,rgba(245,181,70,.2),transparent 70%)}
+.app[data-asking]~.glow .gk,.glow.asking .gk{opacity:1;animation:askglow 1.8s ease-in-out infinite alternate}
+.glow.asking .gl,.glow.asking .ga,.glow.asking .go{opacity:0!important}
 
 /* ---------- narrow screens: stacked layout and bottom sheets ---------- */
 @media (max-width:1079px){
@@ -407,6 +436,11 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   .actions #newBtn{flex:1 1 auto;height:54px}
   .actions .round{width:54px;height:54px}
   .chip{flex:none;gap:8px}
+  /* online: New round and settings get their own row; the room pill gets the row under it */
+  .app[data-mode="online"] .actions{flex-wrap:wrap;row-gap:10px}
+  .app[data-mode="online"] .chip{order:5;flex:1 1 100%;justify-content:space-between;padding:0 6px 0 8px}
+  .app[data-mode="online"] .chip .ccode{flex:1 1 auto;padding-left:4px}
+  .app[data-mode="online"][data-net="live"],.app[data-mode="online"][data-net="lost"]{--bs:min(calc(100vw - 32px),calc(100dvh - 380px),520px)}
   .pick{--pw:76px}
   .pick-txt{display:none}
   .actions .round{width:48px;height:48px}
@@ -451,6 +485,9 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 @keyframes drawo{0%{stroke-dashoffset:1;transform:rotate(-90deg) scale(.7)}60%{transform:rotate(-90deg) scale(1.12)}100%{stroke-dashoffset:0;transform:rotate(-90deg) scale(1)}}
 @keyframes askin{from{opacity:0;transform:translate(-50%,-130%) scale(.9)}to{opacity:1;transform:translateX(-50%)}}
 @keyframes lobbyout{to{opacity:0;transform:scale(.92)}}
+@keyframes countdown{from{transform:scaleX(1)}to{transform:scaleX(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes askglow{from{opacity:.55}to{opacity:1}}
 @keyframes meta{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes rise{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
@@ -475,7 +512,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 </style>
 </head>
 <body>
-<div class="glow" aria-hidden="true"><i class="gl"></i><i class="ga"></i><i class="go"></i></div>
+<div class="glow" aria-hidden="true"><i class="gl"></i><i class="ga"></i><i class="go"></i><i class="gk"></i></div>
 
 <div class="app" id="app" data-mode="local" data-net="idle">
   <header class="top">
@@ -510,10 +547,6 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
         <div class="res-actions" id="resActions">
           <button class="btn primary big" id="playAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="lbl" id="playAgainLbl">Play again</span></button>
           <button class="btn" id="seeBoard" type="button">See board</button>
-        </div>
-        <div class="res-ask" id="resAsk" hidden>
-          <p>Your friend wants a rematch</p>
-          <div class="row"><button class="btn danger-soft" id="resDecline" type="button">Not now</button><button class="btn primary" id="resAccept" type="button">Accept</button></div>
         </div>
       </div>
     </div>
@@ -574,8 +607,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   </main>
 </div>
 
-<div class="toast" id="toast" role="status" aria-live="polite"><span class="orb friend" id="toastOrb"></span><span id="toastTxt"></span></div>
-<div class="ask" id="ask" role="alertdialog" aria-labelledby="askTxt" hidden><span class="orb friend"></span><span class="t" id="askTxt"></span><button class="btn danger-soft" id="askNo" type="button">Decline</button><button class="btn primary" id="askYes" type="button">Accept</button></div>
+<div class="tst" id="tst" role="region" aria-label="Requests from your friend" aria-live="assertive"></div>
 <div class="scrim" id="scrim" hidden></div>
 
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
@@ -827,6 +859,9 @@ function setStatus(dot,html,busy){
 }
 function renderStatus(){
   const sideVar=s=>s==="X"?"var(--x)":"var(--o)";
+  if(flashMsg)return setStatus(flashDot,flashMsg);
+  if(mode==="online"&&inReq)return setStatus("var(--amber)","Your friend is asking",true);
+  if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for your friend",true);
   if(over){
     const w=names[turn];
     setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?"Friend wins":`${turn} wins`);
@@ -869,7 +904,7 @@ function renderPlayers(){
 }
 function render(){
   app.dataset.phase=mode==="online"&&room?phase:"play";
-  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderAsk();renderPick();
+  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();
   $("undoBtn").disabled=mode==="online"||history.length===0;
   $("newBtn").disabled=mode==="online"&&!connOpen;
   syncWave();
@@ -1144,6 +1179,7 @@ function onMessage(m){
   if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
     if(m.kind==="rule"&&m.data!=="A"&&m.data!=="B")return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
+  if(m.t==="cancel"&&inReq&&m.rid===inReq.rid){inReq=null;toast("Your friend took the request back","friend");render();return}
   if(m.t==="ans"&&outReq&&m.rid===outReq.rid){
     const r=outReq;outReq=null;clearTimeout(reqTimer);
     if(m.ok){if(r.kind==="again")collapseSrc=r.src;toast(r.kind==="again"?"Friend said yes":"Friend accepted","friend")}
@@ -1181,12 +1217,13 @@ $("leaveRoom").addEventListener("click",leaveAndReset);
 $("chipLeave").addEventListener("click",leaveAndReset);
 
 /* ---------- Online UI: room card, seats, chip, toast ---------- */
-let toastT=null;
+/* Short notices go to the status pill for a moment rather than a toast:
+   the pill is already where the eye goes for "what is happening". */
+let flashMsg=null,flashDot="",flashT=null;
 function toast(text,orb){
-  const t=$("toast"),o=$("toastOrb");$("toastTxt").textContent=text;
-  o.hidden=!orb;if(orb)o.className="orb "+orb;t.classList.toggle("plain",!orb);
-  t.classList.remove("show");void t.offsetWidth;t.classList.add("show");
-  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),2800);
+  flashMsg=esc(text);flashDot=orb==="friend"?"var(--friend)":"var(--ink-2)";
+  clearTimeout(flashT);flashT=setTimeout(()=>{flashMsg=null;renderStatus()},2600);
+  renderStatus();
 }
 function setText(el,txt){if(el.textContent===txt)return;el.textContent=txt;if(!still){el.classList.remove("swap");void el.offsetWidth;el.classList.add("swap")}}
 const canShare=!!navigator.share&&matchMedia("(pointer:coarse)").matches;
@@ -1350,8 +1387,7 @@ function request(kind,data,src){
   if(outReq){toast("Still waiting for your friend to answer");return}
   outReq={rid:rid(),kind,data:data??null,src:src||null};
   publish({t:"req",rid:outReq.rid,kind,data:data??null});
-  toast(kind==="again"?"Asked your friend for a new round":kind==="reset"?"Asked to reset the score":"Asked to change the rule");
-  clearTimeout(reqTimer);reqTimer=setTimeout(()=>{if(outReq){outReq=null;toast("No answer from your friend");render()}},30000);
+  clearTimeout(reqTimer);reqTimer=setTimeout(()=>{if(outReq){publish({t:"cancel",rid:outReq.rid});outReq=null;toast("No answer from your friend");render()}},REQ_MS);
   render();
 }
 function performReq(kind,data){
@@ -1362,23 +1398,84 @@ function performReq(kind,data){
 function answer(ok,src){
   const r=inReq;if(!r)return;inReq=null;
   publish({t:"ans",rid:r.rid,ok:!!ok});
-  if(ok){if(r.kind==="again")collapseSrc=src||null;performReq(r.kind,r.data);pushState()}
+  if(ok){if(r.kind==="again")collapseSrc=waveShown?$("playAgain"):null;performReq(r.kind,r.data);pushState()}
+  else toast("You said not now");
   render();
 }
-function renderAsk(){
-  const a=$("ask"),inResult=inReq&&inReq.kind==="again"&&waveShown;
-  const show=mode==="online"&&!!inReq&&!inResult;
-  if(show){$("askTxt").textContent="Your friend "+REQ_TEXT[inReq.kind];if(a.hidden){a.hidden=false;$("toast").classList.remove("show")}}
-  else a.hidden=true;
-  $("resAsk").hidden=!inResult;$("resActions").hidden=!!inResult;
+const REQ_MS=30000;
+function cancelReq(){if(!outReq)return;publish({t:"cancel",rid:outReq.rid});outReq=null;clearTimeout(reqTimer);toast("Request cancelled");render()}
+
+/* ---------- Toast stack for requests ---------- */
+const tst=$("tst"),TH=68,PEEK=12,TGAP=10;
+let tItems=[]; // newest first: {key,el}
+const ICONS={
+  again:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  reset:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
+  rule:'<path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/>',
+  out:'<path d="M21 12a9 9 0 1 1-6.2-8.6"/>'
+};
+const svg=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+function reqCopy(r,incoming){
+  const ruleTo=r.data==="B"?"oldest leaves before placing":"oldest leaves after placing";
+  if(incoming){
+    if(r.kind==="again")return over?["Rematch?","Your friend wants another round"]:["New round?","Your friend wants to restart"];
+    if(r.kind==="reset")return["Reset the score?","Back to 0 : 0"];
+    return["Change the rule?","To "+ruleTo];
+  }
+  return["Waiting for your friend",r.kind==="again"?(over?"You asked for a rematch":"You asked for a new round"):r.kind==="reset"?"You asked to reset the score":"You asked to change the rule"];
+}
+function makeToast(r,incoming){
+  const el=document.createElement("div");el.className="tst-toast enter";
+  el.dataset.kind=incoming?r.kind:"out";el.setAttribute("role",incoming?"alertdialog":"status");
+  const [t,b]=reqCopy(r,incoming);
+  el.innerHTML=`<span class="tst-icon">${svg(ICONS[incoming?r.kind:"out"])}</span><span class="tst-text"><b>${esc(t)}</b><span>${esc(b)}</span></span>`+
+    (incoming?`<button type="button" class="tst-act">Accept</button>`:"")+
+    `<button type="button" class="tst-x" aria-label="${incoming?"Decline":"Cancel request"}">${svg('<path d="M18 6 6 18M6 6l12 12"/>')}</button>`+
+    `<span class="tst-bar" aria-hidden="true"><i style="animation-duration:${REQ_MS}ms"></i></span>`;
+  if(incoming){el.querySelector(".tst-act").onclick=()=>answer(true);el.querySelector(".tst-x").onclick=()=>answer(false)}
+  else el.querySelector(".tst-x").onclick=cancelReq;
+  return el;
+}
+function tstLayout(){
+  const open=tst.hasAttribute("data-open"),n=tItems.length;
+  tst.style.height=(n?(open?n*TH+(n-1)*TGAP:TH+(Math.min(n,3)-1)*PEEK):0)+"px";
+  tItems.forEach((t,k)=>{
+    const d=Math.min(k,2),y=open?k*(TH+TGAP):d*PEEK,sc=open?1:1-d*.05;
+    t.el.style.transform=`translateY(${y}px) scale(${sc})`;t.el.style.zIndex=String(10-k);
+    t.el.toggleAttribute("data-front",k===0);
+    const hide=!open&&k>0;t.el.setAttribute("aria-hidden",hide?"true":"false");
+    t.el.querySelectorAll("button").forEach(b=>b.tabIndex=hide?-1:0);
+  });
+}
+function renderRequests(){
+  const want=[];
+  if(mode==="online"&&inReq)want.push({key:"in:"+inReq.rid,make:()=>makeToast(inReq,true)});
+  if(mode==="online"&&outReq)want.push({key:"out:"+outReq.rid,make:()=>makeToast(outReq,false)});
+  let changed=false;
+  tItems=tItems.filter(t=>{
+    if(want.some(w=>w.key===t.key))return true;
+    changed=true;t.el.classList.add("leave");setTimeout(()=>t.el.remove(),still?0:240);return false;
+  });
+  for(const w of want)if(!tItems.some(t=>t.key===w.key)){
+    const el=w.make();tst.appendChild(el);tItems.unshift({key:w.key,el});changed=true;
+    if(still)el.classList.remove("enter");else requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove("enter")));
+    if(w.key.startsWith("in:"))setTimeout(()=>{const a=el.querySelector(".tst-act");a&&!openDlg&&a.focus({preventScroll:true})},80);
+  }
+  if(!tItems.length)tst.removeAttribute("data-open");
+  if(changed)tstLayout();
+  const asking=mode==="online"&&!!inReq;
+  document.querySelector(".glow").classList.toggle("asking",asking);
+  app.toggleAttribute("data-asking",asking);
   const pa=$("playAgain"),waiting=mode==="online"&&outReq&&outReq.kind==="again";
   pa.classList.toggle("waiting",!!waiting);pa.disabled=!!waiting;
   const t=waiting?"Waiting for friend…":"Play again";if($("playAgainLbl").textContent!==t)$("playAgainLbl").textContent=t;
 }
-$("askYes").addEventListener("click",e=>answer(true,null));
-$("askNo").addEventListener("click",()=>answer(false));
-$("resAccept").addEventListener("click",e=>answer(true,e.currentTarget));
-$("resDecline").addEventListener("click",()=>answer(false));
+/* the whole frame is the hover target, with a containment test, so the list
+   does not slide out from under the pointer and close itself */
+tst.addEventListener("pointerover",()=>{if(tItems.length>1&&!tst.hasAttribute("data-open")){tst.setAttribute("data-open","");tstLayout()}});
+tst.addEventListener("pointerout",e=>{if(!e.relatedTarget||!tst.contains(e.relatedTarget)){if(tst.hasAttribute("data-open")){tst.removeAttribute("data-open");tstLayout()}}});
+tst.addEventListener("focusin",()=>{if(tItems.length>1){tst.setAttribute("data-open","");tstLayout()}});
+tst.addEventListener("focusout",e=>{if(!tst.contains(e.relatedTarget)){tst.removeAttribute("data-open");tstLayout()}});
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
