@@ -54,9 +54,20 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 /* ---------- app frame ---------- */
 .app{position:relative;z-index:1;height:100dvh;display:grid;grid-template-rows:auto 1fr}
 .top{position:relative;display:flex;align-items:center;justify-content:space-between;padding:20px 40px 0;min-height:76px}
-.mark{width:36px;height:36px;border-radius:11px;background:var(--slab);box-shadow:inset 0 0 0 1px var(--hair);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;letter-spacing:-.02em;transition:transform .4s var(--spring)}
-.mark:hover{transform:rotate(-8deg) scale(1.06)}
-.mark .x{color:var(--x)} .mark .o{color:var(--o)}
+/* the logo: a monochrome X and O that write themselves again on hover.
+   The X turns a quarter on a spring while its strokes redraw one after the
+   other, and the O is drawn from the top with a small swell, like a pen. */
+.mark{width:40px;height:40px;border-radius:12px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--hair);display:flex;align-items:center;justify-content:center;color:var(--ink);transition:background-color .2s ease,scale .2s var(--out)}
+.mark:hover{background:var(--chip-2)}
+.mark:active{scale:.92}
+.mark svg{width:26px;height:19px;overflow:visible}
+.mark path,.mark circle{fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:1 1}
+.mark .gx{transform-box:fill-box;transform-origin:center;transition:transform .7s var(--spring)}
+.mark .lo{transform-box:fill-box;transform-origin:center;transform:rotate(-90deg)}
+.mark:hover .gx,.mark.intro .gx{transform:rotate(90deg)}
+.mark:hover .lx1,.mark.intro .lx1{animation:draw .38s var(--out) both}
+.mark:hover .lx2,.mark.intro .lx2{animation:draw .38s var(--out) .1s both}
+.mark:hover .lo,.mark.intro .lo{animation:drawo .62s var(--out) .18s both}
 .tabs-wrap{position:absolute;left:50%;top:20px;transform:translateX(-50%)}
 .icons{display:flex;gap:8px}
 .ibtn{width:44px;height:44px;border:0;border-radius:999px;background:var(--chip);color:var(--ink-2);display:flex;align-items:center;justify-content:center;transition:background-color .16s ease,color .16s ease,scale .16s var(--out)}
@@ -64,17 +75,33 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .ibtn:active{scale:.92}
 .ibtn[aria-expanded="true"]{background:var(--primary);color:var(--primary-ink)}
 .ibtn svg{width:18px;height:18px;transition:transform .45s var(--spring)}
-.ibtn:hover svg{transform:rotate(-10deg)}
-#btnTheme:hover svg{transform:rotate(-30deg)}
+.ibtn:hover svg{transform:scale(1.1)}
+.ibtn:active svg{transform:scale(.9)}
+/* theme: one shape that is a moon in the dark and a sun in the light.
+   The bite that makes the moon slides off, the disc shrinks, and the rays
+   swing in on a spring. No tilt: the icon stays upright. */
+#btnTheme svg{width:20px;height:20px;overflow:visible}
+#btnTheme:hover svg{transform:none}
+.ti-body{transform-box:fill-box;transform-origin:center;transition:transform .6s var(--spring)}
+.ti-cut{transition:transform .6s var(--spring)}
+.ti-rays{transform-origin:12px 12px;transform:rotate(-90deg) scale(.3);opacity:0;transition:transform .6s var(--spring),opacity .25s ease}
+:root[data-theme="light"] .ti-body{transform:scale(.56)}
+:root[data-theme="light"] .ti-cut{transform:translate(9px,-9px)}
+:root[data-theme="light"] .ti-rays{transform:none;opacity:1}
+#btnTheme:hover .ti-rays{transform:rotate(-90deg) scale(.3)}
+:root[data-theme="light"] #btnTheme:hover .ti-rays{transform:rotate(22deg)}
+#btnTheme:hover .ti-cut{transform:translate(-1px,1px)}
+:root[data-theme="light"] #btnTheme:hover .ti-cut{transform:translate(9px,-9px)}
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
 
 /* ---------- segmented (tabs and settings) ---------- */
 .seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;padding:4px;border-radius:999px;background:var(--chip);isolation:isolate}
-.seg button{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--mute);font-weight:500;font-size:14px;white-space:nowrap;transition:color .2s ease,scale .16s var(--out)}
+.seg button{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 18px;border:0;border-radius:999px;background:transparent;color:var(--mute);font-weight:500;font-size:14px;white-space:nowrap;transition:color .12s ease,scale .16s var(--out);touch-action:manipulation}
 .seg button:hover{color:var(--ink)}
 .seg button:active{scale:.96}
 .seg button[aria-pressed="true"]{color:var(--ink)}
 .seg button svg{width:18px;height:18px;flex:none}
-.seg .thumb{position:absolute;z-index:0;top:4px;left:0;height:calc(100% - 8px);border-radius:999px;background:var(--thumb);box-shadow:var(--raise);transition:transform .5s var(--spring-soft),width .5s var(--spring-soft)}
+.seg .thumb{position:absolute;z-index:0;top:4px;left:0;height:calc(100% - 8px);border-radius:999px;background:var(--thumb);box-shadow:var(--raise);transition:transform .38s cubic-bezier(.3,1.3,.5,1),width .38s cubic-bezier(.3,1.3,.5,1);will-change:transform}
 .seg.no-anim .thumb{transition:none}
 .seg.sm button{height:34px;padding:0 12px;font-size:13px}
 .seg.full{display:grid;width:100%}
@@ -235,7 +262,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .dlg .grab{display:none}
 .dlg-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 6px 14px 12px}
 .dlg-head h2{margin:0;font-size:17px;font-weight:500;letter-spacing:-.01em}
-.pop{top:84px;right:40px;width:336px;padding:10px 8px 8px;border-radius:24px;transform-origin:calc(100% - 70px) -8px}
+.pop{width:336px;padding:10px 8px 8px;border-radius:24px}
 .modal{top:50%;left:50%;width:min(780px,calc(100vw - 48px));max-height:calc(100dvh - 48px);overflow:auto;padding:12px;border-radius:36px;translate:-50% -50%}
 .group{padding:10px 10px 12px;display:flex;flex-direction:column;gap:10px}
 .group+.group{border-top:1px solid var(--hair)}
@@ -279,6 +306,84 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 /* stagger helper for content entering a dialog */
 .stag{animation:rise .5s var(--spring-soft) both;animation-delay:calc(var(--i,0) * 45ms + 60ms)}
 
+
+/* ---------- quick picker (vs computer): a pill that becomes its menu ---------- */
+/* One shape. The press sinks it, and the spread starts while the sink is
+   still running, so there is never a still frame. It grows out of the pill's
+   own corner, upward, because it sits at the bottom of the screen. Width,
+   height and corner run one curve with no overshoot: a spring past the target
+   would drag the corner radius past it too, which reads as a wobble. */
+.pick{position:relative;height:52px;width:var(--pw);flex:none;--pw:132px;--panel-w:240px;--panel-h:300px}
+.app:not([data-mode="ai"]) .pick{display:none}
+.pick-body{position:absolute;left:0;bottom:0;width:var(--pw);height:52px;border-radius:26px;background:var(--chip);transition:width .32s var(--out),height .32s var(--out),border-radius .32s var(--out),background-color .2s ease,box-shadow .3s ease,scale .42s var(--out);transform-origin:left bottom}
+.pick[data-open] .pick-body{width:var(--panel-w);height:var(--panel-h);border-radius:26px;background:var(--slab);box-shadow:var(--float)}
+.pick[data-sink] .pick-body,.pick[data-sink] .pick-pill{scale:.94;transition:scale .16s var(--out)}
+.pick-pill{position:absolute;inset:0;display:flex;align-items:center;gap:10px;padding:0 14px 0 8px;border:0;border-radius:26px;background:none;font-weight:500;font-size:14px;white-space:nowrap;transition:opacity .16s ease,scale .42s var(--out)}
+.pick[data-open] .pick-pill{opacity:0;pointer-events:none}
+.pick[data-sink] .pick-pill{opacity:1}
+.pick-glyph{width:36px;height:36px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:var(--chip-2);font-weight:600;font-size:17px;color:var(--x)}
+.pick-glyph.O{color:var(--o)}
+.pick-glyph span{display:block;animation:otpin .34s var(--out) both}
+.pick-chev{width:16px;height:16px;margin-left:auto;color:var(--faint);transition:color .16s,transform .3s var(--spring)}
+.pick-pill:hover .pick-chev{color:var(--ink);transform:translateY(-2px)}
+.pick-panel{position:absolute;left:0;bottom:0;width:var(--panel-w);height:var(--panel-h);padding:10px;display:flex;flex-direction:column;gap:2px;pointer-events:none;z-index:2}
+.pick[data-open] .pick-panel{pointer-events:auto}
+.pick-item{opacity:0;transform:translateY(6px);transition:opacity .16s ease,transform .22s var(--out)}
+.pick[data-open] .pick-item{opacity:1;transform:none}
+.pick-label{font-size:11px;color:var(--faint);padding:8px 12px 4px}
+.pick-sep{height:1px;background:var(--hair);margin:6px 10px}
+.pick-row{position:relative;isolation:isolate;width:100%;height:38px;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;border-radius:16px;background:none;color:color-mix(in srgb,var(--ink) 78%,transparent);font-size:13px;text-align:left;transition:color .2s ease}
+.pick-row::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:color-mix(in srgb,var(--ink) 8%,transparent);opacity:0;transition:opacity .2s ease}
+@media (hover:hover){.pick-row:hover::before{opacity:1;transition-duration:.16s}}
+.pick-row:focus-visible{outline:none}.pick-row:focus-visible::before{opacity:1}
+.pick-row:hover,.pick-row[aria-selected="true"]{color:var(--ink)}
+.pick-row b{width:22px;font-weight:600;font-size:15px;text-align:center}
+.pick-row b.X{color:var(--x)} .pick-row b.O{color:var(--o)}
+.pick-row small{color:var(--faint);font-size:12px}
+.pick-row .tick{margin-left:auto;width:18px;height:18px;border-radius:6px;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 22%,transparent);transition:background-color .16s,box-shadow .16s}
+.pick-row .tick svg{width:12px;height:12px;color:var(--slab);opacity:0;transform:scale(.4);transition:opacity .16s,transform .3s var(--spring)}
+.pick-row[aria-selected="true"] .tick{background:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.pick-row[aria-selected="true"] .tick svg{opacity:1;transform:none}
+
+/* ---------- online lobby: room ready, coin toss, pick a mark ---------- */
+.lobby{grid-area:board;justify-self:center;align-self:center;z-index:3;width:var(--bs);height:var(--bs);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;border-radius:36px;background:color-mix(in srgb,var(--slab) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--float);animation:cardin .6s var(--spring-soft) both}
+.lobby.out{animation:lobbyout .35s var(--out) both}
+.lobby h3{margin:0;font-size:clamp(22px,calc(var(--bs) * .06),28px);font-weight:500;letter-spacing:-.02em}
+.lobby p{margin:0;color:var(--mute);max-width:280px}
+.lobby .swap{animation:meta .3s var(--out) both}
+.vs{display:flex;align-items:center;gap:20px}
+.vs .orb{width:64px;height:64px}
+.vs .seat-col{gap:8px}
+.vs .v{font:500 12px var(--mono);color:var(--faint)}
+.coin-stage{perspective:900px;height:150px;width:120px;display:flex;align-items:flex-end;justify-content:center}
+.coin{position:relative;width:88px;height:88px;transform-style:preserve-3d}
+.coin .face{position:absolute;inset:0;border-radius:99px;-webkit-backface-visibility:hidden;backface-visibility:hidden;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:13px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25);box-shadow:inset 0 0 0 3px rgba(255,255,255,.28),inset 0 -6px 12px rgba(0,0,0,.18)}
+.coin .back{transform:rotateY(180deg)}
+.coin-shadow{position:absolute;bottom:-6px;left:50%;width:70px;height:10px;margin-left:-35px;border-radius:50%;background:rgba(0,0,0,.35);filter:blur(4px)}
+.coin-wrap{position:relative}
+.choices{display:flex;gap:12px}
+.choice{width:104px;height:112px;border:0;border-radius:28px;background:var(--chip);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:52px;font-weight:600;line-height:1;transition:scale .35s var(--spring),background-color .2s ease;animation:pop .55s var(--spring) both}
+.choice+.choice{animation-delay:.07s}
+.choice:hover{scale:1.06;background:var(--chip-2)}
+.choice:active{scale:.95}
+.choice.X{color:var(--x)} .choice.O{color:var(--o)}
+.choice small{font-size:11px;font-weight:500;color:var(--mute)}
+[data-mode="online"][data-phase="lobby"] .board,[data-mode="online"][data-phase="toss"] .board{opacity:.3;transition:opacity .4s var(--out)}
+[data-mode="online"][data-phase="lobby"] .player,[data-mode="online"][data-phase="toss"] .player{visibility:hidden}
+[data-mode="online"][data-phase="lobby"] #newBtn,[data-mode="online"][data-phase="toss"] #newBtn{display:none}
+
+/* ---------- a request from your friend ---------- */
+.ask{position:fixed;z-index:62;top:16px;left:50%;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 24px);padding:8px 8px 8px 8px;border-radius:999px;background:var(--slab);box-shadow:0 0 0 1px color-mix(in srgb,var(--friend) 40%,transparent),0 16px 48px rgba(0,0,0,.4);transform:translateX(-50%);animation:askin .6s var(--spring) both}
+.ask .orb{width:34px;height:34px}
+.ask .t{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:4px}
+.ask .btn{height:36px;padding:0 14px;font-size:13px}
+.res-ask{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(100%,260px);animation:meta .3s var(--out) both}
+.res-ask p{margin:0;font-weight:500}
+.res-ask .row{display:flex;gap:8px;width:100%}
+.res-ask .row .btn{flex:1 1 0}
+.btn.waiting{opacity:1;cursor:default}
+.btn.waiting .lbl{animation:breathe 1s ease-in-out infinite alternate}
+
 /* ---------- narrow screens: stacked layout and bottom sheets ---------- */
 @media (max-width:1079px){
   :root{--bs:min(calc(100vw - 32px),calc(100dvh - 318px),520px)}
@@ -302,6 +407,16 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   .actions #newBtn{flex:1 1 auto;height:54px}
   .actions .round{width:54px;height:54px}
   .chip{flex:none;gap:8px}
+  .pick{--pw:76px}
+  .pick-txt{display:none}
+  .actions .round{width:48px;height:48px}
+  .actions #newBtn{height:52px}
+  .pick,.pick-body,.pick-pill{height:52px}
+  .lobby{border-radius:30px;gap:12px;padding:18px}
+  .vs .orb{width:52px;height:52px}
+  .coin-stage{height:120px}
+  .choice{width:92px;height:96px;font-size:44px}
+  .ask{top:max(10px,env(safe-area-inset-top))}
   .chip .ccode{letter-spacing:.08em}
   .actions #newBtn{min-width:0;padding:0 16px}
   .dock{display:flex;position:fixed;z-index:30;left:0;right:0;bottom:0;flex-direction:column;gap:14px;max-height:76dvh;overflow:auto;padding:10px 16px max(20px,env(safe-area-inset-bottom));border-radius:30px 30px 0 0;background:var(--slab);box-shadow:var(--float);transform:translateY(0);transition:transform .55s var(--spring-soft)}
@@ -332,6 +447,10 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 }
 
 /* ---------- keyframes ---------- */
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes drawo{0%{stroke-dashoffset:1;transform:rotate(-90deg) scale(.7)}60%{transform:rotate(-90deg) scale(1.12)}100%{stroke-dashoffset:0;transform:rotate(-90deg) scale(1)}}
+@keyframes askin{from{opacity:0;transform:translate(-50%,-130%) scale(.9)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes lobbyout{to{opacity:0;transform:scale(.92)}}
 @keyframes meta{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes rise{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:none}}
 @keyframes pop{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
@@ -360,7 +479,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 
 <div class="app" id="app" data-mode="local" data-net="idle">
   <header class="top">
-    <span class="mark" aria-label="X n O"><span class="x">X</span><span class="o">O</span></span>
+    <span class="mark intro" id="logo" role="img" aria-label="X n O"><svg viewBox="0 0 28 20" aria-hidden="true"><g class="gx"><path class="lx1" pathLength="1" d="M3 5.5 11 14.5"/><path class="lx2" pathLength="1" d="M11 5.5 3 14.5"/></g><circle class="lo" pathLength="1" cx="20.5" cy="10" r="4.6"/></svg></span>
     <div class="tabs-wrap">
       <div class="seg tabs" id="tabs" role="group" aria-label="Game mode">
         <span class="thumb" aria-hidden="true"></span>
@@ -372,8 +491,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
     <div class="icons">
       <button class="ibtn" id="btnRules" type="button" aria-label="Rules" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></button>
       <button class="ibtn" id="btnInsight" type="button" aria-label="Can it be won?" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg></button>
-      <button class="ibtn" id="btnSettings" type="button" aria-label="Settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/></svg></button>
-      <button class="ibtn" id="btnTheme" type="button" aria-label="Switch light or dark theme"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/></svg></button>
+      <button class="ibtn" id="btnTheme" type="button" aria-label="Switch light or dark theme"><svg viewBox="0 0 24 24" aria-hidden="true"><mask id="tiMask"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle class="ti-cut" cx="17.5" cy="6.5" r="7" fill="#000"/></mask><circle class="ti-body" cx="12" cy="12" r="9" fill="currentColor" mask="url(#tiMask)"/><g class="ti-rays" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></g></svg></button>
     </div>
   </header>
 
@@ -389,16 +507,37 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
         <span class="orb" id="resOrb"></span>
         <h2 class="res-title" id="resTitle"></h2>
         <p class="res-score" id="resScore"></p>
-        <div class="res-actions">
-          <button class="btn primary big" id="playAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>Play again</button>
+        <div class="res-actions" id="resActions">
+          <button class="btn primary big" id="playAgain" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="lbl" id="playAgainLbl">Play again</span></button>
           <button class="btn" id="seeBoard" type="button">See board</button>
+        </div>
+        <div class="res-ask" id="resAsk" hidden>
+          <p>Your friend wants a rematch</p>
+          <div class="row"><button class="btn danger-soft" id="resDecline" type="button">Not now</button><button class="btn primary" id="resAccept" type="button">Accept</button></div>
         </div>
       </div>
     </div>
 
+    <div class="lobby" id="lobby" hidden aria-live="polite"></div>
+
     <div class="actions">
+      <div class="pick" id="pick">
+        <span class="pick-body" aria-hidden="true"></span>
+        <button class="pick-pill" id="pickPill" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose your mark and level"><span class="pick-glyph" id="pickGlyph"><span>X</span></span><span class="pick-txt" id="pickTxt">You're X</span><svg class="pick-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        <div class="pick-panel" role="listbox" aria-label="Your mark and level">
+          <div class="pick-item pick-label">You play</div>
+          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="youAre" data-v="X"><b class="X">X</b>Play X<small>first</small><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
+          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="youAre" data-v="O"><b class="O">O</b>Play O<small>second</small><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
+          <div class="pick-item pick-sep"></div>
+          <div class="pick-item pick-label">Computer</div>
+          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="level" data-v="easy">Easy<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
+          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="level" data-v="medium">Medium<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
+          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="level" data-v="perfect">Perfect<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
+        </div>
+      </div>
       <button class="btn primary big" id="newBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>New round</button>
       <button class="btn round" id="undoBtn" type="button" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+      <button class="btn round" id="btnSettings" type="button" aria-label="Game settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/></svg></button>
       <div class="chip" id="chip" hidden>
         <span class="orbs"><span class="orb" id="chipMe"></span><span class="orb friend" id="chipFriend"></span></span>
         <span class="ccode" id="chipCode"></span>
@@ -436,13 +575,12 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"><span class="orb friend" id="toastOrb"></span><span id="toastTxt"></span></div>
+<div class="ask" id="ask" role="alertdialog" aria-labelledby="askTxt" hidden><span class="orb friend"></span><span class="t" id="askTxt"></span><button class="btn danger-soft" id="askNo" type="button">Decline</button><button class="btn primary" id="askYes" type="button">Accept</button></div>
 <div class="scrim" id="scrim" hidden></div>
 
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <div class="group stag" data-for="ai"><span class="group-label" id="gl-level">Level</span><div class="seg sm full" data-opt="level" role="group" aria-labelledby="gl-level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div></div>
-  <div class="group stag" data-for="ai"><span class="group-label" id="gl-you">You play</span><div class="seg sm full" data-opt="youAre" role="group" aria-labelledby="gl-you"><span class="thumb"></span><button type="button" data-v="X">X, first</button><button type="button" data-v="O">O, second</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-rule">Oldest mark leaves</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule"><span class="thumb"></span><button type="button" data-v="A">After you place</button><button type="button" data-v="B">Before</button></div></div>
   <div class="group stag" data-hide="online"><span class="group-label" id="gl-hints">Solver hints</span><div class="seg sm full" data-opt="hints" role="group" aria-labelledby="gl-hints"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-age">Mark order numbers</span><div class="seg sm full" data-opt="age" role="group" aria-labelledby="gl-age"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
@@ -575,6 +713,12 @@ let me=null,aiSide="O",aiTimer=null;
 let rejected=false,clients=[],room=null,isHost=false,partner=null,partnerSeen=0,connOpen=false;
 let myId=null,seq=0,version=0,seen=new Set(),pingTimer=null,joinTimer=null,joinDeadline=0;
 let netShown="idle",joinedTimer=null;
+/* online round flow: lobby (room ready) -> toss (coin, then the winner picks
+   a mark) -> play. hostMark is the mark the room creator plays. */
+let phase="play",hostMark="X",tossWinner=null,tossId=null;
+const tossDone=new Set();
+/* requests that need the other player's yes: new round, reset, rule */
+let outReq=null,inReq=null,reqTimer=null,collapseSrc=null;
 
 /* ---------- Board cells ---------- */
 const boardEl=$("board");
@@ -626,7 +770,7 @@ function applyMove(c){
 function onCell(c){
   if(over)return;
   if(mode==="ai"&&turn===aiSide)return;
-  if(mode==="online"){if(!room||!connOpen||turn!==me)return;if(applyMove(c))pushState();return}
+  if(mode==="online"){if(!room||!connOpen||phase!=="play"||turn!==me)return;if(applyMove(c))pushState();return}
   if(applyMove(c))maybeAI();
 }
 function maybeAI(){
@@ -649,7 +793,7 @@ function renderBoard(){
   const showHints=opt.hints==="1"&&!over&&mode!=="online"&&!(mode==="ai"&&turn===aiSide);
   const hints=showHints?Object.fromEntries(evalMoves(marks[turn],marks[other(turn)],rule).map(m=>[m.c,m])):{};
   const showAge=opt.age==="1";
-  const myTurnOK=!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(turn!==me||!connOpen));
+  const myTurnOK=!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(turn!==me||!connOpen||phase!=="play"));
   for(let i=0;i<9;i++){
     const b=cells[i];let side="",idx=-1;
     for(const s of ["X","O"]){const k=marks[s].indexOf(i);if(k>=0){side=s;idx=k}}
@@ -695,6 +839,8 @@ function renderStatus(){
     if(s==="guest-wait")return setStatus("var(--amber)",`Looking for room<span class="code">${esc(room)}</span>`,true);
     if(s==="full")return setStatus("var(--red)","That room is full");
     if(s==="lost")return setStatus("var(--amber)","Your friend is offline",true);
+    if(phase==="lobby")return setStatus("var(--green)","Room ready");
+    if(phase==="toss")return tossDone.has(tossId)?setStatus("var(--friend)",(tossWinner==="host")===isHost?"Pick your mark":"Friend is picking",true):setStatus("var(--friend)","Tossing the coin",true);
     return turn===me?setStatus("var(--green)","Your turn"):setStatus("var(--friend)","Friend's turn",true);
   }
   if(mode==="ai")return turn===aiSide?setStatus("var(--ai)","Computer is thinking",true):setStatus(sideVar(turn),"Your turn");
@@ -722,18 +868,23 @@ function renderPlayers(){
   }
 }
 function render(){
-  renderBoard();renderPlayers();renderNet();renderStatus();
+  app.dataset.phase=mode==="online"&&room?phase:"play";
+  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderAsk();renderPick();
   $("undoBtn").disabled=mode==="online"||history.length===0;
   $("newBtn").disabled=mode==="online"&&!connOpen;
   syncWave();
 }
 
 function nextStarter(){return opt.alt==="1"?other(starter):starter}
-$("newBtn").addEventListener("click",()=>{
-  if(mode==="online"){if(!room||!connOpen)return;newRound(nextStarter());pushState();return}
+/* New round. Online it is a question for your friend, not an action:
+   anything that throws away a game needs both players to agree. */
+function doNew(src){
+  if(mode==="online"){if(!room||!connOpen||phase!=="play")return;request("again",null,src);return}
   if(mode==="ai")aiSide=other(opt.youAre);
+  collapseSrc=src||null;
   newRound(history.length||over?nextStarter():starter);
-});
+}
+$("newBtn").addEventListener("click",()=>doNew(null));
 $("undoBtn").addEventListener("click",()=>{
   if(mode==="online"||!history.length)return;
   clearTimeout(aiTimer);
@@ -744,7 +895,10 @@ $("undoBtn").addEventListener("click",()=>{
   }
   render();maybeAI();
 });
-$("resetScore").addEventListener("click",()=>{score={X:0,O:0};store.set("xo.score",score);render();if(mode==="online"&&room)pushState();toast("Score reset")});
+$("resetScore").addEventListener("click",()=>{
+  if(mode==="online"&&room){closeDialog();request("reset");return}
+  score={X:0,O:0};store.set("xo.score",score);render();toast("Score reset");
+});
 
 /* ---------- Segmented controls ---------- */
 /* The thumb is placed from the pressed button's own box, so the labels can
@@ -765,8 +919,8 @@ function syncOptSegs(animate){document.querySelectorAll(".seg[data-opt]").forEac
 document.querySelectorAll(".seg[data-opt]").forEach(s=>s.addEventListener("click",e=>{const b=e.target.closest("button");if(b)onOpt(s.dataset.opt,b.dataset.v)}));
 function onOpt(k,v){
   if(k==="rule"){
-    if(mode==="online"&&room&&!isHost){toast("Only the room creator can change the rule");syncOptSegs(true);return}
     if(v===rule)return;
+    if(mode==="online"&&room){syncOptSegs(true);closeDialog();request("rule",v);return}
     rule=v;opt.rule=v;saveOpt();syncOptSegs(true);newRound("X");
     if(mode==="online"&&room)pushState();
     updateInsight();return;
@@ -786,10 +940,48 @@ function setMode(m){
   else setOnlineNames();
   newRound("X");
 }
+/* The thumb moves on the press itself, before any game work, so the switch
+   answers at once; the mode change runs on the next frame. */
+let modeSwitch=0;
 $("tabs").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.dataset.mode===mode)return;
-  if(mode==="online")leave();
-  setMode(b.dataset.mode);
+  const m=b.dataset.mode;setSeg($("tabs"),m,true);app.dataset.mode=m;
+  cancelAnimationFrame(modeSwitch);
+  modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m)}));
+});
+
+/* ---------- Quick picker (vs computer) ---------- */
+const pick=$("pick"),pickPill=$("pickPill");
+let pickBeat=0,lastGlyph="";
+function renderPick(){
+  const m=opt.youAre==="O"?"O":"X";
+  if(lastGlyph!==m){lastGlyph=m;const g=$("pickGlyph");g.className="pick-glyph "+m;g.innerHTML="<span>"+m+"</span>";$("pickTxt").textContent="You're "+m}
+  pick.querySelectorAll(".pick-row").forEach(r=>r.setAttribute("aria-selected",String(opt[r.dataset.k]===r.dataset.v)));
+}
+function pickOpen(){
+  if(pick.hasAttribute("data-open"))return;
+  pick.setAttribute("data-sink","");clearTimeout(pickBeat);
+  pickBeat=setTimeout(()=>{pick.removeAttribute("data-sink");pick.setAttribute("data-open","");pickPill.setAttribute("aria-expanded","true");
+    pick.querySelectorAll(".pick-item").forEach((it,i)=>it.style.transitionDelay=(30+i*22)+"ms");
+    const sel=pick.querySelector('.pick-row[aria-selected="true"]');setTimeout(()=>sel&&sel.focus({preventScroll:true}),still?0:120);
+  },still?0:60);
+}
+function pickClose(focusPill){
+  if(!pick.hasAttribute("data-open"))return;
+  pick.querySelectorAll(".pick-item").forEach(it=>it.style.transitionDelay="0ms");
+  pick.removeAttribute("data-open");pickPill.setAttribute("aria-expanded","false");
+  if(focusPill)pickPill.focus({preventScroll:true});
+}
+pickPill.addEventListener("click",pickOpen);
+pick.querySelectorAll(".pick-row").forEach(r=>r.addEventListener("click",()=>{
+  onOpt(r.dataset.k,r.dataset.v);renderPick();setTimeout(()=>pickClose(true),still?0:140);
+}));
+/* anywhere but the menu puts it away; a press by a person, not by a script */
+document.addEventListener("pointerdown",e=>{if(e.isTrusted&&pick.hasAttribute("data-open")&&!pick.contains(e.target))pickClose(false)});
+pick.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.stopPropagation();pickClose(true);return}
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){const rows=[...pick.querySelectorAll(".pick-row")],i=rows.indexOf(document.activeElement);
+    if(i<0)return;e.preventDefault();rows[(i+(e.key==="ArrowDown"?1:rows.length-1))%rows.length].focus()}
 });
 /* ---------- Online (MQTT relay over secure WebSockets) ---------- */
 /* Both players connect to several public brokers at once and send every
@@ -813,7 +1005,8 @@ function linkFor(c){return location.origin+location.pathname+"?room="+c+(customB
 function liveBrokers(){return clients.filter(c=>c.connected).length}
 function netState(){if(!room)return"idle";if(rejected)return"full";if(connOpen)return"live";if(partner)return"lost";return isHost?"host-wait":"guest-wait"}
 
-function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),turn,starter,over,score:{X:score.X,O:score.O},rule}}
+function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),turn,starter,over,score:{X:score.X,O:score.O},rule,phase,hostMark,tossWinner,tossId}}
+function updateMe(){me=room?(isHost?hostMark:other(hostMark)):null;setOnlineNames()}
 function validCells(a){return Array.isArray(a)&&a.length<=3&&a.every(c=>Number.isInteger(c)&&c>=0&&c<9)&&new Set(a).size===a.length}
 function adopt(s,v){
   if(!s||!validCells(s.X)||!validCells(s.O))return;
@@ -822,6 +1015,14 @@ function adopt(s,v){
   marks={X:s.X.slice(),O:s.O.slice()};turn=s.turn;starter=s.starter;rule=s.rule;syncOptSegs(true);
   over=!!s.over;winCells=over?winLine(marks[turn]):null;if(over&&!winCells)over=false;
   if(s.score&&Number.isInteger(s.score.X)&&Number.isInteger(s.score.O))score={X:s.score.X,O:s.score.O};
+  const prevPhase=phase;
+  if(["lobby","toss","play"].includes(s.phase))phase=s.phase;
+  if(s.hostMark==="X"||s.hostMark==="O")hostMark=s.hostMark;
+  tossWinner=s.tossWinner==="host"||s.tossWinner==="guest"?s.tossWinner:null;
+  tossId=typeof s.tossId==="string"&&s.tossId.length<40?s.tossId:null;
+  updateMe();
+  if(prevPhase==="toss"&&phase==="play"&&connOpen){const iWon=(tossWinner==="host")===isHost;
+    toast(iWon?`You play ${me}. You move first`:`Friend picked ${other(me)}. You play ${me}`,iWon?null:"friend")}
   history=[];version=v;saveSession();render();
 }
 function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,partner,version,state:snapshot()}))}catch(e){}}
@@ -875,7 +1076,7 @@ function updateNetStatus(){
 
 function begin(c,host,restore){
   leave(true);
-  room=c;isHost=host;me=host?"X":"O";
+  room=c;isHost=host;phase="lobby";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;updateMe();
   myId=(restore&&restore.myId)||rid();seq=Math.floor(Math.random()*1e6);seen=new Set();
   if(restore&&typeof restore.partner==="string"){partner=restore.partner;partnerSeen=Date.now()}
   rejected=false;netShown="idle";
@@ -937,8 +1138,17 @@ function onMessage(m){
     if(!isHost&&!rejected&&m.t==="ping"&&partnerStale)sendJoin();
     return;
   }
-  if(m.t==="bye"){connOpen=false;partnerSeen=0;render();return}
+  if(m.t==="bye"){connOpen=false;partnerSeen=0;inReq=null;outReq=null;render();return}
   markSeen();
+  if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
+  if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
+    if(m.kind==="rule"&&m.data!=="A"&&m.data!=="B")return;
+    inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
+  if(m.t==="ans"&&outReq&&m.rid===outReq.rid){
+    const r=outReq;outReq=null;clearTimeout(reqTimer);
+    if(m.ok){if(r.kind==="again")collapseSrc=r.src;toast(r.kind==="again"?"Friend said yes":"Friend accepted","friend")}
+    else toast("Friend said not now");
+    render();return}
   // the host refreshed and forgot us: join again so both sides sync
   if(!isHost&&m.t==="ping"&&m.p!==myId){sendJoin();return}
   if(m.t==="state"&&Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
@@ -962,6 +1172,7 @@ function leave(silent){
   const old=clients;clients=[];
   setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),silent?0:300);
   room=null;partner=null;connOpen=false;me=null;rejected=false;netShown="idle";
+  phase="play";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;clearTimeout(reqTimer);
   if(!silent){clearSession();setUrlRoom(null);net("")}
 }
 function leaveAndReset(){leave();setOnlineNames();setOtp("",{auto:false});newRound("X")}
@@ -1070,6 +1281,104 @@ $("pasteBtn").addEventListener("click",async()=>{
   catch(e){otpIn.focus();toast("Paste the code with your keyboard")}
 });
 $("joinBtn").addEventListener("click",()=>{otpVal.length===5?joinRoom(otpVal):otpError("Codes have 5 letters or numbers")});
+
+/* ---------- Lobby: room ready, coin toss, pick a mark ---------- */
+/* The room creator resolves the toss so both players see the same result;
+   either player can ask for it. The coin flips on both screens and lands on
+   the winner's face; the winner then picks X or O and moves first. */
+function doToss(){
+  if(!isHost||phase!=="lobby")return;
+  tossWinner=Math.random()<.5?"host":"guest";tossId=rid();phase="toss";
+  pushState();render();
+}
+function choose(mark){
+  if(phase!=="toss"||(tossWinner==="host")!==isHost)return;
+  hostMark=isHost?mark:other(mark);updateMe();
+  marks={X:[],O:[]};over=false;winCells=null;history=[];starter=turn=mark;phase="play";
+  pushState();toast(`You play ${mark}. You move first`);render();
+}
+const faceStyle=k=>({"":"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",o:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)",friend:"radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e)"}[k]);
+let lobbyKey="";
+function renderLobby(){
+  const L=$("lobby");
+  const show=mode==="online"&&!!room&&(netShown==="live"||netShown==="lost")&&phase!=="play";
+  if(!show){
+    if(!L.hidden&&!L.classList.contains("out")){if(still){L.hidden=true}else{L.classList.add("out");setTimeout(()=>{L.hidden=true;L.classList.remove("out")},340)}}
+    lobbyKey="";return;
+  }
+  L.hidden=false;L.classList.remove("out");
+  const iWon=(tossWinner==="host")===isHost,done=tossDone.has(tossId);
+  const key=phase+"|"+tossId+"|"+done+"|"+netShown;
+  if(key===lobbyKey)return;lobbyKey=key;
+  const myFace=me==="O"&&phase!=="lobby"?"o":"";
+  if(phase==="lobby"){
+    L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}"></span><span class="seat-name me">You</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend"></span><span class="seat-name">Friend</span></div></div>
+      <h3 class="swap">Room ready</h3><p class="swap">Toss a coin. The winner picks X or O and moves first.</p>
+      <button class="btn primary big" id="tossBtn" type="button"${netShown==="lost"?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Toss the coin</span></button>`;
+    $("tossBtn").onclick=e=>{const b=e.currentTarget;b.disabled=true;b.classList.add("waiting");b.querySelector(".lbl").textContent="Tossing…";isHost?doToss():publish({t:"tossreq"})};
+    return;
+  }
+  if(!done){
+    L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">You</span><span class="face back" style="background:${faceStyle("friend")}">Friend</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Tossing the coin</h3><p class="swap">Heads you pick, tails your friend does.</p>`;
+    const finish=()=>{tossDone.add(tossId);render()};
+    if(still){finish();return}
+    const end=iWon?0:180,coin=$("coin"),sh=$("coinShadow");
+    coin.animate([
+      {transform:"translateY(0) rotateY(0deg) rotateX(12deg)",easing:"cubic-bezier(.2,.7,.4,1)"},
+      {transform:`translateY(-120px) rotateY(${900}deg) rotateX(12deg)`,offset:.45,easing:"cubic-bezier(.6,0,.8,.4)"},
+      {transform:`translateY(0) rotateY(${1800+end}deg) rotateX(0deg)`,offset:.85},
+      {transform:`translateY(-14px) rotateY(${1800+end}deg)`,offset:.92},
+      {transform:`translateY(0) rotateY(${1800+end}deg)`}
+    ],{duration:1900,fill:"forwards"}).onfinish=()=>setTimeout(finish,350);
+    sh.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.45)",opacity:.4,offset:.45},{transform:"scale(1)",opacity:1,offset:.85},{transform:"scale(.85)",offset:.92},{transform:"scale(1)"}],{duration:1900,fill:"forwards"});
+    return;
+  }
+  if(iWon){
+    L.innerHTML=`<span class="orb" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">You won the toss</h3><p class="swap">Pick your mark. You move first.</p>
+      <div class="choices"><button class="choice X" type="button" data-m="X">X<small>Play X</small></button><button class="choice O" type="button" data-m="O">O<small>Play O</small></button></div>`;
+    L.querySelectorAll(".choice").forEach(b=>b.onclick=()=>choose(b.dataset.m));
+    setTimeout(()=>{const c=L.querySelector(".choice");c&&c.focus({preventScroll:true})},60);
+  }else{
+    L.innerHTML=`<span class="orb friend" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">Friend won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
+  }
+}
+
+/* ---------- Requests: the other player has to say yes ---------- */
+const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the fade rule"};
+function request(kind,data,src){
+  if(!connOpen){toast("Your friend is offline");return}
+  if(outReq){toast("Still waiting for your friend to answer");return}
+  outReq={rid:rid(),kind,data:data??null,src:src||null};
+  publish({t:"req",rid:outReq.rid,kind,data:data??null});
+  toast(kind==="again"?"Asked your friend for a new round":kind==="reset"?"Asked to reset the score":"Asked to change the rule");
+  clearTimeout(reqTimer);reqTimer=setTimeout(()=>{if(outReq){outReq=null;toast("No answer from your friend");render()}},30000);
+  render();
+}
+function performReq(kind,data){
+  if(kind==="again")newRound(over||history.length?nextStarter():starter);
+  else if(kind==="reset"){score={X:0,O:0};render()}
+  else if(kind==="rule"&&(data==="A"||data==="B")){rule=data;syncOptSegs(true);newRound(starter);updateInsight()}
+}
+function answer(ok,src){
+  const r=inReq;if(!r)return;inReq=null;
+  publish({t:"ans",rid:r.rid,ok:!!ok});
+  if(ok){if(r.kind==="again")collapseSrc=src||null;performReq(r.kind,r.data);pushState()}
+  render();
+}
+function renderAsk(){
+  const a=$("ask"),inResult=inReq&&inReq.kind==="again"&&waveShown;
+  const show=mode==="online"&&!!inReq&&!inResult;
+  if(show){$("askTxt").textContent="Your friend "+REQ_TEXT[inReq.kind];if(a.hidden){a.hidden=false;$("toast").classList.remove("show")}}
+  else a.hidden=true;
+  $("resAsk").hidden=!inResult;$("resActions").hidden=!!inResult;
+  const pa=$("playAgain"),waiting=mode==="online"&&outReq&&outReq.kind==="again";
+  pa.classList.toggle("waiting",!!waiting);pa.disabled=!!waiting;
+  const t=waiting?"Waiting for friend…":"Play again";if($("playAgainLbl").textContent!==t)$("playAgainLbl").textContent=t;
+}
+$("askYes").addEventListener("click",e=>answer(true,null));
+$("askNo").addEventListener("click",()=>answer(false));
+$("resAccept").addEventListener("click",e=>answer(true,e.currentTarget));
+$("resDecline").addEventListener("click",()=>answer(false));
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
@@ -1091,9 +1400,13 @@ function fillResult(){
 function showResult(show){
   waveShown=show;
   if(show)fillResult();
+  if(!show)setTimeout(()=>{collapseSrc=null},0);
   if(wave){
+    /* out of the square the winning mark landed on; back in through the
+       button that started the next round (Play again, or Accept) */
     const last=marks[turn][marks[turn].length-1];
-    wave.update({type:"center",palette:"colorful",revealed:show,source:show&&last!=null?cells[last]:undefined,onFinish:focusResult});
+    const back=collapseSrc&&boardWrap.contains(collapseSrc)?collapseSrc:undefined;
+    wave.update({type:"center",palette:"colorful",revealed:show,source:show?(last!=null?cells[last]:undefined):back,onFinish:focusResult});
   }else{
     resultEl.style.opacity=show?"1":"0";resultEl.style.pointerEvents=show?"auto":"none";
     resultEl.toggleAttribute("inert",!show);boardEl.toggleAttribute("inert",show);
@@ -1112,7 +1425,7 @@ function syncWave(){
     if(waveShown)showResult(false);
   }
 }
-$("playAgain").addEventListener("click",()=>$("newBtn").click());
+$("playAgain").addEventListener("click",e=>doNew(e.currentTarget));
 $("seeBoard").addEventListener("click",()=>{reviewing=true;syncWave()});
 
 /* ---------- Dialogs: pop-over, modal, bottom sheet ---------- */
@@ -1121,14 +1434,22 @@ $("seeBoard").addEventListener("click",()=>{reviewing=true;syncWave()});
    become bottom sheets you can drag away. */
 const scrim=$("scrim"),narrowMQ=matchMedia("(max-width:1079px)");
 let openDlg=null,openerBtn=null;
+function anchorPop(d,btn){
+  /* the settings panel unfolds out of its own button: placed above it, and
+     scaled from the point the button sits under */
+  if(narrowMQ.matches||!btn||!d.classList.contains("pop")){d.style.left=d.style.bottom=d.style.transformOrigin="";return}
+  const r=btn.getBoundingClientRect(),w=336,cx=r.left+r.width/2;
+  const left=Math.max(12,Math.min(innerWidth-w-12,cx-w/2));
+  d.style.left=left+"px";d.style.bottom=(innerHeight-r.top+12)+"px";d.style.transformOrigin=`${cx-left}px calc(100% + 18px)`;
+}
 function openFrames(d){
   if(narrowMQ.matches)return[{transform:"translateY(100%)"},{transform:"none"}];
-  if(d.classList.contains("pop"))return[{opacity:0,transform:"translateY(-10px) scale(.86,.72)"},{opacity:1,transform:"none"}];
+  if(d.classList.contains("pop"))return[{opacity:0,transform:"translateY(10px) scale(.86,.72)"},{opacity:1,transform:"none"}];
   return[{opacity:0,transform:"translateY(12px) scale(.9)"},{opacity:1,transform:"none"}];
 }
 function closeFrames(d){
   if(narrowMQ.matches)return[{transform:getComputedStyle(d).transform==="none"?"none":getComputedStyle(d).transform},{transform:"translateY(100%)"}];
-  if(d.classList.contains("pop"))return[{opacity:1,transform:"none"},{opacity:0,transform:"translateY(-8px) scale(.92,.86)"}];
+  if(d.classList.contains("pop"))return[{opacity:1,transform:"none"},{opacity:0,transform:"translateY(8px) scale(.92,.86)"}];
   return[{opacity:1,transform:"none"},{opacity:0,transform:"scale(.96)"}];
 }
 function restartStag(d){
@@ -1140,6 +1461,7 @@ function openDialog(id,btn){
   const d=$(id);openDlg=d;openerBtn=btn||null;
   if(id==="dlgRules")buildRules();
   if(id==="dlgInsight")updateInsight(true);
+  anchorPop(d,btn);pickClose(false);
   d.hidden=false;scrim.hidden=false;d.style.transform="";
   scrim.classList.toggle("clear",d.classList.contains("pop")&&!narrowMQ.matches);
   requestAnimationFrame(()=>scrim.classList.add("show"));
@@ -1226,7 +1548,17 @@ const root=document.documentElement;
 const savedTheme=store.get("xo.theme",null);if(savedTheme==="light"||savedTheme==="dark")root.dataset.theme=savedTheme;
 function themeMeta(){document.querySelector('meta[name="theme-color"]').content=root.dataset.theme==="light"?"#f6f6f7":"#101011"}
 themeMeta();
-$("btnTheme").addEventListener("click",()=>{root.dataset.theme=root.dataset.theme==="light"?"dark":"light";store.set("xo.theme",root.dataset.theme);themeMeta()});
+function applyTheme(t){root.dataset.theme=t;store.set("xo.theme",t);themeMeta()}
+/* the new theme spreads from the button in a circle while the icon morphs */
+$("btnTheme").addEventListener("click",e=>{
+  const next=root.dataset.theme==="light"?"dark":"light";
+  if(still||!document.startViewTransition){applyTheme(next);return}
+  const r=e.currentTarget.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
+  const R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  const t=document.startViewTransition(()=>applyTheme(next));
+  t.ready.then(()=>root.animate({clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${R}px at ${x}px ${y}px)`]},
+    {duration:700,easing:"cubic-bezier(.22,1,.36,1)",pseudoElement:"::view-transition-new(root)"})).catch(()=>{});
+});
 
 /* ---------- Layout upkeep ---------- */
 function placeAll(){placeThumb($("tabs"),false);document.querySelectorAll(".seg[data-opt]").forEach(s=>placeThumb(s,false))}
@@ -1242,6 +1574,12 @@ if(saved&&saved.room&&(saved.isHost?(!roomParam||roomParam===saved.room):roomPar
 }else if(roomParam){setMode("online");joinRoom(roomParam)}
 else setMode("local");
 placeAll();
+const logo=$("logo");
+setTimeout(()=>logo.classList.remove("intro"),still?0:1100);
+logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void logo.offsetWidth;logo.classList.add("intro");setTimeout(()=>logo.classList.remove("intro"),900)});
+/* build the solver tables while the page is idle, so hints, the computer
+   and the analysis never make a press wait */
+(window.requestIdleCallback||(f=>setTimeout(f,600)))(()=>{solve("A");solve("B")});
 })();
 </script>
 </body>
