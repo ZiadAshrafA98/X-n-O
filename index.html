@@ -125,7 +125,7 @@ footer{max-width:980px;margin:20px auto 0;text-align:center}
 
     <div id="onlinePanel" hidden>
       <h2>Online room</h2>
-      <p class="muted" style="margin:0 0 8px">Create a room and send the link to your friend. You play over a direct browser connection. No account needed.</p>
+      <p class="muted" style="margin:0 0 8px">Create a room and send the link to your friend. Moves travel through a small relay, so it works on Wi-Fi and mobile data. No account needed.</p>
       <div class="row">
         <button class="btn primary" id="createRoom" type="button">Create room</button>
         <button class="btn" id="leaveRoom" type="button" hidden>Leave</button>
@@ -188,9 +188,9 @@ footer{max-width:980px;margin:20px auto 0;text-align:center}
   <p class="muted">Classic tic-tac-toe is a draw because the board fills up. Here the board never fills, so the side to move keeps the initiative and can build double threats that cannot both be blocked.</p>
 </section>
 
-<footer class="muted">Fading XO. Online play uses a peer to peer connection through PeerJS.</footer>
+<footer class="muted">X n O. Online moves go through public MQTT relays.</footer>
 
-<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="mqtt.min.js"></script>
 <script>
 (() => {
 "use strict";
@@ -302,7 +302,7 @@ function applyMove(c){
 function onCell(c){
   if(over)return;
   if(mode==="ai"&&turn===aiSide)return;
-  if(mode==="online"){if(!conn||!connOpen||turn!==me)return;if(applyMove(c))send({t:"move",c});return}
+  if(mode==="online"){if(!room||!connOpen||turn!==me)return;if(applyMove(c))pushState();return}
   if(applyMove(c))maybeAI();
 }
 let aiTimer=null;
@@ -336,8 +336,9 @@ function render(){
   }
   const st=$("status");
   const nm=s=>`<span class="${s.toLowerCase()}">${esc(names[s])}</span>`;
-  if(over)st.innerHTML=`${nm(turn)} wins!`;
-  else if(mode==="online"&&!connOpen)st.innerHTML=`<span class="muted">Create or join a room to start</span>`;
+  if(over)st.innerHTML=names[turn]==="You"?"You win!":`${nm(turn)} wins!`;
+  else if(mode==="online"&&!room)st.innerHTML=`<span class="muted">Create or join a room to start</span>`;
+  else if(mode==="online"&&!connOpen)st.innerHTML=`<span class="muted">Waiting for your friend…</span>`;
   else if(mode==="online")st.innerHTML=turn===me?`Your turn (${nm(turn)})`:`Waiting for ${nm(turn)}`;
   else if(mode==="ai")st.innerHTML=turn===aiSide?`Computer is thinking…`:`Your turn (${nm(turn)})`;
   else st.innerHTML=`${nm(turn)} to move`;
@@ -349,7 +350,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 
 function nextStarter(){return $("altStart").checked?other(starter):starter}
 $("newBtn").addEventListener("click",()=>{
-  if(mode==="online"){if(!connOpen)return;const s=nextStarter();newRound(s);send({t:"new",starter:s});return}
+  if(mode==="online"){if(!room||!connOpen)return;newRound(nextStarter());pushState();return}
   if(mode==="ai"){aiSide=other($("youAre").value);}
   newRound(history.length||over?nextStarter():starter);
 });
@@ -364,9 +365,10 @@ $("undoBtn").addEventListener("click",()=>{
   render();maybeAI();
 });
 $("resetScore").addEventListener("click",()=>{score={X:0,O:0};store.set("xo.score",score);render()});
-$("ruleSel").addEventListener("change",e=>{rule=e.target.value;store.set("xo.rule",rule);
-  if(mode==="online"&&connOpen){if(isHost){send({t:"rule",rule});newRound("X");send({t:"new",starter:"X"})}else{e.target.value=rule=hostRule}}
-  else newRound("X")});
+$("ruleSel").addEventListener("change",e=>{
+  if(mode==="online"&&room&&!isHost){e.target.value=rule;net("Only the room creator can change the rule.");return}
+  rule=e.target.value;store.set("xo.rule",rule);newRound("X");
+  if(mode==="online"&&room)pushState()});
 for(const id of ["showHints","showAge","altStart"])$(id).addEventListener("change",e=>{store.set("xo."+({showHints:"hints",showAge:"age",altStart:"alt"})[id],e.target.checked);render()});
 $("level").addEventListener("change",e=>store.set("xo.level",e.target.value));
 
@@ -379,69 +381,190 @@ function setMode(m){
   else setOnlineNames();
   newRound("X");
 }
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(mode==="online"&&b.dataset.mode!=="online")leave();setMode(b.dataset.mode)}));
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.mode===mode)return;if(mode==="online"&&b.dataset.mode!=="online")leave();setMode(b.dataset.mode)}));
 $("youAre").addEventListener("change",()=>setMode("ai"));
 
-/* ---------- Online (PeerJS) ---------- */
-let peer=null,conn=null,connOpen=false,isHost=false,hostRule="A";
-const PREFIX="fadexo-v1-";
+/* ---------- Online (MQTT relay over secure WebSockets) ---------- */
+/* Both players connect to several public brokers at once and send every
+   message through all of them. Duplicates are dropped by message id, so the
+   game keeps working when one broker is down. No direct peer connection is
+   needed, which avoids the NAT and firewall problems of WebRTC. */
+const qs=new URLSearchParams(location.search);
+const customBroker=qs.get("broker");
+const BROKERS=customBroker?[customBroker]:[
+  "wss://broker.emqx.io:8084/mqtt",
+  "wss://broker.hivemq.com:8884/mqtt",
+  "wss://test.mosquitto.org:8081/mqtt"
+];
+const TOPIC="xnofade/v1/";
+const JOIN_TIMEOUT=20000,PING_EVERY=4000,PEER_LOST=12000;
+let clients=[],room=null,isHost=false,partner=null,partnerSeen=0,connOpen=false;
+let myId=null,seq=0,version=0,seen=new Set(),pingTimer=null,joinTimer=null,joinDeadline=0;
 function code(){const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
+function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
 function net(msg){$("netStatus").textContent=msg}
 function setOnlineNames(){names.X=me==="X"?"You":(me?"Friend":"X");names.O=me==="O"?"You":(me?"Friend":"O")}
-function send(o){if(conn&&connOpen)conn.send(o)}
-function noPeer(){if(typeof Peer==="undefined"){net("Online play could not load. Check your connection and reload.");return true}return false}
-function createRoom(){
-  if(noPeer())return;leave();
-  const c=code();isHost=true;me="X";
-  peer=new Peer(PREFIX+c);
-  net("Creating room…");
-  peer.on("open",()=>{
-    const url=location.origin+location.pathname+"?room="+c;
-    $("roomLink").textContent=url;$("roomInfo").hidden=false;$("leaveRoom").hidden=false;
-    $("shareLink").hidden=!navigator.share;
-    net("Room "+c+" is ready. Waiting for your friend…");
-  });
-  peer.on("connection",cn=>{
-    if(conn&&connOpen){cn.on("open",()=>{cn.send({t:"full"});setTimeout(()=>cn.close(),300)});return}
-    bind(cn);
-  });
-  peer.on("error",err=>{if(err.type==="unavailable-id"){createRoom()}else net("Error: "+err.type)});
+function linkFor(c){return location.origin+location.pathname+"?room="+c+(customBroker?"&broker="+encodeURIComponent(customBroker):"")}
+function liveBrokers(){return clients.filter(c=>c.connected).length}
+
+function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),turn,starter,over,score:{X:score.X,O:score.O},rule}}
+function validCells(a){return Array.isArray(a)&&a.length<=3&&a.every(c=>Number.isInteger(c)&&c>=0&&c<9)&&new Set(a).size===a.length}
+function adopt(s,v){
+  if(!s||!validCells(s.X)||!validCells(s.O))return;
+  if(s.X.some(c=>s.O.includes(c)))return;
+  if(!["X","O"].includes(s.turn)||!["X","O"].includes(s.starter)||!["A","B"].includes(s.rule))return;
+  marks={X:s.X.slice(),O:s.O.slice()};turn=s.turn;starter=s.starter;rule=s.rule;$("ruleSel").value=rule;
+  over=!!s.over;winCells=over?winLine(marks[turn]):null;if(over&&!winCells)over=false;
+  if(s.score&&Number.isInteger(s.score.X)&&Number.isInteger(s.score.O))score={X:s.score.X,O:s.score.O};
+  history=[];version=v;saveSession();render();
 }
+function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,version,state:snapshot()}))}catch(e){}}
+function clearSession(){try{sessionStorage.removeItem("xo.online")}catch(e){}}
+
+function publish(o){
+  if(!room)return;
+  o.from=myId;o.mid=myId+":"+(++seq);
+  const payload=JSON.stringify(o);
+  for(const c of clients){try{if(c.connected)c.publish(TOPIC+room,payload,{qos:1})}catch(e){}}
+}
+/* called after every local change while online */
+function pushState(){version++;saveSession();publish({t:"state",v:version,s:snapshot()})}
+
+function connectBrokers(onReady){
+  if(typeof mqtt==="undefined"){net("Online play could not load. Reload the page.");return false}
+  let readyFired=false;
+  clients=BROKERS.map(url=>{
+    const c=mqtt.connect(url,{clientId:"xno_"+myId+"_"+Math.random().toString(36).slice(2,6),clean:true,
+      connectTimeout:8000,reconnectPeriod:3000,keepalive:30,
+      will:{topic:TOPIC+room,payload:JSON.stringify({t:"bye",from:myId,mid:myId+":bye"}),qos:0,retain:false}});
+    c.on("connect",()=>{
+      c.subscribe(TOPIC+room,{qos:1},err=>{
+        if(err)return;
+        if(!readyFired){readyFired=true;onReady()}
+        else if(partner)publish({t:"ping"});
+        updateNetStatus();
+      });
+    });
+    c.on("message",(t,buf)=>{let m;try{m=JSON.parse(buf.toString())}catch(e){return}onMessage(m)});
+    c.on("close",updateNetStatus);
+    c.on("error",()=>{});
+    return c;
+  });
+  setTimeout(()=>{if(!readyFired&&room)net("Cannot reach the game server. Check your internet connection. Still trying…")},10000);
+  return true;
+}
+
+function startPing(){
+  clearInterval(pingTimer);
+  pingTimer=setInterval(()=>{
+    if(!room)return;
+    publish({t:"ping",p:partner});
+    if(partner&&connOpen&&Date.now()-partnerSeen>PEER_LOST){connOpen=false;updateNetStatus();render()}
+  },PING_EVERY);
+}
+function updateNetStatus(){
+  if(!room){net("Not connected.");return}
+  const n=liveBrokers();
+  if(n===0){net("Connection lost. Reconnecting…");return}
+  if(isHost&&!partner){net("Room "+room+" is ready. Waiting for your friend…");return}
+  if(!isHost&&!partner){net("Looking for room "+room+"…");return}
+  net(connOpen?"Connected. You are "+me+".":"Your friend seems offline. Waiting for them to come back…");
+}
+
+function begin(c,host,restore){
+  leave(true);
+  room=c;isHost=host;me=host?"X":"O";
+  myId=(restore&&restore.myId)||rid();seq=Math.floor(Math.random()*1e6);seen=new Set();
+  setOnlineNames();
+  $("leaveRoom").hidden=false;
+  if(host){$("roomLink").textContent=linkFor(c);$("roomInfo").hidden=false;$("shareLink").hidden=!navigator.share}
+  if(restore&&restore.state){adopt(restore.state,restore.version||0)}
+  else{version=0;score={X:0,O:0};newRound("X")}
+  saveSession();setUrlRoom(c);
+  net(host?"Creating room…":"Connecting to room "+c+"…");
+  const ok=connectBrokers(()=>{
+    startPing();updateNetStatus();
+    if(!host)sendJoin();
+    else publish({t:"ping"});
+  });
+  if(!ok)return;
+  if(!host){
+    joinDeadline=Date.now()+JOIN_TIMEOUT;
+    clearInterval(joinTimer);
+    joinTimer=setInterval(()=>{
+      if(partner){clearInterval(joinTimer);return}
+      if(Date.now()>joinDeadline){net("No answer from room "+room+". Check the code, and make sure your friend still has the game open. Still trying…");joinDeadline=Infinity}
+      if(liveBrokers())sendJoin();
+    },2000);
+  }
+  render();
+}
+function setUrlRoom(c){
+  try{const u=new URL(location.href);if(c)u.searchParams.set("room",c);else u.searchParams.delete("room");window.history.replaceState(null,"",u)}catch(e){}
+}
+function sendJoin(){publish({t:"join",v:version,s:snapshot()})}
+
+function onMessage(m){
+  if(!m||typeof m!=="object"||typeof m.from!=="string"||typeof m.mid!=="string")return;
+  if(m.from===myId||seen.has(m.mid))return;
+  if(qs.has("debug"))console.log("[xo]",isHost?"host":"guest",JSON.stringify(m));
+  seen.add(m.mid);if(seen.size>2000)seen=new Set([...seen].slice(-500));
+  if(m.to&&m.to!==myId)return;
+  const fromPartner=partner&&m.from===partner;
+  const partnerStale=!partner||Date.now()-partnerSeen>PEER_LOST;
+
+  if(isHost&&m.t==="join"){
+    if(!fromPartner&&!partnerStale){publish({t:"full",to:m.from});return}
+    partner=m.from;markSeen();
+    // keep whichever side has the newer game, so a refresh does not lose the game
+    if(Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
+    publish({t:"welcome",to:m.from,v:version,s:snapshot()});
+    return;
+  }
+  if(!isHost&&m.t==="welcome"){
+    if(partner&&m.from!==partner&&!partnerStale)return;
+    partner=m.from;markSeen();clearInterval(joinTimer);
+    if(Number.isInteger(m.v))adopt(m.s,m.v);
+    return;
+  }
+  if(!isHost&&m.t==="full"){net("That room already has two players.");clearInterval(joinTimer);return}
+  if(!fromPartner){
+    // host came back after a refresh: ask again
+    if(!isHost&&m.t==="ping"&&partnerStale)sendJoin();
+    return;
+  }
+  if(m.t==="bye"){connOpen=false;partnerSeen=0;net("Your friend left the room.");render();return}
+  markSeen();
+  // the host refreshed and forgot us: join again so both sides sync
+  if(!isHost&&m.t==="ping"&&m.p!==myId){sendJoin();return}
+  if(m.t==="state"&&Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
+}
+function markSeen(){
+  partnerSeen=Date.now();
+  if(!connOpen){connOpen=true;updateNetStatus();render()}
+}
+
+function createRoom(){begin(code(),true,null)}
 function joinRoom(c){
-  c=(c||"").trim().toUpperCase();if(!c)return;
-  if(noPeer())return;leave();
-  isHost=false;me="O";
-  peer=new Peer();net("Connecting to room "+c+"…");$("leaveRoom").hidden=false;
-  peer.on("open",()=>bind(peer.connect(PREFIX+c,{reliable:true})));
-  peer.on("error",err=>net(err.type==="peer-unavailable"?"Room "+c+" not found. Check the code.":"Error: "+err.type));
+  c=(c||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(c.length!==6){net("Room codes have 6 letters and numbers.");return}
+  begin(c,false,null);
 }
-function bind(cn){
-  conn=cn;
-  cn.on("open",()=>{connOpen=true;setOnlineNames();
-    net("Connected. "+(isHost?"You are X.":"You are O."));
-    if(isHost){send({t:"hello",rule});score={X:0,O:0};newRound("X")}
-    render();});
-  cn.on("data",onData);
-  cn.on("close",()=>{connOpen=false;net("Your friend left the room.");render()});
-}
-function onData(m){
-  if(!m||typeof m!=="object")return;
-  if(m.t==="hello"&&(m.rule==="A"||m.rule==="B")){rule=hostRule=m.rule;$("ruleSel").value=rule;score={X:0,O:0};newRound("X")}
-  else if(m.t==="rule"&&(m.rule==="A"||m.rule==="B")){rule=hostRule=m.rule;$("ruleSel").value=rule}
-  else if(m.t==="move"&&Number.isInteger(m.c)&&turn!==me)applyMove(m.c);
-  else if(m.t==="new"&&(m.starter==="X"||m.starter==="O"))newRound(m.starter);
-  else if(m.t==="full")net("That room already has two players.");
-}
-function leave(){
-  connOpen=false;try{conn&&conn.close()}catch(e){}try{peer&&peer.destroy()}catch(e){}
-  conn=null;peer=null;me=null;$("roomInfo").hidden=true;$("leaveRoom").hidden=true;net("Not connected.");
+function leave(silent){
+  if(room&&!silent)publish({t:"bye"});
+  clearInterval(pingTimer);clearInterval(joinTimer);
+  const old=clients;clients=[];
+  setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),silent?0:300);
+  room=null;partner=null;connOpen=false;me=null;
+  $("roomInfo").hidden=true;$("leaveRoom").hidden=true;
+  if(!silent){clearSession();setUrlRoom(null);net("Not connected.")}
 }
 $("createRoom").addEventListener("click",createRoom);
 $("leaveRoom").addEventListener("click",()=>{leave();setOnlineNames();render()});
 $("joinBtn").addEventListener("click",()=>joinRoom($("joinCode").value));
 $("joinCode").addEventListener("keydown",e=>{if(e.key==="Enter")joinRoom(e.target.value)});
 $("copyLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText($("roomLink").textContent);$("copyLink").textContent="Copied"}catch(e){$("copyLink").textContent="Copy failed"}setTimeout(()=>$("copyLink").textContent="Copy link",1500)});
-$("shareLink").addEventListener("click",()=>{navigator.share&&navigator.share({title:"Fading XO",text:"Play XO with me",url:$("roomLink").textContent}).catch(()=>{})});
+$("shareLink").addEventListener("click",()=>{navigator.share&&navigator.share({title:"X n O",text:"Play XO with me",url:$("roomLink").textContent}).catch(()=>{})});
 
 /* ---------- Theme ---------- */
 const root=document.documentElement;
@@ -451,8 +574,11 @@ $("themeBtn").addEventListener("click",()=>{
   root.dataset.theme=dark?"light":"dark";store.set("xo.theme",root.dataset.theme)});
 
 /* ---------- Boot ---------- */
-const room=new URLSearchParams(location.search).get("room");
-if(room){setMode("online");$("joinCode").value=room.toUpperCase();joinRoom(room)}
+const roomParam=(qs.get("room")||"").toUpperCase();
+let saved=null;try{saved=JSON.parse(sessionStorage.getItem("xo.online")||"null")}catch(e){}
+if(saved&&saved.room&&(saved.isHost?(!roomParam||roomParam===saved.room):roomParam===saved.room)){
+  setMode("online");begin(saved.room,!!saved.isHost,saved);
+}else if(roomParam){setMode("online");$("joinCode").value=roomParam;joinRoom(roomParam)}
 else setMode("local");
 })();
 </script>
