@@ -1341,25 +1341,36 @@ function renderNow(){
   app.dataset.role=mode==="online"&&role==="aud"?"aud":"player";
   app.dataset.phase=mode==="online"&&room?phase:"play";
   renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();
-  $("undoBtn").disabled=mode==="online"||history.length===0;
-  $("newBtn").disabled=mode==="online"&&!connOpen;
+  $("undoBtn").disabled=!canUndo();
+  $("newBtn").disabled=!canNew();
+  /* buttons still sliding into place carry the same state */
+  flyers.forEach((f,k)=>{if("disabled" in f.g)f.g.disabled=k.disabled});
   syncWave();
 }
 
+/* a round has started once someone (you, against the computer) has moved */
+function youMoved(){return mode==="ai"?history.some(h=>h.turn!==aiSide):history.length>0}
+function canUndo(){return mode!=="online"&&youMoved()}
+function canNew(){
+  if(mode==="online")return connOpen&&phase==="play"&&(over||marks.X.length+marks.O.length>0);
+  return over||youMoved();
+}
 function nextStarter(){return opt.alt==="1"?other(starter):starter}
 /* New round. Online it is a question for your friend, not an action:
    anything that throws away a game needs both players to agree. */
 function doNew(src){
-  if(mode==="online"){if(!room||!connOpen||phase!=="play")return;request("again",null,src);return}
+  if(!canNew())return;
+  if(mode==="online"){if(!room)return;request("again",null,src);return}
   if(mode==="ai")aiSide=other(opt.youAre);
   collapseSrc=src||null;
   newRound(history.length||over?nextStarter():starter);
 }
 $("newBtn").addEventListener("click",()=>doNew(null));
 $("undoBtn").addEventListener("click",()=>{
-  if(mode==="online"||!history.length)return;
+  if(!canUndo())return;
   clearTimeout(aiTimer);
-  const steps=(mode==="ai"&&history.length>=2&&!(over&&turn!==aiSide))?2:1;
+  /* against the computer, take back your last move and its reply together */
+  const steps=mode==="ai"&&(over?turn===aiSide:turn!==aiSide)?2:1;
   for(let k=0;k<steps&&history.length;k++){
     if(over){score[turn]--;store.set("xo.score",score)}
     const h=history.pop();marks={X:h.X,O:h.O};turn=h.turn;over=false;winCells=null;
@@ -1417,7 +1428,8 @@ let modeSwitch=0;
 $("tabs").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.dataset.mode===mode)return;
   const m=b.dataset.mode;setSeg($("tabs"),m,true);
-  flipActions(()=>{app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;$("emo").hidden=true;emoClose();app.dataset.net="idle";app.dataset.role="player"}});
+  /* the new mode opens on a fresh board: nothing to undo or restart yet */
+  flipActions(()=>{$("undoBtn").disabled=true;$("newBtn").disabled=true;app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;$("emo").hidden=true;emoClose();app.dataset.net="idle";app.dataset.role="player"}});
   cancelAnimationFrame(modeSwitch);
   modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m)}));
 });
