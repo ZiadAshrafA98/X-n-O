@@ -232,6 +232,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .card-title{font-size:16px;font-weight:500;letter-spacing:-.01em}
 .pill{height:24px;padding:0 10px;border-radius:999px;background:var(--chip);font-size:12px;line-height:24px;color:var(--ink-2);white-space:nowrap}
 .pill.swap{animation:meta .22s var(--out) both}
+.pill.clock{font-variant-numeric:tabular-nums;min-width:44px;text-align:center;animation:none}
 .seats{display:flex;justify-content:center;gap:28px;padding:6px 0 2px}
 .seat-col{display:flex;flex-direction:column;align-items:center;gap:8px;animation:pop .5s var(--spring) both}
 .seat-col .orb{width:64px;height:64px}
@@ -1947,7 +1948,9 @@ function renderNet(){
   const mmS=mm&&s==="idle"?mm.phase:null;
   setText($("rcTitle"),mmS==="search"?"Finding a match":mmS==="found"?"Match found":{idle:"Play a friend","host-wait":"Your room","guest-wait":"Joining room",full:"Room is full",joined:isHost?"Your room":"Joined"}[s]||"Your room");
   const pill=$("rcPill"),pt=mmS==="search"?mmClock():{"host-wait":"1 of 2","guest-wait":room||"",joined:"2 of 2"}[s];
-  if(pt)setText(pill,pt);
+  /* the search clock ticks in place; only real label changes get the swap animation */
+  pill.classList.toggle("clock",mmS==="search");
+  if(pt){if(mmS==="search"){if(pill.textContent!==pt)pill.textContent=pt}else setText(pill,pt)}
   $("meOrb").className="orb"+(me==="O"?" o":"");
   const seat=$("seat"),seatState=mmS==="found"||joined?"filled":(mmS==="search"||s==="host-wait"||s==="guest-wait")?"waiting":"empty";
   seat.style.background=mmS==="found"&&mm.peer.av?`url('${avUri(mm.peer.av)}') center/cover`:"";
@@ -2729,7 +2732,7 @@ function findMatch(){
     c.on("message",(t,b)=>{let m;try{m=JSON.parse(b.toString())}catch(e){return}mmOn(m)});
     c.on("error",()=>{});return c;
   });
-  mm.seekT=setInterval(mmSeek,MM_SEEK);mm.tickT=setInterval(()=>{if(mm&&mm.phase==="search")setText($("rcPill"),mmClock())},1000);
+  mm.seekT=setInterval(mmSeek,MM_SEEK);mm.tickT=setInterval(()=>{if(mm&&mm.phase==="search"){const p=$("rcPill"),t=mmClock();if(p.textContent!==t)p.textContent=t}},1000);
   render();
 }
 function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv})}
