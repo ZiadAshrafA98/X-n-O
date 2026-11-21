@@ -119,7 +119,8 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 /* ---------- board + result (wave root) ---------- */
 .board-wrap{grid-area:board;justify-self:center;width:var(--bs);height:var(--bs);display:grid;isolation:isolate;border-radius:36px;overflow:hidden}
 .board-wrap>*{grid-area:1/1;min-width:0;min-height:0;isolation:isolate}
-.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--bs) * .026);background:var(--bg);transition:background-color .4s var(--out)}
+/* no backing behind the squares: each one sits on its own, and the glow shows through the gaps */
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--bs) * .026);background:transparent}
 .cell{position:relative;border:0;padding:0;border-radius:calc(var(--bs) * .07);background:var(--tile);display:flex;align-items:center;justify-content:center;transition:background-color .2s ease,scale .18s var(--out),outline-color .2s ease;outline:2px dashed transparent;outline-offset:-10px}
 .cell:not(:disabled):hover{background:var(--tile-2)}
 .cell:not(:disabled):active{scale:.95}
@@ -217,7 +218,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .seat[data-state="waiting"] i:nth-child(2){animation-delay:.15s} .seat[data-state="waiting"] i:nth-child(3){animation-delay:.3s}
 .seat[data-state="waiting"]::before,.seat[data-state="waiting"]::after{content:"";position:absolute;inset:-2px;border-radius:99px;border:1.5px solid var(--friend);opacity:0;animation:ripple 2s var(--out) infinite}
 .seat[data-state="waiting"]::after{animation-delay:1s}
-.seat[data-state="filled"]{border:0;background:radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e);animation:seatpop .75s cubic-bezier(.34,1.2,.5,1) both}
+.seat[data-state="filled"]{border:0;background:radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e)}
 .seat[data-state="filled"]::after{content:"";position:absolute;inset:-2px;border-radius:99px;border:2px solid var(--friend);opacity:0;animation:ripple .9s var(--out) .15s 2 both}
 .seat[data-state="waiting"]{animation:seatpop .6s cubic-bezier(.34,1.2,.5,1) both}
 .card.leaving{animation:cardout .34s cubic-bezier(.4,0,1,1) both}
@@ -409,6 +410,33 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .app[data-asking]~.glow .gk,.glow.asking .gk{opacity:1;animation:askglow 1.8s ease-in-out infinite alternate}
 .glow.asking .gl,.glow.asking .ga,.glow.asking .go{opacity:0!important}
 
+
+/* ---------- header: how to play, can you win ---------- */
+.win-pill{position:relative;overflow:hidden;isolation:isolate;display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px 0 12px;border:0;border-radius:999px;background:var(--chip);color:var(--ink-2);font-weight:500;font-size:14px;white-space:nowrap;transition:background-color .2s ease,color .2s ease,scale .16s var(--out)}
+.win-pill svg{width:18px;height:18px;flex:none;transition:transform .55s var(--spring)}
+.win-pill::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(100deg,transparent 30%,color-mix(in srgb,var(--ink) 14%,transparent) 50%,transparent 70%);transform:translateX(-120%);transition:transform .7s var(--out)}
+.win-pill:hover{background:var(--chip-2);color:var(--ink)}
+.win-pill:hover svg{transform:rotate(-14deg) scale(1.12)}
+.win-pill:hover::after{transform:translateX(120%)}
+.win-pill:active{scale:.96}
+.win-pill[aria-expanded="true"]{background:var(--primary);color:var(--primary-ink)}
+
+/* ---------- QR code: show it, or scan one ---------- */
+.qr-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+.qr{width:184px;height:184px;padding:12px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.qr svg{display:block;width:100%;height:100%}
+.qr-hint{margin:0;font-size:12px;color:var(--mute);text-align:center}
+.code-row .tools{display:flex;gap:6px}
+.sq[aria-expanded="true"]{background:var(--primary);color:var(--primary-ink)}
+.scan-frame{position:relative;width:min(320px,100%);aspect-ratio:1;margin:0 auto;border-radius:28px;overflow:hidden;background:#000}
+.scan-frame video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-frame::before{content:"";position:absolute;inset:18%;border-radius:22px;box-shadow:0 0 0 999px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.85)}
+.scan-line{position:absolute;left:20%;right:20%;top:20%;height:2px;border-radius:2px;background:var(--friend);box-shadow:0 0 12px var(--friend);animation:scanline 1.8s ease-in-out infinite alternate}
+.scan-note{margin:12px 0 4px;text-align:center;font-size:13px;color:var(--mute)}
+.scan-note.err{color:var(--red)}
+.scan-wrap{width:min(380px,calc(100vw - 48px));padding:4px}
+@keyframes scanline{from{top:20%}to{top:80%}}
+
 /* ---------- narrow screens: stacked layout and bottom sheets ---------- */
 @media (max-width:1079px){
   :root{--bs:min(calc(100vw - 32px),calc(100dvh - 318px),520px)}
@@ -425,7 +453,10 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   .player .pname{display:none}
   .pscore{font-size:30px;height:32px;min-width:22px}
   .player.on .orb{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--ring,rgba(255,122,92,.6))}
-  .status{height:32px;font-size:13px;padding:0 12px 0 10px;gap:8px}
+  .status{height:32px;font-size:13px;padding:0 12px 0 10px;gap:8px;max-width:min(100%,calc(100vw - 200px));min-width:0}
+  .status .txt{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .status .code{display:none}
+  .win-pill{height:44px;padding:0 13px 0 11px;font-size:13px}
   .status .sub{display:none}
   .board-wrap{border-radius:30px}
   .actions{width:100%;flex-wrap:nowrap}
@@ -525,8 +556,8 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
       </div>
     </div>
     <div class="icons">
-      <button class="ibtn" id="btnRules" type="button" aria-label="Rules" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></button>
-      <button class="ibtn" id="btnInsight" type="button" aria-label="Can it be won?" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg></button>
+      <button class="ibtn" id="btnRules" type="button" aria-label="How to play" title="How to play" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4.1"/><path d="M12 17.6h.01"/></svg></button>
+      <button class="win-pill" id="btnInsight" type="button" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h2.5a1.5 1.5 0 0 1 0 3H17M7 5H4.5a1.5 1.5 0 0 0 0 3H7"/></svg>Can you win?</button>
       <button class="ibtn" id="btnTheme" type="button" aria-label="Switch light or dark theme"><svg viewBox="0 0 24 24" aria-hidden="true"><mask id="tiMask"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle class="ti-cut" cx="17.5" cy="6.5" r="7" fill="#000"/></mask><circle class="ti-body" cx="12" cy="12" r="9" fill="currentColor" mask="url(#tiMask)"/><g class="ti-rays" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></g></svg></button>
     </div>
   </header>
@@ -582,7 +613,8 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
           <div class="seat-col"><span class="orb" id="meOrb"></span><span class="seat-name me">You</span></div>
           <div class="seat-col"><span class="seat" id="seat" data-state="empty"><i></i><i></i><i></i></span><span class="seat-name" id="seatName">Friend</span></div>
         </div>
-        <div class="code-row" id="codeRow" hidden><span class="ccode" id="rcCode"></span><button class="sq" id="copyCode" type="button" aria-label="Copy room code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></div>
+        <div class="code-row" id="codeRow" hidden><span class="ccode" id="rcCode"></span><span class="tools"><button class="sq" id="qrBtn" type="button" aria-label="Show QR code" aria-expanded="false" aria-controls="qrWrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20h-3M17 20v.01M20 17v.01"/></svg></button><button class="sq" id="copyCode" type="button" aria-label="Copy room code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div>
+        <div class="qr-wrap" id="qrWrap" hidden><div class="qr" id="qr" role="img" aria-label="QR code with the invite link"></div><p class="qr-hint">Point a phone camera here to join</p></div>
         <div class="card-actions">
           <button class="btn primary grow" id="createRoom" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Create room</button>
           <button class="btn primary grow" id="inviteBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="inviteLbl">Copy invite link</span></button>
@@ -592,7 +624,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
       </section>
 
       <section class="card join" id="joinCard" aria-label="Join with a code">
-        <div class="card-head join-head"><label for="otpInput">Join with a code</label><button class="btn accent" id="pasteBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Paste</button></div>
+        <div class="card-head join-head"><label for="otpInput">Join with a code</label><span class="tools" style="display:flex;gap:6px"><button class="btn accent" id="scanBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2M4 12h16"/></svg>Scan</button><button class="btn accent" id="pasteBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Paste</button></span></div>
         <div class="otp" id="otp">
           <span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span><span class="c"></span>
           <span class="capsule" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Joined</span>
@@ -644,6 +676,16 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   </div>
 </section>
 
+<section class="dlg modal" id="dlgScan" role="dialog" aria-modal="true" aria-labelledby="scanTitle" tabindex="-1" hidden>
+  <span class="grab" aria-hidden="true"></span>
+  <div class="scan-wrap">
+    <div class="dlg-head"><h2 id="scanTitle">Scan a room QR</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="scan-frame"><video id="scanVideo" playsinline muted></video><span class="scan-line" aria-hidden="true"></span></div>
+    <p class="scan-note" id="scanNote" aria-live="polite">Point your camera at your friend's QR code</p>
+  </div>
+</section>
+
+<script src="qr.js"></script>
 <script src="mqtt.min.js"></script>
 <script>
 (() => {
@@ -748,6 +790,46 @@ let phase="play",hostMark="X",tossWinner=null,tossId=null;
 const tossDone=new Set();
 /* requests that need the other player's yes: new round, reset, rule */
 let outReq=null,inReq=null,reqTimer=null,collapseSrc=null;
+
+/* ---------- Springs ---------- */
+/* A real damped spring, stepped at 60fps and handed to the browser as
+   keyframes. It overshoots, comes back past rest and settles, which is the
+   curve that makes something read as arriving rather than appearing. */
+function springAnim(el,o){
+  if(still||!el)return null;
+  o=Object.assign({from:0,to:1,k:240,c:12.5,prop:v=>`scale(${v})`},o);
+  let x=o.from,v=0;const f=[],dt=1/60;
+  for(let i=0;i<150;i++){v+=(-o.k*(x-o.to)-o.c*v)*dt;x+=v*dt;f.push({transform:o.prop(x)});if(i>12&&Math.abs(x-o.to)<.0015&&Math.abs(v)<.02)break}
+  f[f.length-1]={transform:o.prop(o.to)};
+  el.animate([{opacity:0},{opacity:1}],{duration:140,fill:"backwards"});
+  return el.animate(f,{duration:f.length*1000/60,easing:"linear"});
+}
+const dropIn=el=>springAnim(el,{k:260,c:12,prop:v=>`translateY(${((1-v)*-18).toFixed(2)}px) scale(${Math.max(0,v).toFixed(4)})`});
+
+/* ---------- The row under the board slides between modes ---------- */
+/* Buttons that stay glide to their new places on a spring; ones that arrive
+   rise in from below; ones that leave sink and fade where they stood. */
+let flipping=false;
+function flipActions(change){
+  if(flipping||still){change();return}
+  flipping=true;
+  const row=document.querySelector(".actions"),kids=[...row.children];
+  const before=new Map(kids.map(k=>[k,k.offsetParent?k.getBoundingClientRect():null]));
+  try{change()}finally{flipping=false}
+  kids.forEach(k=>{
+    const a=before.get(k),b=k.offsetParent?k.getBoundingClientRect():null;
+    if(a&&b){const dx=a.left-b.left,dy=a.top-b.top;
+      if(Math.abs(dx)>.5||Math.abs(dy)>.5)k.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"none"}],{duration:560,easing:"cubic-bezier(.34,1.25,.5,1)"})}
+    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:560,delay:90,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+    else if(a&&!b){
+      const g=k.cloneNode(true);g.removeAttribute("id");g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
+      g.hidden=false;g.setAttribute("aria-hidden","true");g.removeAttribute("data-open");
+      Object.assign(g.style,{position:"fixed",left:a.left+"px",top:a.top+"px",width:a.width+"px",height:a.height+"px",margin:"0",pointerEvents:"none",zIndex:"4",display:"flex"});
+      document.body.appendChild(g);
+      g.animate([{opacity:1,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(16px) scale(.9)",filter:"blur(4px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
+    }
+  });
+}
 
 /* ---------- Board cells ---------- */
 const boardEl=$("board");
@@ -857,8 +939,8 @@ function setStatus(dot,html,busy){
 function renderStatus(){
   const sideVar=s=>s==="X"?"var(--x)":"var(--o)";
   if(flashMsg)return setStatus(flashDot,flashMsg);
-  if(mode==="online"&&inReq)return setStatus("var(--amber)","Your friend is asking",true);
-  if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for your friend",true);
+  if(mode==="online"&&inReq)return setStatus("var(--amber)","Friend is asking",true);
+  if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
   if(over){
     const w=names[turn];
     setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?"Friend wins":`${turn} wins`);
@@ -866,11 +948,11 @@ function renderStatus(){
   }
   if(mode==="online"){
     const s=netState();
-    if(s==="idle")return setStatus("var(--friend)","Create a room or join one");
-    if(s==="host-wait")return setStatus("var(--amber)",`Waiting for your friend<span class="code">${esc(room)}</span>`,true);
+    if(s==="idle")return setStatus("var(--friend)","Create or join a room");
+    if(s==="host-wait")return setStatus("var(--amber)",`Waiting for friend<span class="code">${esc(room)}</span>`,true);
     if(s==="guest-wait")return setStatus("var(--amber)",`Looking for room<span class="code">${esc(room)}</span>`,true);
-    if(s==="full")return setStatus("var(--red)","That room is full");
-    if(s==="lost")return setStatus("var(--amber)","Your friend is offline",true);
+    if(s==="full")return setStatus("var(--red)","Room is full");
+    if(s==="lost")return setStatus("var(--amber)","Friend is offline",true);
     if(phase==="lobby")return setStatus("var(--green)","Room ready");
     if(phase==="toss")return tossDone.has(tossId)?setStatus("var(--friend)",(tossWinner==="host")===isHost?"Pick your mark":"Friend is picking",true):setStatus("var(--friend)","Tossing the coin",true);
     return turn===me?setStatus("var(--green)","Your turn"):setStatus("var(--friend)","Friend's turn",true);
@@ -899,7 +981,8 @@ function renderPlayers(){
     tick($("p"+s+"score"),score[s]);
   }
 }
-function render(){
+function render(){flipActions(renderNow)}
+function renderNow(){
   app.dataset.phase=mode==="online"&&room?phase:"play";
   renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();
   $("undoBtn").disabled=mode==="online"||history.length===0;
@@ -977,7 +1060,8 @@ function setMode(m){
 let modeSwitch=0;
 $("tabs").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.dataset.mode===mode)return;
-  const m=b.dataset.mode;setSeg($("tabs"),m,true);app.dataset.mode=m;
+  const m=b.dataset.mode;setSeg($("tabs"),m,true);
+  flipActions(()=>{app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;app.dataset.net="idle"}});
   cancelAnimationFrame(modeSwitch);
   modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m)}));
 });
@@ -1055,7 +1139,7 @@ function adopt(s,v){
   tossId=typeof s.tossId==="string"&&s.tossId.length<40?s.tossId:null;
   updateMe();
   if(prevPhase==="toss"&&phase==="play"&&connOpen){const iWon=(tossWinner==="host")===isHost;
-    toast(iWon?`You play ${me}. You move first`:`Friend picked ${other(me)}. You play ${me}`,iWon?null:"friend")}
+    toast(iWon?`You're ${me} · you start`:`You're ${me}`,iWon?null:"friend")}
   history=[];version=v;saveSession();render();
 }
 function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,partner,version,state:snapshot()}))}catch(e){}}
@@ -1163,7 +1247,7 @@ function onMessage(m){
     return;
   }
   if(!isHost&&m.t==="full"){
-    if(!partner||!connOpen){rejected=true;clearInterval(joinTimer);otpError("That room already has two players");render()}
+    if(!partner||!connOpen){rejected=true;clearInterval(joinTimer);otpError("Room is full");render()}
     return;
   }
   if(!fromPartner){
@@ -1177,11 +1261,11 @@ function onMessage(m){
   if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
     if(m.kind==="rule"&&m.data!=="A"&&m.data!=="B")return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
-  if(m.t==="cancel"&&inReq&&m.rid===inReq.rid){inReq=null;toast("Your friend took the request back","friend");render();return}
+  if(m.t==="cancel"&&inReq&&m.rid===inReq.rid){inReq=null;toast("Request withdrawn","friend");render();return}
   if(m.t==="ans"&&outReq&&m.rid===outReq.rid){
     const r=outReq;outReq=null;clearTimeout(reqTimer);
-    if(m.ok){if(r.kind==="again")collapseSrc=r.src;toast(r.kind==="again"?"Friend said yes":"Friend accepted","friend")}
-    else toast("Friend said not now");
+    if(m.ok){if(r.kind==="again")collapseSrc=r.src;toast("Friend said yes","friend")}
+    else toast("Friend declined");
     render();return}
   // the host refreshed and forgot us: join again so both sides sync
   if(!isHost&&m.t==="ping"&&m.p!==myId){sendJoin();return}
@@ -1195,7 +1279,7 @@ function markSeen(){
 function createRoom(){begin(code(),true,null)}
 function joinRoom(c){
   c=cleanCode(c);
-  if(c.length<5){otpError("Codes have 5 letters or numbers");return}
+  if(c.length<5){otpError("Codes have 5 characters");return}
   if(room===c&&!rejected)return;
   setOtp(c,{auto:false});
   begin(c,false,null);
@@ -1233,7 +1317,7 @@ function renderNet(){
     /* the room fills: the empty seat pops into an orb, the code fuses into a
        capsule for the one who joined, then the cards make way for the board */
     netShown="joined";
-    toast(isHost?"Your friend joined the room":"You're in. You play O","friend");
+    toast(isHost?"Friend joined":"You're in","friend");
     clearTimeout(joinedTimer);joinedTimer=setTimeout(()=>{
       if(netShown!=="joined")return;
       /* the cards bow out before the board takes the stage */
@@ -1242,8 +1326,8 @@ function renderNet(){
     },still?0:1300);
   }else if(netShown==="joined"&&st==="live"){/* hold the moment */}
   else{
-    if(st==="lost"&&netShown==="live")toast("Your friend left the room");
-    if(st==="live"&&netShown==="lost")toast("Your friend is back","friend");
+    if(st==="lost"&&netShown==="live")toast("Friend left");
+    if(st==="live"&&netShown==="lost")toast("Friend is back","friend");
     netShown=st;
   }
   const prevNet=app.dataset.net;
@@ -1256,17 +1340,19 @@ function renderNet(){
   if(pt)setText(pill,pt);
   $("meOrb").className="orb"+(me==="O"?" o":"");
   const seat=$("seat"),seatState=joined?"filled":(s==="host-wait"||s==="guest-wait")?"waiting":"empty";
-  if(seat.dataset.state!==seatState)seat.dataset.state=seatState;
+  if(seat.dataset.state!==seatState){seat.dataset.state=seatState;if(seatState==="filled")dropIn(seat)}
   setText($("seatName"),joined?(isHost?"Friend":"Host"):s==="host-wait"?"Waiting":s==="guest-wait"?"Host":"Friend");
   if(room)$("rcCode").textContent=room;
   applyVis($("roomCard"),[[pill,!!pt],[$("codeRow"),isHost&&(s==="host-wait"||joined)],[$("createRoom"),s==="idle"||s==="full"],
-    [$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"]]);
+    [$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"],[$("qrWrap"),qrOpen&&isHost&&s==="host-wait"]]);
+  if(s!=="host-wait"&&qrOpen){qrOpen=false;$("qrBtn").setAttribute("aria-expanded","false")}
   $("leaveRoom").textContent=s==="guest-wait"?"Cancel":"Leave";
   if(!$("inviteBtn").dataset.busy)$("inviteLbl").textContent=canShare?"Share invite":"Copy invite link";
   otpEl.classList.toggle("busy",s==="guest-wait");
   otpEl.classList.toggle("done",joined&&!isHost);
   otpIn.disabled=s==="guest-wait"||joined;
   const chip=$("chip"),showChip=s==="live"||s==="lost";
+  if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
   chip.hidden=!showChip;
   if(showChip){$("chipMe").className="orb"+(me==="O"?" o":"");$("chipFriend").className="orb friend"+(s==="lost"?" away":"");$("chipCode").textContent=room||""}
 }
@@ -1344,14 +1430,60 @@ function otpError(msg){
   setTimeout(()=>{otpEl.classList.remove("shake");setOtp("",{auto:false})},still?0:620);
 }
 otpIn.addEventListener("input",()=>setOtp(otpIn.value));
-otpIn.addEventListener("paste",e=>{const t=(e.clipboardData||window.clipboardData)?.getData("text");if(t==null)return;e.preventDefault();const c=extractCode(t);c?setOtp(c):otpError("No room code in what you pasted")});
+otpIn.addEventListener("paste",e=>{const t=(e.clipboardData||window.clipboardData)?.getData("text");if(t==null)return;e.preventDefault();const c=extractCode(t);c?setOtp(c):otpError("No code found")});
 otpIn.addEventListener("focus",updateCaret);otpIn.addEventListener("blur",updateCaret);
 otpIn.addEventListener("keydown",e=>{if(e.key==="Enter"&&otpVal.length===5)joinRoom(otpVal)});
 $("pasteBtn").addEventListener("click",async()=>{
-  try{const t=await navigator.clipboard.readText();const c=extractCode(t);c?setOtp(c):otpError("No room code on the clipboard")}
-  catch(e){otpIn.focus();toast("Paste the code with your keyboard")}
+  try{const t=await navigator.clipboard.readText();const c=extractCode(t);c?setOtp(c):otpError("No code to paste")}
+  catch(e){otpIn.focus();toast("Paste with your keyboard")}
 });
-$("joinBtn").addEventListener("click",()=>{otpVal.length===5?joinRoom(otpVal):otpError("Codes have 5 letters or numbers")});
+$("joinBtn").addEventListener("click",()=>{otpVal.length===5?joinRoom(otpVal):otpError("Codes have 5 characters")});
+
+/* ---------- QR: show the invite, or scan one ---------- */
+let qrOpen=false,qrFor="";
+function drawQR(text){
+  if(typeof qrcode!=="function")return false;
+  if(qrFor===text)return true;
+  const q=qrcode(0,"M");q.addData(text);q.make();const n=q.getModuleCount();let d="";
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+=`M${c} ${r}h1v1h-1z`;
+  $("qr").innerHTML=`<svg viewBox="-1 -1 ${n+2} ${n+2}" shape-rendering="crispEdges" aria-hidden="true"><path d="${d}" fill="#111"/></svg>`;
+  qrFor=text;return true;
+}
+$("qrBtn").addEventListener("click",()=>{
+  if(!room)return;
+  if(!qrOpen&&!drawQR(linkFor(room))){toast("QR not available");return}
+  qrOpen=!qrOpen;$("qrBtn").setAttribute("aria-expanded",String(qrOpen));render();
+});
+let scanStream=null,scanTimer=0,scanCanvas=null;
+function loadScript(src){return new Promise((res,rej)=>{const t=document.createElement("script");t.src=src;t.onload=res;t.onerror=rej;document.head.appendChild(t)})}
+function scanNote(m,err){const n=$("scanNote");n.textContent=m;n.className="scan-note"+(err?" err":"")}
+function stopScan(){clearTimeout(scanTimer);if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null}$("scanVideo").srcObject=null}
+async function startScan(){
+  scanNote("Point your camera at your friend's QR code");
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){scanNote("This browser can't open the camera. Type the code instead.",true);return}
+  try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false})}
+  catch(e){scanNote("Camera blocked. Allow it, or type the code instead.",true);return}
+  if(!openDlg||openDlg.id!=="dlgScan"){stopScan();return}
+  const v=$("scanVideo");v.srcObject=scanStream;await v.play().catch(()=>{});
+  let det=null;
+  if("BarcodeDetector" in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes("qr_code"))det=new BarcodeDetector({formats:["qr_code"]})}catch(e){}}
+  if(!det&&typeof jsQR!=="function")await loadScript("jsqr.js").catch(()=>{});
+  scanCanvas=scanCanvas||document.createElement("canvas");const ctx=scanCanvas.getContext("2d",{willReadFrequently:true});
+  const tick=async()=>{
+    if(!scanStream)return;
+    if(v.readyState>=2&&v.videoWidth){
+      let txt=null;
+      if(det){try{const r=await det.detect(v);if(r[0])txt=r[0].rawValue}catch(e){}}
+      else if(typeof jsQR==="function"){const w=360,h=Math.round(w*v.videoHeight/v.videoWidth);scanCanvas.width=w;scanCanvas.height=h;ctx.drawImage(v,0,0,w,h);
+        const r=jsQR(ctx.getImageData(0,0,w,h).data,w,h,{inversionAttempts:"dontInvert"});if(r)txt=r.data}
+      const c=txt&&extractCode(txt);
+      if(c){scanNote("Found "+c);stopScan();setTimeout(()=>{closeDialog();setOtp(c)},still?0:380);return}
+    }
+    scanTimer=setTimeout(tick,140);
+  };
+  tick();
+}
+$("scanBtn").addEventListener("click",e=>{openDialog("dlgScan",e.currentTarget);startScan()});
 
 /* ---------- Lobby: room ready, coin toss, pick a mark ---------- */
 /* The room creator resolves the toss so both players see the same result;
@@ -1366,7 +1498,7 @@ function choose(mark){
   if(phase!=="toss"||(tossWinner==="host")!==isHost)return;
   hostMark=isHost?mark:other(mark);updateMe();
   marks={X:[],O:[]};over=false;winCells=null;history=[];starter=turn=mark;phase="play";
-  pushState();toast(`You play ${mark}. You move first`);render();
+  pushState();toast(`You're ${mark} · you start`);render();
 }
 const faceStyle=k=>({"":"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",o:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)",friend:"radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e)"}[k]);
 let lobbyKey="";
@@ -1386,6 +1518,7 @@ function renderLobby(){
     L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}"></span><span class="seat-name me">You</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend"></span><span class="seat-name">Friend</span></div></div>
       <h3 class="swap">Room ready</h3><p class="swap">Toss a coin. The winner picks X or O and moves first.</p>
       <button class="btn primary big" id="tossBtn" type="button"${netShown==="lost"?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Toss the coin</span></button>`;
+    setTimeout(()=>dropIn(L.querySelector(".vs .orb.friend")),180);
     $("tossBtn").onclick=e=>{const b=e.currentTarget;b.disabled=true;b.classList.add("waiting");b.querySelector(".lbl").textContent="Tossing…";isHost?doToss():publish({t:"tossreq"})};
     return;
   }
@@ -1417,11 +1550,11 @@ function renderLobby(){
 /* ---------- Requests: the other player has to say yes ---------- */
 const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the fade rule"};
 function request(kind,data,src){
-  if(!connOpen){toast("Your friend is offline");return}
-  if(outReq){toast("Still waiting for your friend to answer");return}
+  if(!connOpen){toast("Friend is offline");return}
+  if(outReq){toast("Still waiting");return}
   outReq={rid:rid(),kind,data:data??null,src:src||null};
   publish({t:"req",rid:outReq.rid,kind,data:data??null});
-  clearTimeout(reqTimer);reqTimer=setTimeout(()=>{if(outReq){publish({t:"cancel",rid:outReq.rid});outReq=null;toast("No answer from your friend");render()}},REQ_MS);
+  clearTimeout(reqTimer);reqTimer=setTimeout(()=>{if(outReq){publish({t:"cancel",rid:outReq.rid});outReq=null;toast("No answer");render()}},REQ_MS);
   render();
 }
 function performReq(kind,data){
@@ -1433,7 +1566,7 @@ function answer(ok,src){
   const r=inReq;if(!r)return;inReq=null;
   publish({t:"ans",rid:r.rid,ok:!!ok});
   if(ok){if(r.kind==="again")collapseSrc=waveShown?$("playAgain"):null;performReq(r.kind,r.data);pushState()}
-  else toast("You said not now");
+  else toast("Declined");
   render();
 }
 const REQ_MS=30000;
@@ -1602,6 +1735,7 @@ function openDialog(id,btn){
 }
 function closeDialog(instant){
   const d=openDlg;if(!d)return;openDlg=null;app.inert=false;
+  if(d.id==="dlgScan")stopScan();
   const btn=openerBtn;openerBtn=null;if(btn)btn.setAttribute("aria-expanded","false");
   scrim.classList.remove("show");
   const done=()=>{d.hidden=true;d.style.transform="";if(!openDlg)scrim.hidden=true};
