@@ -1579,7 +1579,7 @@ function renderNet(){
   otpEl.classList.toggle("busy",s==="guest-wait");
   otpEl.classList.toggle("done",joined&&!isHost);
   otpIn.disabled=s==="guest-wait"||joined;
-  $("joinBtn").hidden=s==="guest-wait"||joined;
+  applyVis($("joinCard"),[[$("joinBtn"),!(s==="guest-wait"||joined)]]);
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
   $("emo").hidden=s!=="live";if(s!=="live")emoClose();
@@ -1602,9 +1602,9 @@ function flipHeight(card,fn){
 }
 function applyVis(card,list){
   list.forEach(([el,w])=>el._want=!!w);
-  if(visPending)return;
+  if(card._vp)return;
   const commit=()=>{
-    visPending=false;
+    card._vp=false;
     const show=list.map(x=>x[0]).filter(el=>el._want&&el.hidden),hide=list.map(x=>x[0]).filter(el=>!el._want&&!el.hidden);
     list.forEach(([el])=>{if(el._want&&!el.hidden&&el._out){el._out.cancel();el._out=null}});
     if(!show.length&&!hide.length)return;
@@ -1613,7 +1613,7 @@ function applyVis(card,list){
   };
   const hiding=list.filter(([el,w])=>!w&&!el.hidden&&!el._out);
   if(still||!hiding.length||!card.offsetParent){commit();return}
-  visPending=true;
+  card._vp=true;
   hiding.forEach(([el])=>{el._out=el.animate(VIS_OUT,{duration:200,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
   setTimeout(commit,210);
 }
