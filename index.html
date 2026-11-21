@@ -443,6 +443,7 @@ button.mark{border:0;background:none;padding:0}
 .made-by{display:block;margin:12px auto 2px;padding:8px 14px;border:0;border-radius:999px;background:none;color:var(--faint);font:500 12px var(--sans);transition:color .2s,background-color .2s}
 .made-by:hover{color:var(--ink);background:var(--chip)}
 .about{width:min(540px,calc(100vw - 48px))}
+#dlgAbout{overflow:visible}
 .about-lead{margin:-6px 12px 0;color:var(--mute);font-size:14px}
 .creators{display:flex;justify-content:center;gap:clamp(12px,4vw,36px);padding:18px 8px 6px}
 .creator{display:flex;flex-direction:column;align-items:center;width:clamp(120px,34vw,170px)}
@@ -453,7 +454,7 @@ button.mark{border:0;background:none;padding:0}
 .head3d g{transition:transform .9s cubic-bezier(.22,1,.36,1)}
 .head3d .l-back{transform:translate(calc(var(--mx,0)*-2px),calc(var(--my,0)*-1.5px))}
 .head3d .l-mid{transform:translate(calc(var(--mx,0)*2px),calc(var(--my,0)*1.5px))}
-.head3d .pupil{transform:translate(calc(var(--mx,0)*2.4px),calc(var(--my,0)*1.4px))}
+
 .head3d .l-front{transform:translate(calc(var(--mx,0)*3.5px),calc(var(--my,0)*2.5px))}
 .head-shadow{width:58%;height:14px;margin-top:-4px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.4),transparent);animation:shadowbob 4.6s ease-in-out infinite}
 .creator+.creator .head-shadow{animation-delay:-2.3s}
@@ -2403,39 +2404,53 @@ const AV={
   BEARD_F:"M60 110C60 146 70 172 84 184C93 192 107 192 116 184C130 172 140 146 140 110C136 128 129 138 120 142C114 137 106 137 100 139C94 137 86 137 80 142C71 138 64 128 60 110Z",
   MUST:"M85 140C92 135 108 135 115 140C108 141.5 92 141.5 85 140Z",
   BROWS:"M67 99Q79 91 93 96Q80 94 67 101Z M133 99Q121 91 107 96Q120 94 133 101Z",
-  NOSE:"M101 101C102 112 104 121 108 127C104 132 99 133 96 131C100 128 102 118 101 101Z"
+  NOSE:"M101 101C102 112 104 121 108 127C104 132 99 133 96 131C100 128 102 118 101 101Z",
+  /* Adham: a longer, narrower face, short wavy hair with a side part, a goatee */
+  FACE_L:"M65 94C64 57 81 37 100 37C119 37 136 57 135 94L136 121C136 148 127 168 115 179C108 186 92 186 85 179C73 168 64 148 64 121Z",
+  HAIR_W:"M61 98C57 64 75 37 100 34C123 32 141 45 140 70C140 80 139 88 138 98C134 86 130 76 123 70C116 64 107 61 98 63C93 60 87 60 83 62C79 58 75 58 73 62C68 70 66 82 64 98Z",
+  GOATEE:"M87 153C88 166 93 177 100 179C107 177 112 166 113 153C109 158 105 160 100 160C95 160 91 158 87 153Z"
 };
 AV.HAIR_C=(()=>{let d="M60 100";const n=13;for(let i=0;i<=n;i++){const t=Math.PI*(1-i/n),r=46+((i%2)?3:0),x=100+r*Math.cos(t)*1.02,y=72-r*Math.sin(t)*.95;d+=` Q${(100+(r+9)*Math.cos(t+.12)*1.02).toFixed(1)} ${(72-(r+9)*Math.sin(t+.12)*.95).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`}
-  return d+" C138 84 132 70 124 63C116 57 108 55 100 55C92 55 84 57 76 63C68 70 62 84 60 100Z"})();
+  return d+" C139 86 134 75 126 69C118 63 109 61 100 61C91 61 82 63 74 69C66 75 61 86 60 100Z"})();
 const avEye=(cx,cy)=>`M${cx-10} ${cy}Q${cx-1} ${cy-5.5} ${cx+10} ${cy-.5}Q${cx} ${cy+3.6} ${cx-10} ${cy}Z`;
 const avLid=(cx,cy)=>`M${cx-11} ${cy+.3}Q${cx-1} ${cy-7} ${cx+11} ${cy-.6}`;
 function avatarSVG(p){
   const id="av"+p.id,ink="#0d0a14",w=2.2,hi="#ffe7cf",rim="#5ad1ff",hair=p.hair,beard=p.full?AV.BEARD_F:AV.BEARD_S;
-  const curls=p.curly?[[72,50],[84,42],[97,38],[110,40],[122,46],[132,56],[66,64],[78,56],[91,50],[104,49],[117,53],[128,63],[70,78],[136,76],[86,62],[112,62]]
-      .map(([x,y])=>`<path d="M${x-4} ${y+1}a4.2 4.2 0 1 1 7 -2.5" fill="none" stroke="#3b2e39" stroke-width="1.6" stroke-linecap="round"/>`).join("")
+  const FACE=p.long?AV.FACE_L:AV.FACE,earL=p.long?`transform="translate(3 0)"`:"",earR=p.long?`transform="translate(-3 0)"`:"";
+  const hairPath=p.wavy?AV.HAIR_W:AV.HAIR_S;
+  const curls=p.wavy?`<path d="M82 37C80 45 79 53 80 61" fill="none" stroke="#3d302a" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M88 44Q101 37 114 43Q125 48 132 58M90 52Q104 46 118 52Q127 56 133 66M70 60Q74 50 80 45" fill="none" stroke="#4a3a46" stroke-width="1.6" stroke-linecap="round"/>`
+    :p.curly?[[72,50],[84,42],[97,38],[110,40],[122,46],[132,56],[66,64],[78,56],[91,50],[104,49],[117,53],[128,63],[70,78],[136,76],[86,62],[112,62]]
+      .map(([x,y])=>`<path d="M${(100+(x-100)*.95-4).toFixed(1)} ${y+5}a4.2 4.2 0 1 1 7 -2.5" fill="none" stroke="#3b2e39" stroke-width="1.6" stroke-linecap="round"/>`).join("")
     :`<g clip-path="url(#${id}h)">`+Array.from({length:60},(_,i)=>{const a=Math.PI*(.04+.92*((i*37)%60)/60),r=18+((i*13)%11)*2.6;return`<circle cx="${(100+r*1.3*Math.cos(a)).toFixed(1)}" cy="${(70-r*.9*Math.sin(a)).toFixed(1)}" r=".9" fill="#3b2e39" opacity=".8"/>`}).join("")+"</g>";
   const glasses=p.round
     ?`<circle cx="81" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><circle cx="119" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><path d="M95 105Q100 101 105 105M67 105L57 103M133 105L143 103" fill="none" stroke="${p.frame}" stroke-width="1.8" stroke-linecap="round"/><path d="M72 100l6 -5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`
     :`<rect x="65" y="97" width="31" height="21" rx="5" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="3.2"/><rect x="104" y="97" width="31" height="21" rx="5" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="3.2"/><path d="M67 98.5H94M106 98.5H133" stroke="${p.accent}" stroke-width="1.6"/><path d="M96 103Q100 100 104 103M65 102L56 100M135 102L144 100" fill="none" stroke="${p.frame}" stroke-width="2.4" stroke-linecap="round"/><path d="M70 101l6 -4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
   return`<svg viewBox="40 20 120 180" role="img" aria-label="${p.label}"><defs>
-    <clipPath id="${id}c"><path d="${AV.FACE}"/></clipPath><clipPath id="${id}h"><path d="${AV.HAIR_S}"/></clipPath>
+    <clipPath id="${id}c"><path d="${FACE}"/></clipPath><clipPath id="${id}h"><path d="${hairPath}"/></clipPath>
     <clipPath id="${id}eL"><path d="${avEye(81,108)}"/></clipPath><clipPath id="${id}eR"><path d="${avEye(119,108)}"/></clipPath></defs>
-  <g class="l-back"><path d="${AV.EARL}" fill="${p.skin}" stroke="${ink}" stroke-width="${w}"/><path d="${AV.EARR}" fill="${p.lo}" stroke="${ink}" stroke-width="${w}"/></g>
+  <g class="l-back"><path d="${AV.EARL}" ${earL} fill="${p.skin}" stroke="${ink}" stroke-width="${w}"/><path d="${AV.EARR}" ${earR} fill="${p.lo}" stroke="${ink}" stroke-width="${w}"/></g>
   <g class="l-face">
-    <path d="${AV.FACE}" fill="${p.skin}"/>
+    <path d="${FACE}" fill="${p.skin}"/>
     <g clip-path="url(#${id}c)">
       <path d="${AV.SHADE}" fill="${p.lo}"/><path d="${AV.DEEP}" fill="${p.deep}"/>
       <path d="M68 100Q81 94 93 99Q81 106 68 100Z" fill="${p.lo}" opacity=".75"/><path d="M107 99Q119 94 132 100Q119 106 107 99Z" fill="${p.deep}" opacity=".7"/>
       <path d="${AV.NOSE}" fill="${p.lo}"/><path d="M66 126Q74 138 84 140" fill="none" stroke="${p.lo}" stroke-width="5" opacity=".5"/>
       <path d="M74 66Q86 56 100 56" fill="none" stroke="${hi}" stroke-width="5" stroke-linecap="round" opacity=".55"/><path d="M98 104L97 122" stroke="${hi}" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><ellipse cx="74" cy="120" rx="6" ry="3" fill="${hi}" opacity=".35"/>
     </g>
-    <path d="${AV.FACE}" fill="none" stroke="${ink}" stroke-width="${w}"/>
-    <path d="M139 96L139 120C139 143 129 162 116 173" fill="none" stroke="${ink}" stroke-width="${w*1.8}" stroke-linecap="round"/>
-    <path d="${AV.FACE}" fill="none" stroke="${rim}" stroke-width="2.2" clip-path="url(#${id}c)" transform="translate(-2 0)" opacity=".9"/>
+    <path d="${FACE}" fill="none" stroke="${ink}" stroke-width="${w}"/>
+    <path d="${p.long?"M135 94L136 121C136 148 127 168 115 179":"M139 96L139 120C139 143 129 162 116 173"}" fill="none" stroke="${ink}" stroke-width="${w*1.8}" stroke-linecap="round"/>
+    <path d="${FACE}" fill="none" stroke="${rim}" stroke-width="2.2" clip-path="url(#${id}c)" transform="translate(-2 0)" opacity=".9"/>
   </g>
   <g class="l-mid">
-    <path d="${beard}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
-    ${Array.from({length:14},(_,i)=>{const x=70+i*4.6,y=150+Math.sin(i)*6+(p.full?6:0);return`<path d="M${x} ${y}q1.5 6 0 12" stroke="#5b4636" stroke-width="1.1" fill="none" opacity=".5"/>`}).join("")}
+    ${p.goatee
+      ?`<path d="M70 150Q86 176 100 178Q114 176 130 150" fill="none" stroke="${p.deep}" stroke-width="7" opacity=".18" stroke-linecap="round"/>
+        <path d="${AV.GOATEE}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
+        <path d="M86 141C85 145 85.5 149 87 153M114 141C115 145 114.5 149 113 153" fill="none" stroke="${hair}" stroke-width="3" stroke-linecap="round"/>
+        <path d="M97 152H103L101.5 157H98.5Z" fill="${hair}"/>
+        ${[0,1,2,3,4].map(i=>`<path d="M${93+i*3.5} 162q1 4 0 8" stroke="#5b4636" stroke-width="1" fill="none" opacity=".55"/>`).join("")}`
+      :`<path d="${beard}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
+        ${Array.from({length:14},(_,i)=>{const x=70+i*4.6,y=150+Math.sin(i)*6+(p.full?6:0);return`<path d="M${x} ${y}q1.5 6 0 12" stroke="#5b4636" stroke-width="1.1" fill="none" opacity=".5"/>`}).join("")}`}
     <path d="${AV.MUST}" fill="${hair}" stroke="${ink}" stroke-width="${w*.9}" stroke-linejoin="round"/>
     <path d="M90 146Q100 149 110 146" fill="none" stroke="${ink}" stroke-width="${w}" stroke-linecap="round"/>
     <path d="M94 150Q100 152.5 106 150" fill="none" stroke="${p.lo}" stroke-width="2.2" stroke-linecap="round"/>
@@ -2443,25 +2458,33 @@ function avatarSVG(p){
     <path d="M99 101C99 112 97 121 95 127" fill="none" stroke="${ink}" stroke-width="1.4" opacity=".55"/>
     ${[81,119].map((cx,i)=>`<path d="${avEye(cx,108)}" fill="#efe9e1"/><g clip-path="url(#${id}e${i?"R":"L"})"><g class="pupil"><circle cx="${cx+1}" cy="108.5" r="4.4" fill="#3a2418"/><circle cx="${cx+1}" cy="108.5" r="2" fill="#000"/><circle cx="${cx+2.4}" cy="107" r="1" fill="#fff"/></g><path d="M${cx-11} 104H${cx+11}V108Q${cx} 103 ${cx-11} 108Z" fill="${p.lo}" opacity=".5"/></g><path d="${avLid(cx,108)}" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/><path d="M${cx-8} 111Q${cx} 113.5 ${cx+8} 111" fill="none" stroke="${ink}" stroke-width="1" opacity=".5"/>`).join("")}
     <path d="${AV.BROWS}" fill="${hair}" stroke="${ink}" stroke-width="1"/>
-    <path d="${p.curly?AV.HAIR_C:AV.HAIR_S}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
+    <path d="${p.curly?AV.HAIR_C:hairPath}" ${p.curly?`transform="translate(100 64) scale(.95 1) translate(-100 -64)"`:""} fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
     ${curls}
   </g>
   <g class="l-front">${glasses}</g>
   </svg>`;
 }
 const CREATORS=[
-  {id:"z",name:"Ziad Ashraf",title:"Product Designer",label:"Ziad drawn as a comic hero style head with round glasses and a full short beard",
-   skin:"#8f5f40",lo:"#5d3a25",deep:"#3e2618",hair:"#16100c",frame:"#c9c2b6",round:1},
-  {id:"a",name:"Adham Salah",title:"Software Engineer",label:"Adham drawn as a comic hero style head with curly hair, rectangular glasses and a full beard",
-   skin:"#c48b63",lo:"#92603f",deep:"#6a4128",hair:"#15100d",frame:"#231b1e",accent:"#8e2f3b",curly:1,full:1}
+  {id:"z",name:"Ziad Ashraf",title:"Product Designer",label:"Ziad drawn as a comic hero style head with short wavy side-parted hair, round glasses and a short full beard",
+   skin:"#8f5f40",lo:"#5d3a25",deep:"#3e2618",hair:"#16100c",frame:"#c9c2b6",round:1,wavy:1},
+  {id:"a",name:"Adham Salah",title:"Software Engineer",label:"Adham drawn as a comic hero style head with curly hair, rectangular glasses and a goatee",
+   skin:"#c48b63",lo:"#92603f",deep:"#6a4128",hair:"#15100d",frame:"#231b1e",accent:"#8e2f3b",curly:1,goatee:1,long:1}
 ];
 let aboutBuilt=false;
 function buildAbout(){
   if(!aboutBuilt){aboutBuilt=true;
     $("creators").innerHTML=CREATORS.map(c=>`<figure class="creator" style="margin:0"><div class="head3d"><div class="rig">${avatarSVG(c)}</div></div><span class="head-shadow" aria-hidden="true"></span><figcaption><h3>${c.name}</h3><p>${c.title}</p></figcaption></figure>`).join("");
   }
-  /* each head springs in, one after the other */
-  document.querySelectorAll(".head3d").forEach((h,i)=>{h.style.setProperty("--mx",0);h.style.setProperty("--my",0);setTimeout(()=>dropIn(h),120+i*160)});
+  /* each head flies up from below the window, overshoots a little, settles
+     into its place and then hovers; its shadow grows as it lands */
+  document.querySelectorAll(".creator").forEach((c,i)=>{
+    const h=c.querySelector(".head3d"),sh=c.querySelector(".head-shadow");h.style.setProperty("--mx",0);h.style.setProperty("--my",0);
+    if(still)return;
+    const lift=innerHeight-h.getBoundingClientRect().top+40;
+    h.style.opacity="0";
+    setTimeout(()=>{h.style.opacity="";springAnim(h,{from:0,to:1,k:90,c:10.5,prop:v=>`translateY(${((1-v)*lift).toFixed(1)}px) rotate(${((1-v)*(i?6:-6)).toFixed(2)}deg)`})},140+i*170);
+    sh.animate([{transform:"scale(0)",opacity:0},{transform:"scale(1)",opacity:1}],{duration:600,delay:520+i*170,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+  });
 }
 /* the heads turn toward the pointer (or a finger dragging across them) */
 $("dlgAbout").addEventListener("pointermove",e=>{
