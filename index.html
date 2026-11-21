@@ -534,9 +534,9 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .av-opt[aria-checked="true"]{box-shadow:0 0 0 3px var(--slab),0 0 0 5px var(--ink)}
 .av-opt .av-tip{position:absolute;left:50%;bottom:-2px;translate:-50% 100%;font-size:11px;color:var(--faint);white-space:nowrap;opacity:0;transition:opacity .15s}
 .av-opt:hover .av-tip,.av-opt:focus-visible .av-tip{opacity:1}
-.player.mine .orb{cursor:pointer}
-.player.mine .orb::after{content:"";position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:99px;background:var(--slab) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M15 5l4 4L9 19H5v-4z'/%3E%3C/svg%3E") center/13px no-repeat;box-shadow:0 2px 8px rgba(0,0,0,.18);scale:0;transition:scale .35s var(--spring)}
-.player.mine .orb:hover::after,.player.mine .orb:focus-visible::after{scale:1}
+.player.mine .orb,.seat-col.mine .orb{cursor:pointer}
+.player.mine .orb::after,.seat-col.mine .orb::after{content:"";position:absolute;right:-2px;bottom:-2px;width:22px;height:22px;border-radius:99px;background:var(--slab) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M15 5l4 4L9 19H5v-4z'/%3E%3C/svg%3E") center/13px no-repeat;box-shadow:0 2px 8px rgba(0,0,0,.18);scale:0;transition:scale .35s var(--spring)}
+.player.mine .orb:hover::after,.player.mine .orb:focus-visible::after,.seat-col.mine .orb:hover::after,.seat-col.mine .orb:focus-visible::after{scale:1}
 .seatc.me{cursor:pointer}
 /* bottom of every sheet: one clear way out */
 .sheet-foot{display:none}
@@ -653,7 +653,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
   .dlg-head{padding:2px 6px 14px 12px;min-height:30px}
   .dlg .sheet-foot{display:block;position:sticky;bottom:calc(-1 * max(24px,env(safe-area-inset-bottom)));z-index:3;margin:14px -12px calc(-1 * max(24px,env(safe-area-inset-bottom)));padding:12px 12px max(24px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,var(--slab) 14px)}
   .sheet-foot .btn{width:100%;height:52px;font-size:15px}
-  .player.mine .orb::after{scale:1;width:18px;height:18px;background-size:11px}
+  .player.mine .orb::after,.seat-col.mine .orb::after{scale:1;width:18px;height:18px;background-size:11px}
   .av-opt .av-tip{display:none}
   .rule{min-height:0;padding:16px 8px 14px;gap:12px}
   .mini{grid-template-columns:repeat(3,34px);gap:4px;padding:4px;border-radius:14px}
@@ -790,7 +790,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
       <section class="card room" id="roomCard" aria-labelledby="rcTitle">
         <div class="card-head"><span class="card-title" id="rcTitle">Play a friend</span><span class="pill" id="rcPill" hidden></span></div>
         <div class="seats">
-          <div class="seat-col"><span class="orb" id="meOrb"></span><span class="seat-name me">You</span></div>
+          <div class="seat-col mine"><span class="orb" id="meOrb" role="button" tabindex="0" aria-label="Edit your profile"></span><span class="seat-name me" id="meName">You</span></div>
           <div class="seat-col"><span class="seat" id="seat" data-state="empty"><i></i><i></i><i></i></span><span class="seat-name" id="seatName">Friend</span></div>
         </div>
         <div class="code-row" id="codeRow" hidden><span class="ccode" id="rcCode"></span><span class="tools"><button class="sq" id="qrBtn" type="button" aria-label="Show QR code" aria-expanded="false" aria-controls="qrWrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20h-3M17 20v.01M20 17v.01"/></svg></button><button class="sq" id="copyCode" type="button" aria-label="Copy room code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div>
@@ -1513,6 +1513,8 @@ function orbHue(id){const h=hueOf(id);return`radial-gradient(circle at 32% 30%,h
 let myAv=cleanAv(store.get("xo.av",""));
 const pav=new Map();
 function avOf(id){if(!id)return"";if(id===myId)return myAv;return cleanAv(isHost?pav.get(id):(roster.avs||{})[id])}
+/* your own avatar never depends on being in a room */
+function myAvBg(){return myAv?`url('${avUri(myAv)}') center/cover`:""}
 function avBg(id){const k=avOf(id);return k?`url('${avUri(k)}') center/cover`:""}
 function orbBg(id){return avBg(id)||orbHue(id)}
 /* Same device: each side keeps its own name and avatar on this device */
@@ -1850,11 +1852,11 @@ function renderNet(){
   renderAud();renderStands(s==="live"||s==="lost");
   chip.hidden=!showChip;
   if(showChip){$("chipMe").className="orb"+(me==="O"?" o":"");$("chipFriend").className="orb friend"+(s==="lost"?" away":"");$("chipCode").textContent=room||""}
-  $("meOrb").style.background=avBg(myId);paintChips();
+  $("meOrb").style.background=myAvBg();setText($("meName"),myName);paintChips();
 }
 function paintChips(){
   const a=role==="aud"?[hostId,guestId]:[myId,partner];
-  $("chipMe").style.background=avBg(a[0]);$("chipFriend").style.background=avBg(a[1]);
+  $("chipMe").style.background=role==="aud"?avBg(a[0]):myAvBg();$("chipFriend").style.background=avBg(a[1]);
 }
 /* Parts of the room card come and go as the room changes. Leaving parts fade
    and lift away first; then the card eases to its new height in one move and
@@ -2040,7 +2042,7 @@ function renderLobby(){
   }
   const myFace=me==="O"&&phase!=="lobby"?"o":"";
   if(phase==="lobby"){
-    L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}" style="background:${avBg(myId)}"></span><span class="seat-name me">You</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend" style="background:${avBg(partner)}"></span><span class="seat-name">${esc(nameOf(partner)||"Friend")}</span></div></div>
+    L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}" style="background:${myAvBg()}"></span><span class="seat-name me">${esc(myName)}</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend" style="background:${avBg(partner)}"></span><span class="seat-name">${esc(nameOf(partner)||"Friend")}</span></div></div>
       <h3 class="swap">Room ready</h3><p class="swap">Toss a coin. The winner picks X or O and moves first.</p>
       <button class="btn primary big" id="tossBtn" type="button"${netShown==="lost"?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Toss the coin</span></button>`;
     setTimeout(()=>dropIn(L.querySelector(".vs .orb.friend")),180);
@@ -2307,7 +2309,7 @@ let profFor="me";
 function profCur(){return profFor==="me"?{n:myName,av:myAv}:{n:localName(profFor),av:localProf[profFor].av}}
 function profDot(){
   if(profFor!=="me")return MARK_BG[profFor];
-  return mode==="online"?orbHue(myId):MARK_BG[mySide()||"X"];
+  return mode==="online"&&room?orbHue(myId):MARK_BG[mySide()||"X"];
 }
 function paintProf(){const k=profCur().av;$("profOrb").style.background=k?`url('${avUri(k)}') center/cover`:profDot()}
 function buildProfile(){
@@ -2342,6 +2344,8 @@ for(const s of ["X","O"]){
   o.addEventListener("click",go);
   o.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});
 }
+$("meOrb").addEventListener("click",e=>openProfile("me",e.currentTarget));
+$("meOrb").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openProfile("me",e.currentTarget)}});
 $("rpProfile").addEventListener("click",e=>openProfile("me",e.currentTarget));
 $("dlgRoom").addEventListener("click",e=>{if(e.target.closest(".seatc.me"))openProfile("me",e.target.closest(".seatc.me"))});
 
