@@ -2903,7 +2903,7 @@ function buildAbout(){
    result straight onto the SVG layers: the whole head turns, the ears, face,
    features and glasses shift by different amounts, and the pupils slide
    inside the eyes. Quick to follow a finger, softer for a mouse. */
-const look={heads:[],raf:0,touch:false,home:0};
+const look={heads:[],raf:0,touch:false,home:0,t:0};
 const clamp1=v=>Math.max(-1,Math.min(1,v));
 function lookHeads(){
   look.heads=[...document.querySelectorAll(".head3d")].map(el=>({el,rig:el.querySelector(".rig"),back:el.querySelector(".l-back"),mid:el.querySelector(".l-mid"),front:el.querySelector(".l-front"),
@@ -2916,9 +2916,12 @@ function lookAt(x,y){
   lookKick();
 }
 function lookAhead(){look.heads.forEach(h=>{h.tx=0;h.ty=0});lookKick()}
-function lookKick(){if(!look.raf)look.raf=requestAnimationFrame(lookStep)}
-function lookStep(){
-  look.raf=0;const k=look.touch?.3:.1;let busy=false;
+function lookKick(){if(!look.raf){look.t=performance.now();look.raf=requestAnimationFrame(lookStep)}}
+/* time-based easing, so it feels the same at any frame rate: about a
+   quarter second to catch a finger, a little softer for the mouse */
+function lookStep(now){
+  look.raf=0;const dt=Math.min(64,Math.max(1,(now||performance.now())-look.t));look.t=now||performance.now();
+  const k=1-Math.exp(-dt/(look.touch?95:150));let busy=false;
   look.heads.forEach(h=>{
     h.x+=(h.tx-h.x)*k;h.y+=(h.ty-h.y)*k;
     if(Math.abs(h.tx-h.x)+Math.abs(h.ty-h.y)>.001)busy=true;else{h.x=h.tx;h.y=h.ty}
@@ -2929,7 +2932,7 @@ function lookStep(){
     if(h.front)h.front.setAttribute("transform",t(6,4));
     h.pupils.forEach(p=>p.setAttribute("transform",t(3.4,2.2)));
   });
-  if(busy)lookKick();
+  if(busy)look.raf=requestAnimationFrame(lookStep);
 }
 /* mouse and pen: anywhere over the card */
 $("dlgAbout").addEventListener("pointermove",e=>{if(e.pointerType!=="touch"){look.touch=false;lookAt(e.clientX,e.clientY)}});
@@ -2939,7 +2942,8 @@ const cr=$("creators");
 const tLook=e=>{const t=e.touches[0];if(!t)return;look.touch=true;clearTimeout(look.home);lookAt(t.clientX,t.clientY)};
 cr.addEventListener("touchstart",e=>{look.heads=[];tLook(e)},{passive:true});
 cr.addEventListener("touchmove",tLook,{passive:true});
-const tEnd=()=>{clearTimeout(look.home);look.home=setTimeout(()=>{look.touch=false;lookAhead()},650)};
+/* lift your finger and they ease straight back to looking ahead */
+const tEnd=e=>{if(e.touches&&e.touches.length)return;look.touch=false;lookAhead()};
 cr.addEventListener("touchend",tEnd);cr.addEventListener("touchcancel",tEnd);
 $("madeBy").addEventListener("click",()=>openDialog("dlgAbout",$("logo")));
 
