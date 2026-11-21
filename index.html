@@ -852,6 +852,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
         <button class="btn" id="rcPeople" type="button" hidden aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="rcPeopleTxt">Choose opponent</span></button>
         <div class="card-actions">
           <button class="btn primary grow" id="createRoom" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Create room</button>
+          <button class="btn grow" id="findMatch" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Find a match</button>
           <button class="btn primary grow" id="inviteBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="inviteLbl">Copy invite link</span></button>
           <button class="btn danger" id="leaveRoom" type="button" hidden>Leave</button>
         </div>
@@ -1403,6 +1404,7 @@ function renderStatus(){
   }
   if(mode==="online"){
     const s=netState();
+    if(s==="idle"&&mm)return mm.phase==="found"?setStatus("var(--green)","Match found"):setStatus("var(--amber)","Looking for a player",true);
     if(s==="idle")return setStatus("var(--friend)","Create or join a room");
     if(s==="host-wait")return setStatus("var(--amber)",`Waiting for friend<span class="code">${esc(room)}</span>`,true);
     if(s==="guest-wait")return setStatus("var(--amber)",`Looking for room<span class="code">${esc(room)}</span>`,true);
@@ -1593,6 +1595,7 @@ const BROKERS=customBroker?[customBroker]:[
   "wss://test.mosquitto.org:8081/mqtt"
 ];
 const TOPIC="xnofade/v1/";
+let mm=null,mmGuardT=0; /* matchmaking state, see "Find a match" */
 const JOIN_TIMEOUT=20000,PING_EVERY=4000,PEER_LOST=12000;
 function code(){const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
@@ -1874,6 +1877,7 @@ function joinRoom(c){
   begin(c,false,null);
 }
 function leave(silent){
+  if(mm)mmStop();
   if(room&&!silent)publish({t:"bye"});
   clearInterval(pingTimer);clearInterval(joinTimer);clearTimeout(joinedTimer);
   const old=clients;clients=[];
@@ -1885,7 +1889,7 @@ function leave(silent){
 }
 function leaveAndReset(){leave();setOnlineNames();drainOtp(0);newRound("X")}
 $("createRoom").addEventListener("click",createRoom);
-$("leaveRoom").addEventListener("click",leaveAndReset);
+$("leaveRoom").addEventListener("click",()=>mm?cancelMatch():leaveAndReset());
 $("chipLeave").addEventListener("click",leaveAndReset);
 
 /* ---------- Online UI: room card, seats, chip, toast ---------- */
@@ -1940,27 +1944,29 @@ function renderNet(){
   const s=netShown,joined=s==="joined";
   if((s==="host-wait"||s==="guest-wait")&&prevNet!==s&&!still)
     $("meOrb").animate([{transform:"scale(.6)"},{transform:"scale(1.14)",offset:.55},{transform:"scale(.96)",offset:.78},{transform:"none"}],{duration:700,easing:"cubic-bezier(.34,1.2,.5,1)"});
-  setText($("rcTitle"),{idle:"Play a friend","host-wait":"Your room","guest-wait":"Joining room",full:"Room is full",joined:isHost?"Your room":"Joined"}[s]||"Your room");
-  const pill=$("rcPill"),pt={"host-wait":"1 of 2","guest-wait":room||"",joined:"2 of 2"}[s];
+  const mmS=mm&&s==="idle"?mm.phase:null;
+  setText($("rcTitle"),mmS==="search"?"Finding a match":mmS==="found"?"Match found":{idle:"Play a friend","host-wait":"Your room","guest-wait":"Joining room",full:"Room is full",joined:isHost?"Your room":"Joined"}[s]||"Your room");
+  const pill=$("rcPill"),pt=mmS==="search"?mmClock():{"host-wait":"1 of 2","guest-wait":room||"",joined:"2 of 2"}[s];
   if(pt)setText(pill,pt);
   $("meOrb").className="orb"+(me==="O"?" o":"");
-  const seat=$("seat"),seatState=joined?"filled":(s==="host-wait"||s==="guest-wait")?"waiting":"empty";
+  const seat=$("seat"),seatState=mmS==="found"||joined?"filled":(mmS==="search"||s==="host-wait"||s==="guest-wait")?"waiting":"empty";
+  seat.style.background=mmS==="found"&&mm.peer.av?`url('${avUri(mm.peer.av)}') center/cover`:"";
   if(seat.dataset.state!==seatState){seat.dataset.state=seatState;if(seatState==="filled")dropIn(seat)}
-  setText($("seatName"),joined?(isHost?"Friend":"Host"):s==="host-wait"?"Waiting":s==="guest-wait"?"Host":"Friend");
+  setText($("seatName"),mmS==="search"?"Searching":mmS==="found"?mm.peer.n:joined?(isHost?"Friend":"Host"):s==="host-wait"?"Waiting":s==="guest-wait"?"Host":"Friend");
   if(room)$("rcCode").textContent=room;
   $("rcPeopleTxt").textContent=`${audIds.length} watching · Choose opponent`;
-  applyVis($("roomCard"),[[pill,!!pt],[$("codeRow"),isHost&&(s==="host-wait"||joined)],[$("createRoom"),s==="idle"||s==="full"],
-    [$("rcPeople"),isHost&&s==="host-wait"&&audIds.length>0],[$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"],[$("qrWrap"),qrOpen&&isHost&&s==="host-wait"]]);
+  applyVis($("roomCard"),[[pill,!!pt],[$("codeRow"),isHost&&(s==="host-wait"||joined)],[$("createRoom"),(s==="idle"||s==="full")&&!mmS],[$("findMatch"),(s==="idle"||s==="full")&&!mmS],
+    [$("rcPeople"),isHost&&s==="host-wait"&&audIds.length>0],[$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"||mmS==="search"],[$("qrWrap"),qrOpen&&isHost&&s==="host-wait"]]);
   if(s!=="host-wait"&&qrOpen){qrOpen=false;$("qrBtn").setAttribute("aria-expanded","false")}
   /* the host closes the room for everyone; a guest just leaves it */
-  $("leaveRoom").textContent=s==="guest-wait"?"Cancel":isHost?"Close room":"Leave";
+  $("leaveRoom").textContent=mmS||s==="guest-wait"?"Cancel":isHost?"Close room":"Leave";
   $("chipLeave").textContent=isHost?"Close room":"Leave";$("rpLeave").textContent=isHost?"Close room":"Leave room";
   if(!$("inviteBtn").dataset.busy)$("inviteLbl").textContent=canShare?"Share invite":"Copy invite link";
   otpEl.classList.toggle("busy",s==="guest-wait");
   otpEl.classList.toggle("done",joined&&!isHost);
   otpIn.disabled=s==="guest-wait"||joined;
   applyVis($("joinCard"),[[$("joinBtn"),!(s==="guest-wait"||joined)]]);
-  joinVis(!(matchMedia("(max-width:1079px)").matches&&isHost&&!!room&&(s==="host-wait"||joined)));
+  joinVis(!(matchMedia("(max-width:1079px)").matches&&(!!mmS||isHost&&!!room&&(s==="host-wait"||joined))));
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
   $("emo").hidden=s!=="live";if(s!=="live")emoClose();
@@ -2689,12 +2695,86 @@ function morphLand(st){
   if(st.card){
     /* the old card folds into the dot and travels with it, always behind it */
     const g=st.card,[ox,oy]=st.cardOrigin,gr=g.getBoundingClientRect(),k=r.width/gr.width;
+    /* its contents go first, so only the empty card folds in behind the dot and name */
+    [...g.children].forEach(el=>el.animate([{opacity:1},{opacity:0}],{duration:150,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
     g.style.transformOrigin=`${ox}px ${oy}px`;
     const tx=r.left+r.width/2-(gr.left+ox),ty=r.top+r.height/2-(gr.top+oy);
     g.animate([{transform:"none",opacity:1},{transform:`translate(${tx*.5}px,${ty*.5}px) scale(${(1+k)/2})`,opacity:.9,offset:.45},{transform:`translate(${tx}px,${ty}px) scale(${k})`,opacity:0}],{duration:D,easing:E,fill:"forwards"});
   }
   setTimeout(done,D+30);
 }
+
+
+/* ---------- Find a match ---------- */
+/* No server: everyone looking for a game waits in one shared lobby topic
+   and says "I'm looking" every 1.5 s. When two of them see each other, the
+   one with the lower id offers a fresh room code; the other accepts and
+   both go there, the offerer as host. An offer that is not taken in 3.5 s
+   lapses. If the joiner's room never answers (a lost accept), it gives up
+   after 9 s and goes back to looking, so nobody waits in an empty room. */
+const MM_TOPIC=TOPIC+"mm",MM_SEEK=1500,MM_OFFER=3500;
+function mmClock(){const s=Math.floor((Date.now()-mm.t0)/1000);return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")}
+function mmPublish(o){
+  if(!mm)return;o.from=mm.id;o.mid=mm.id+":"+(++mm.seq);o.v=1;const p=JSON.stringify(o);
+  for(const c of mm.clients){try{if(c.connected)c.publish(MM_TOPIC,p,{qos:0})}catch(e){}}
+}
+function findMatch(){
+  if(room||mm)return;
+  if(typeof mqtt==="undefined"){net("Online play could not load. Reload the page.");return}
+  clearTimeout(mmGuardT);
+  mm={phase:"search",id:rid(),seq:0,seen:new Set(),t0:Date.now(),pending:null,peer:null};
+  mm.clients=BROKERS.map(url=>{
+    const c=mqtt.connect(url,{clientId:"xnomm_"+mm.id+"_"+Math.random().toString(36).slice(2,6),clean:true,connectTimeout:8000,reconnectPeriod:3000,keepalive:30});
+    c.on("connect",()=>c.subscribe(MM_TOPIC,{qos:0},()=>mmSeek()));
+    c.on("message",(t,b)=>{let m;try{m=JSON.parse(b.toString())}catch(e){return}mmOn(m)});
+    c.on("error",()=>{});return c;
+  });
+  mm.seekT=setInterval(mmSeek,MM_SEEK);mm.tickT=setInterval(()=>{if(mm&&mm.phase==="search")setText($("rcPill"),mmClock())},1000);
+  render();
+}
+function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv})}
+function mmStop(){
+  if(!mm)return;clearInterval(mm.seekT);clearInterval(mm.tickT);
+  const old=mm.clients;mm=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),400);
+}
+function cancelMatch(){mmStop();clearTimeout(mmGuardT);render()}
+function mmOn(m){
+  if(!mm||!m||typeof m!=="object"||m.v!==1||typeof m.from!=="string"||typeof m.mid!=="string"||m.from===mm.id||mm.seen.has(m.mid))return;
+  mm.seen.add(m.mid);if(mm.seen.size>800)mm.seen=new Set([...mm.seen].slice(-200));
+  if(m.to&&m.to!==mm.id)return;
+  if(mm.phase!=="search")return;
+  const now=Date.now();if(mm.pending&&now>mm.pending.until)mm.pending=null;
+  const peer={id:m.from,n:cleanName(m.n||"")||"Player",av:cleanAv(m.av)};
+  if(m.t==="seek"){
+    if(!mm.pending&&mm.id<m.from){const r=code();mm.pending={to:m.from,room:r,until:now+MM_OFFER,peer};mmPublish({t:"offer",to:m.from,room:r,n:myName,av:myAv})}
+    return;
+  }
+  if(m.t==="offer"&&typeof m.room==="string"&&cleanCode(m.room).length===5){
+    const r=cleanCode(m.room);mmPublish({t:"accept",to:m.from,room:r});
+    setTimeout(()=>mmPublish({t:"accept",to:m.from,room:r}),300);
+    mmFound(peer,r,false);return;
+  }
+  if(m.t==="accept"&&mm.pending&&m.from===mm.pending.to&&m.room===mm.pending.room)mmFound(mm.pending.peer,mm.pending.room,true);
+}
+/* the two of you find each other: their face drops into the empty seat,
+   both dots lean in, then you go to your room together */
+function mmFound(peer,r,host){
+  mm.phase="found";mm.peer=peer;clearInterval(mm.seekT);
+  toast("Match found","friend");render();
+  if(!still){
+    const me=$("meOrb"),seat=$("seat");
+    dropIn(seat);
+    setTimeout(()=>{
+      me.animate([{transform:"none"},{transform:"translateX(10px) scale(1.06)",offset:.4},{transform:"none"}],{duration:620,easing:"cubic-bezier(.34,1.3,.6,1)"});
+      seat.animate([{transform:"none"},{transform:"translateX(-10px) scale(1.06)",offset:.4},{transform:"none"}],{duration:620,easing:"cubic-bezier(.34,1.3,.6,1)"});
+    },260);
+  }
+  setTimeout(()=>{
+    mmStop();begin(r,host,null);
+    if(!host){clearTimeout(mmGuardT);mmGuardT=setTimeout(()=>{if(room===r&&!partner&&!rejected){leave();toast("They slipped away. Still looking");findMatch()}},9000)}
+  },still?300:1300);
+}
+$("findMatch").addEventListener("click",findMatch);
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
