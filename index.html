@@ -447,22 +447,16 @@ button.mark{border:0;background:none;padding:0}
 #dlgAbout{overflow:clip}
 .creators{touch-action:none;-webkit-user-select:none;user-select:none}
 /* under a finger the heads track closely; the slow glide is for the mouse */
-.creators.touching .rig,.creators.touching .head3d g,.creators.touching .pupil{transition-duration:.14s;transition-timing-function:linear}
 .head3d .rig{will-change:transform}
 @media (hover:none){.head3d svg{filter:none}}
-.head3d .pupil{transform:translate(calc(var(--mx,0)*2.6px),calc(var(--my,0)*1.6px));transition:transform .45s cubic-bezier(.22,1,.36,1)}
 .about-lead{margin:-6px 12px 0;color:var(--mute);font-size:14px}
 .creators{display:flex;justify-content:center;gap:clamp(12px,4vw,36px);padding:18px 8px 6px}
 .creator{display:flex;flex-direction:column;align-items:center;width:clamp(120px,34vw,170px)}
 .head3d{position:relative;width:100%;aspect-ratio:120/180;perspective:800px}
-.head3d .rig{width:100%;height:100%;transform-style:preserve-3d;transform:rotateY(calc(var(--mx,0)*8deg)) rotateX(calc(var(--my,0)*-6deg));transition:transform .9s cubic-bezier(.22,1,.36,1);animation:bob 4.6s ease-in-out infinite}
+.head3d .rig{width:100%;height:100%;transform-style:preserve-3d;animation:bob 4.6s ease-in-out infinite}
 .creator+.creator .rig{animation-delay:-2.3s}
 .head3d svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 16px 22px rgba(0,0,0,.32))}
-.head3d g{transition:transform .9s cubic-bezier(.22,1,.36,1)}
-.head3d .l-back{transform:translate(calc(var(--mx,0)*-2px),calc(var(--my,0)*-1.5px))}
-.head3d .l-mid{transform:translate(calc(var(--mx,0)*2px),calc(var(--my,0)*1.5px))}
 
-.head3d .l-front{transform:translate(calc(var(--mx,0)*3.5px),calc(var(--my,0)*2.5px))}
 .head-shadow{width:58%;height:14px;margin-top:-4px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.4),transparent);animation:shadowbob 4.6s ease-in-out infinite}
 .creator+.creator .head-shadow{animation-delay:-2.3s}
 :root[data-theme="light"] .head-shadow{background:radial-gradient(closest-side,rgba(0,0,0,.18),transparent)}
@@ -2889,10 +2883,11 @@ function buildAbout(){
   if(!aboutBuilt){aboutBuilt=true;
     $("creators").innerHTML=CREATORS.map(c=>`<figure class="creator" style="margin:0"><div class="head3d"><div class="rig">${avatarSVG(c)}</div></div><span class="head-shadow" aria-hidden="true"></span><figcaption><h3>${c.name}</h3><p>${c.title}</p></figcaption></figure>`).join("");
   }
+  lookHeads();lookStep();
   /* each head flies up from below the window, overshoots a little, settles
      into its place and then hovers; its shadow grows as it lands */
   document.querySelectorAll(".creator").forEach((c,i)=>{
-    const h=c.querySelector(".head3d"),sh=c.querySelector(".head-shadow");h.style.setProperty("--mx",0);h.style.setProperty("--my",0);
+    const h=c.querySelector(".head3d"),sh=c.querySelector(".head-shadow");
     if(still)return;
     /* start just under the card's bottom edge: the card clips them, so they rise into view from inside it */
     const lift=$("dlgAbout").getBoundingClientRect().bottom-h.getBoundingClientRect().top+16;
@@ -2904,26 +2899,48 @@ function buildAbout(){
 /* the heads turn toward the pointer; on a phone they follow your finger
    while you touch and drag across them, then look ahead again */
 /* one update per frame, with each head's box read once per gesture */
-let lookRects=null,lookRaf=0,lookPt=null;
-function lookAt(e){
-  lookPt={x:e.clientX,y:e.clientY};if(lookRaf)return;
-  lookRaf=requestAnimationFrame(()=>{lookRaf=0;lookNow(lookPt)});
+/* A small loop eases every head toward its target each frame and writes the
+   result straight onto the SVG layers: the whole head turns, the ears, face,
+   features and glasses shift by different amounts, and the pupils slide
+   inside the eyes. Quick to follow a finger, softer for a mouse. */
+const look={heads:[],raf:0,touch:false,home:0};
+const clamp1=v=>Math.max(-1,Math.min(1,v));
+function lookHeads(){
+  look.heads=[...document.querySelectorAll(".head3d")].map(el=>({el,rig:el.querySelector(".rig"),back:el.querySelector(".l-back"),mid:el.querySelector(".l-mid"),front:el.querySelector(".l-front"),
+    pupils:[...el.querySelectorAll(".pupil")],x:0,y:0,tx:0,ty:0}));
 }
-function lookNow(e){
-  const heads=[...document.querySelectorAll(".head3d")];
-  if(!touchLook||!lookRects)lookRects=heads.map(h=>h.getBoundingClientRect());
-  heads.forEach((h,i)=>{
-    const r=lookRects[i],mx=Math.max(-1,Math.min(1,(e.clientX-(r.left+r.width/2))/(r.width*1.2))),my=Math.max(-1,Math.min(1,(e.clientY-(r.top+r.height/2))/(r.height*1.2)));
-    h.style.setProperty("--mx",mx.toFixed(3));h.style.setProperty("--my",my.toFixed(3));
+function lookAt(x,y){
+  if(!look.heads.length)lookHeads();
+  look.heads.forEach(h=>{const r=h.el.getBoundingClientRect();
+    h.tx=clamp1((x-(r.left+r.width/2))/(r.width*.8));h.ty=clamp1((y-(r.top+r.height*.45))/(r.height*.7))});
+  lookKick();
+}
+function lookAhead(){look.heads.forEach(h=>{h.tx=0;h.ty=0});lookKick()}
+function lookKick(){if(!look.raf)look.raf=requestAnimationFrame(lookStep)}
+function lookStep(){
+  look.raf=0;const k=look.touch?.3:.1;let busy=false;
+  look.heads.forEach(h=>{
+    h.x+=(h.tx-h.x)*k;h.y+=(h.ty-h.y)*k;
+    if(Math.abs(h.tx-h.x)+Math.abs(h.ty-h.y)>.001)busy=true;else{h.x=h.tx;h.y=h.ty}
+    const x=h.x,y=h.y,t=(a,b)=>`translate(${(x*a).toFixed(2)} ${(y*b).toFixed(2)})`;
+    h.rig.style.transform=`translate(${(x*6).toFixed(2)}px,${(y*4).toFixed(2)}px) rotateY(${(x*16).toFixed(2)}deg) rotateX(${(-y*11).toFixed(2)}deg)`;
+    if(h.back)h.back.setAttribute("transform",t(-3.5,-2.5));
+    if(h.mid)h.mid.setAttribute("transform",t(3.5,2.5));
+    if(h.front)h.front.setAttribute("transform",t(6,4));
+    h.pupils.forEach(p=>p.setAttribute("transform",t(3.4,2.2)));
   });
+  if(busy)lookKick();
 }
-const lookAhead=()=>document.querySelectorAll(".head3d").forEach(h=>{h.style.setProperty("--mx",0);h.style.setProperty("--my",0)});
-let touchLook=false;
-$("dlgAbout").addEventListener("pointermove",e=>{if(e.pointerType!=="touch"||touchLook)lookAt(e)});
-$("creators").addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;lookRects=null;touchLook=true;$("creators").classList.add("touching");$("creators").setPointerCapture(e.pointerId);lookAt(e)});
-const endLook=e=>{if(e.pointerType==="touch"&&touchLook){touchLook=false;lookRects=null;$("creators").classList.remove("touching");setTimeout(()=>{if(!touchLook)lookAhead()},600)}};
-$("creators").addEventListener("pointerup",endLook);$("creators").addEventListener("pointercancel",endLook);
+/* mouse and pen: anywhere over the card */
+$("dlgAbout").addEventListener("pointermove",e=>{if(e.pointerType!=="touch"){look.touch=false;lookAt(e.clientX,e.clientY)}});
 $("dlgAbout").addEventListener("pointerleave",e=>{if(e.pointerType!=="touch")lookAhead()});
+/* fingers: touch and slide on the heads; they look ahead again after you let go */
+const cr=$("creators");
+const tLook=e=>{const t=e.touches[0];if(!t)return;look.touch=true;clearTimeout(look.home);lookAt(t.clientX,t.clientY)};
+cr.addEventListener("touchstart",e=>{look.heads=[];tLook(e)},{passive:true});
+cr.addEventListener("touchmove",tLook,{passive:true});
+const tEnd=()=>{clearTimeout(look.home);look.home=setTimeout(()=>{look.touch=false;lookAhead()},650)};
+cr.addEventListener("touchend",tEnd);cr.addEventListener("touchcancel",tEnd);
 $("madeBy").addEventListener("click",()=>openDialog("dlgAbout",$("logo")));
 
 const logo=$("logo");
