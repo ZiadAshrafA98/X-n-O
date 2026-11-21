@@ -1278,7 +1278,7 @@ function renderStatus(){
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
   if(over){
     const w=names[turn];
-    setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:`${turn} wins`);
+    setStatus("var(--green)",isYou(turn)?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:localProf[turn].n?`${esc(w)} wins`:`${turn} wins`);
     return;
   }
   if(mode==="online"&&role==="aud"){
@@ -1300,7 +1300,7 @@ function renderStatus(){
   }
   if(mode==="ai")return turn===aiSide?setStatus("var(--ai)","Computer is thinking",true):setStatus(sideVar(turn),"Your turn");
   const sub=marks[turn].length===3?`<span class="sub">oldest ${turn} fades next</span>`:"";
-  setStatus(sideVar(turn),`${turn} to move${sub}`);
+  setStatus(sideVar(turn),localProf[turn].n?`${esc(names[turn])}'s turn${sub}`:`${turn} to move${sub}`);
 }
 
 function tick(el,val){
@@ -1314,10 +1314,10 @@ function renderPlayers(){
   for(const s of ["X","O"]){
     const el=$("p"+s),orb=$("p"+s+"orb"),k=kindOf(s);
     orb.className="orb"+(k?" "+k:"");
-    const sid=idOfSide(s),mine=!!sid&&sid===myId&&role!=="aud";
-    orb.style.background=sid?avBg(sid):"";
+    const mine=!!sideTarget(s);
+    orb.style.background=sideAvBg(s);
     el.classList.toggle("mine",mine);
-    if(mine){orb.tabIndex=0;orb.setAttribute("role","button");orb.setAttribute("aria-label","Edit your profile")}
+    if(mine){orb.tabIndex=0;orb.setAttribute("role","button");orb.setAttribute("aria-label",sideTarget(s)==="me"?"Edit your profile":"Edit player "+s)}
     else{orb.removeAttribute("tabindex");orb.removeAttribute("role");orb.removeAttribute("aria-label")}
     el.style.setProperty("--ring",`color-mix(in srgb,var(${ringVar[k]}) 60%,transparent)`);
     el.style.setProperty("--ring-glow",`color-mix(in srgb,var(${ringVar[k]}) 30%,transparent)`);
@@ -1397,8 +1397,8 @@ function setMode(m){
   setSeg($("tabs"),m,true);
   document.querySelectorAll("[data-for]").forEach(g=>g.hidden=g.dataset.for!==m);
   document.querySelectorAll("[data-hide]").forEach(g=>g.hidden=g.dataset.hide===m);
-  if(m==="ai"){aiSide=other(opt.youAre);names[aiSide]="Computer";names[opt.youAre]="You"}
-  else if(m==="local"){names.X="Player X";names.O="Player O"}
+  if(m==="ai"){aiSide=other(opt.youAre);names[aiSide]="Computer";names[opt.youAre]=myName}
+  else if(m==="local"){names.X=localName("X");names.O=localName("O")}
   else setOnlineNames();
   newRound(m==="ai"?(opt.first==="ai"?aiSide:opt.youAre):"X");
 }
@@ -1494,6 +1494,22 @@ const pav=new Map();
 function avOf(id){if(!id)return"";if(id===myId)return myAv;return cleanAv(isHost?pav.get(id):(roster.avs||{})[id])}
 function avBg(id){const k=avOf(id);return k?`url('${avUri(k)}') center/cover`:""}
 function orbBg(id){return avBg(id)||orbHue(id)}
+/* Same device: each side keeps its own name and avatar on this device */
+const localProf=(()=>{const v=store.get("xo.local",null)||{},o={};for(const s of ["X","O"]){const p=v[s]||{};o[s]={n:cleanName(p.n||""),av:cleanAv(p.av)}}return o})();
+const MARK_BG={X:"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",O:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)"};
+function localName(s){return localProf[s].n||"Player "+s}
+/* who a side's dot belongs to: "me", a same-device side, or nobody to edit */
+function sideTarget(s){
+  if(mode==="online")return idOfSide(s)===myId&&role!=="aud"?"me":null;
+  if(mode==="ai")return s===opt.youAre?"me":null;
+  return s;
+}
+function sideAvBg(s){
+  if(mode==="online"){const id=idOfSide(s);return id?avBg(id):""}
+  const k=mode==="ai"?(s===opt.youAre?myAv:""):localProf[s].av;
+  return k?`url('${avUri(k)}') center/cover`:"";
+}
+function isYou(s){return(mode==="ai"&&s===opt.youAre)||(mode==="online"&&!!me&&s===me)}
 function idOfSide(s){
   if(mode!=="online"||!room)return null;
   const hId=isHost?myId:(role==="aud"?hostId:partner),gId=isHost?partner:(role==="aud"?guestId:myId);
@@ -2248,22 +2264,40 @@ function setMyProfile(v,av){
   if(n===myName&&av===myAv)return;
   myName=n;myAv=av;store.set("xo.name",n);store.set("xo.av",av);
   if(isHost)pushRoom();else if(room&&connOpen)publish({t:"name",n,av});
-  updateMe();render();
+  if(mode==="ai")names[opt.youAre]=myName;
+  if(mode==="online")updateMe();
+  render();
 }
 function setMyName(v){setMyProfile(v,myAv)}
+function setLocalProfile(s,v,av){
+  const n=cleanName(v),p=localProf[s];
+  p.n=n===("Player "+s)?"":n;p.av=cleanAv(av);store.set("xo.local",localProf);
+  if(mode==="local")names[s]=localName(s);
+  render();
+}
 
 /* ---------- your profile: a name and an avatar ---------- */
-function paintProf(){$("profOrb").style.background=orbBg(myId)}
+let profFor="me";
+function profCur(){return profFor==="me"?{n:myName,av:myAv}:{n:localName(profFor),av:localProf[profFor].av}}
+function profDot(){
+  if(profFor!=="me")return MARK_BG[profFor];
+  return mode==="online"?orbHue(myId):MARK_BG[mode==="ai"?opt.youAre:"X"];
+}
+function paintProf(){const k=profCur().av;$("profOrb").style.background=k?`url('${avUri(k)}') center/cover`:profDot()}
 function buildProfile(){
-  $("profName").value=myName;
+  const cur=profCur();
+  $("profTitle").textContent=profFor==="me"?"Your profile":"Player "+profFor;
+  $("profName").value=cur.n;
   $("avGrid").innerHTML=["",...AV_KEYS].map((k,i)=>{const nm=k?AVATARS[k].name:"Colour dot";
-    return`<button class="av-opt stag" type="button" role="radio" data-av="${k}" aria-checked="${k===myAv}" tabindex="${k===myAv?0:-1}" aria-label="${nm}" style="--i:${i+2};background:${k?`url('${avUri(k)}') center/cover`:orbHue(myId)}"><span class="av-tip">${nm}</span></button>`}).join("");
+    return`<button class="av-opt stag" type="button" role="radio" data-av="${k}" aria-checked="${k===cur.av}" tabindex="${k===cur.av?0:-1}" aria-label="${nm}" style="--i:${i+2};background:${k?`url('${avUri(k)}') center/cover`:profDot()}"><span class="av-tip">${nm}</span></button>`}).join("");
   paintProf();
 }
+function saveProf(n,av){if(profFor==="me")setMyProfile(n,av);else setLocalProfile(profFor,n,av)}
+function openProfile(target,btn){profFor=target||"me";openDialog("dlgProfile",btn)}
 function pickAv(b){
   if(!b)return;
   $("avGrid").querySelectorAll(".av-opt").forEach(x=>{const on=x===b;x.setAttribute("aria-checked",String(on));x.tabIndex=on?0:-1});
-  setMyProfile($("profName").value,b.dataset.av);paintProf();
+  saveProf($("profName").value,b.dataset.av);paintProf();
   if(!still){
     $("profOrb").animate([{transform:"scale(.55) rotate(-8deg)"},{transform:"scale(1.12) rotate(3deg)",offset:.55},{transform:"scale(.97)",offset:.8},{transform:"none"}],{duration:640,easing:"cubic-bezier(.34,1.2,.5,1)"});
     b.animate([{transform:"scale(.85)"},{transform:"scale(1.1)",offset:.6},{transform:"none"}],{duration:420,easing:"cubic-bezier(.34,1.3,.6,1)"});
@@ -2275,15 +2309,15 @@ $("avGrid").addEventListener("keydown",e=>{
   const all=[...$("avGrid").children],i=all.indexOf(document.activeElement),n=all[(i+d+all.length)%all.length];
   n.focus();pickAv(n);
 });
-$("profName").addEventListener("change",e=>{setMyProfile(e.target.value,myAv);e.target.value=myName});
+$("profName").addEventListener("change",e=>{saveProf(e.target.value,profCur().av);e.target.value=profCur().n});
 $("profName").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();e.target.blur()}});
 for(const s of ["X","O"]){
-  const o=$("p"+s+"orb"),go=()=>{if($("p"+s).classList.contains("mine"))openDialog("dlgProfile",o)};
+  const o=$("p"+s+"orb"),go=()=>{const t=sideTarget(s);if(t)openProfile(t,o)};
   o.addEventListener("click",go);
   o.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});
 }
-$("rpProfile").addEventListener("click",e=>openDialog("dlgProfile",e.currentTarget));
-$("dlgRoom").addEventListener("click",e=>{if(e.target.closest(".seatc.me"))openDialog("dlgProfile",e.target.closest(".seatc.me"))});
+$("rpProfile").addEventListener("click",e=>openProfile("me",e.currentTarget));
+$("dlgRoom").addEventListener("click",e=>{if(e.target.closest(".seatc.me"))openProfile("me",e.target.closest(".seatc.me"))});
 
 /* ---------- the room panel ---------- */
 let panelKey="";
@@ -2400,9 +2434,9 @@ import("./wave.js").then(m=>{
 }).catch(()=>{});
 function fillResult(){
   const w=names[turn],k=kindOf(turn);
-  $("resOrb").className="orb"+(k?" "+k:"");
+  $("resOrb").className="orb"+(k?" "+k:"");$("resOrb").style.background=sideAvBg(turn);
   const cls=turn.toLowerCase();
-  $("resTitle").innerHTML=w==="You"?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:`<span class="${cls}">${turn}</span> wins`;
+  $("resTitle").innerHTML=isYou(turn)?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"||localProf[turn].n?`${esc(w)} wins`:`<span class="${cls}">${turn}</span> wins`;
   $("resScore").innerHTML=`${esc(names.X)} <b>${score.X}</b> : <b>${score.O}</b> ${esc(names.O)}`;
 }
 function showResult(show){
