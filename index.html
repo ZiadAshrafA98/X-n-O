@@ -197,12 +197,13 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 /* ---------- actions ---------- */
 .actions{grid-area:actions;justify-self:center;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .btn{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--chip);color:var(--ink);font-weight:500;font-size:14px;letter-spacing:-.01em;transition:background-color .16s ease,color .16s ease,scale .16s var(--out),opacity .2s}
-.btn:hover{background:var(--chip-2)}
-.btn:active{scale:.96}
+/* a disabled button never reacts: no hover, no press, no sticky tap highlight on phones */
+@media (hover:hover){.btn:not(:disabled):hover{background:var(--chip-2)}}
+.btn:not(:disabled):active{scale:.96}
 .btn:disabled{opacity:.4;cursor:not-allowed;scale:1}
 .btn svg{width:17px;height:17px;flex:none}
 .btn.primary{background:var(--primary);color:var(--primary-ink)}
-.btn.primary:hover{opacity:.9}
+@media (hover:hover){.btn.primary:not(:disabled):hover{opacity:.9;background:var(--primary)}}
 .btn.big{height:52px;padding:0 28px 0 22px;font-size:15px}
 .btn.round{width:52px;height:52px;padding:0}
 .btn.danger{background:var(--red);color:#fff}
@@ -1422,14 +1423,10 @@ function tick(el,val){
 }
 let flipped=false;
 function renderPlayers(){
-  /* keep you on the left: when you play O the two players trade places */
+  /* you are always the left player: when you play O you simply take the
+     O colours where you stand; nobody moves */
   const f=mySide()==="O";
-  if(f!==flipped){
-    const els=[$("pX"),$("pO")],before=els.map(e=>e.getBoundingClientRect());
-    flipped=f;$("pX").classList.toggle("pl",!f);$("pX").classList.toggle("pr",f);$("pO").classList.toggle("pl",f);$("pO").classList.toggle("pr",!f);
-    if(!still)els.forEach((e,i)=>{const a=e.getBoundingClientRect(),b=before[i];if(!b.width||!a.width)return;
-      e.animate([{transform:`translate(${b.left-a.left}px,${b.top-a.top}px)`},{transform:"none"}],{duration:720,easing:"cubic-bezier(.34,1.25,.5,1)"})});
-  }
+  if(f!==flipped){flipped=f;$("pX").classList.toggle("pl",!f);$("pX").classList.toggle("pr",f);$("pO").classList.toggle("pl",f);$("pO").classList.toggle("pr",!f)}
   for(const s of ["X","O"]){
     const el=$("p"+s),orb=$("p"+s+"orb"),k=kindOf(s);
     orb.className="orb"+(k?" "+k:"");
@@ -1538,10 +1535,12 @@ let modeSwitch=0;
 $("tabs").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.dataset.mode===mode)return;
   const m=b.dataset.mode;setSeg($("tabs"),m,true);
+  /* into or out of Online: your avatar and name travel with you */
+  const mv=(m==="online")!==(mode==="online")?morphStart():null;
   /* the new mode opens on a fresh board: nothing to undo or restart yet */
   flipActions(()=>{$("undoBtn").disabled=true;$("newBtn").disabled=true;app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;$("emo").hidden=true;emoClose();app.dataset.net="idle";app.dataset.role="player"}});
   cancelAnimationFrame(modeSwitch);
-  modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m)}));
+  modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m);if(mv)requestAnimationFrame(()=>morphLand(mv))}));
 });
 
 /* ---------- Quick picker (vs computer) ---------- */
@@ -2588,6 +2587,95 @@ function renderStands(show){
     const o=seat.querySelector(".orb:last-child"),bg=orbBg(seat.dataset.id);if(o&&o.dataset.bg!==bg){o.style.background=bg;o.dataset.bg=bg}});
 }
 $("bleachers").addEventListener("click",e=>openDialog("dlgRoom",e.currentTarget));
+
+/* ---------- You travel between the game and the online card ---------- */
+/* Your avatar and name are one thing on every screen. Switching into Online,
+   the dot and name leave their place beside the board and fly into the
+   "Play a friend" card; on a wide screen the card grows out from behind the
+   dot, on a phone the sheet rises while the dot grows into its seat.
+   Switching back does the reverse. A stand-in made at the start covers the
+   frames where neither copy is on screen. */
+let morph=null;
+function meParts(){
+  if(mode==="online"&&onScreen($("meOrb")))return{orb:$("meOrb"),name:$("meName"),card:matchMedia("(max-width:1079px)").matches?null:$("roomCard"),online:true};
+  const s=mySide();if(!s)return null;const o=$("p"+s+"orb");if(!onScreen(o))return null;
+  const n=$("p"+s+"name");return{orb:o,name:onScreen(n)&&n.getBoundingClientRect().width?n:null};
+}
+function morphClear(){
+  if(!morph)return;morph.parts.forEach(el=>el.remove());morph.hidden.forEach(el=>el.style.visibility="");morph=null;
+}
+function bgOf(el){const c=getComputedStyle(el);return{backgroundImage:c.backgroundImage,backgroundColor:c.backgroundColor,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition}}
+function fixedAt(el,r,z){Object.assign(el.style,{position:"fixed",left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",margin:"0",zIndex:String(z||45),pointerEvents:"none"});document.body.appendChild(el);return el}
+/* called before the mode changes: freeze a copy of you where you are */
+function morphStart(){
+  morphClear();
+  if(still)return null;
+  const p=meParts();if(!p)return null;
+  const st={parts:[],hidden:[],fromOnline:!!p.online};
+  if(p.card){
+    /* the card shrinks back into the dot; its own dot is left to the stand-in */
+    const r=p.card.getBoundingClientRect(),g=p.card.cloneNode(true);
+    g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));g.removeAttribute("id");
+    const go=g.querySelector(".seat-col.mine .orb");if(go)go.style.visibility="hidden";
+    const gn=g.querySelector(".seat-name.me");if(gn)gn.style.visibility="hidden";
+    g.style.animation="none";fixedAt(g,r,44);st.parts.push(g);st.card=g;
+    const o=p.orb.getBoundingClientRect();st.cardOrigin=[o.left+o.width/2-r.left,o.top+o.height/2-r.top];
+    const jc=$("joinCard");if(onScreen(jc)){const jr=jc.getBoundingClientRect(),jg=jc.cloneNode(true);jg.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));jg.removeAttribute("id");jg.style.animation="none";
+      fixedAt(jg,jr,44);st.parts.push(jg);jg.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(10px) scale(.94)",filter:"blur(3px)"}],{duration:240,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})}
+  }
+  const r=p.orb.getBoundingClientRect(),o=document.createElement("span");
+  o.className="orb";Object.assign(o.style,bgOf(p.orb),{boxShadow:"0 10px 30px rgba(0,0,0,.25)"});fixedAt(o,r,46);st.parts.push(o);st.orb=o;st.orbFrom=r;
+  if(p.name){const nr=p.name.getBoundingClientRect(),c=getComputedStyle(p.name),n=document.createElement("span");n.textContent=p.name.textContent;
+    Object.assign(n.style,{font:c.font,fontSize:c.fontSize,fontWeight:c.fontWeight,fontFamily:c.fontFamily,letterSpacing:c.letterSpacing,color:c.color,lineHeight:nr.height+"px",whiteSpace:"nowrap",textAlign:"center"});
+    fixedAt(n,nr,46);n.style.width="auto";st.parts.push(n);st.name=n;st.nameFrom=nr;st.nameSize=parseFloat(c.fontSize)}
+  /* the original stays hidden while its stand-in is out (the phone sheet slides away with it) */
+  [p.orb,p.name].forEach(el=>{if(el){el.style.visibility="hidden";st.hidden.push(el)}});
+  morph=st;return st;
+}
+/* called once the new mode has drawn: fly the copy to where you are now */
+function morphLand(st){
+  if(!st||st!==morph)return;
+  const p=meParts();
+  const done=()=>{if(morph===st)morphClear()};
+  if(!p){st.parts.forEach(el=>el.animate([{opacity:1},{opacity:0}],{duration:200,fill:"forwards"}));setTimeout(done,220);return}
+  /* settle any entrance animation on the target so its resting place is measured */
+  const holder=p.online?(matchMedia("(max-width:1079px)").matches?$("dock"):$("roomCard")):p.orb.closest(".player");
+  if(holder&&!p.online)holder.getAnimations().forEach(a=>a.finish());
+  let r=p.orb.getBoundingClientRect(),nr=p.name?p.name.getBoundingClientRect():null;
+  /* the phone sheet is still sliding up: aim for where it will stop */
+  if(p.online&&holder&&holder.id==="dock"){const m=new DOMMatrix(getComputedStyle(holder).transform),ty=m.m42;r=new DOMRect(r.left,r.top-ty,r.width,r.height);if(nr)nr=new DOMRect(nr.left,nr.top-ty,nr.width,nr.height)}
+  if(p.online&&holder&&holder.id==="roomCard"){holder.getAnimations().forEach(a=>a.cancel());holder.style.animation="none";
+    holder.querySelectorAll(".seat-col").forEach(e=>e.getAnimations().forEach(a=>a.finish()));r=p.orb.getBoundingClientRect();nr=p.name.getBoundingClientRect()}
+  [p.orb,p.name].forEach(el=>{if(el){el.style.visibility="hidden";st.hidden.push(el)}});
+  const D=p.online&&holder&&holder.id==="dock"?640:600,E="cubic-bezier(.3,1.15,.45,1)";
+  const f=st.orbFrom;
+  st.orb.animate([{left:f.left+"px",top:f.top+"px",width:f.width+"px",height:f.height+"px"},{left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px"}],{duration:D,easing:E,fill:"forwards"});
+  const ob=bgOf(p.orb);if(ob.backgroundImage!==st.orb.style.backgroundImage)setTimeout(()=>Object.assign(st.orb.style,ob),D*.5);
+  if(st.name&&nr){const c=getComputedStyle(p.name);
+    st.name.animate([{left:st.nameFrom.left+"px",top:st.nameFrom.top+"px",fontSize:st.nameSize+"px",lineHeight:st.nameFrom.height+"px"},{left:nr.left+"px",top:nr.top+"px",fontSize:c.fontSize,lineHeight:nr.height+"px"}],{duration:D,easing:E,fill:"forwards"});}
+  else if(st.name)st.name.animate([{opacity:1},{opacity:0,transform:"scale(.8)"}],{duration:220,fill:"forwards"});
+  else if(nr){/* the name had nowhere to come from (phone): it rises into place */
+    p.name.style.visibility="";st.hidden=st.hidden.filter(e=>e!==p.name);
+    p.name.animate([{opacity:0,transform:"translateY(6px)"},{opacity:1,transform:"none"}],{duration:420,delay:D*.55,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"})}
+  if(p.online&&holder&&holder.id==="roomCard"){
+    /* the card grows out from behind your dot */
+    const cr=holder.getBoundingClientRect(),ox=r.left+r.width/2-cr.left,oy=r.top+r.height/2-cr.top;
+    holder.style.transformOrigin=`${ox}px ${oy}px`;
+    const sx=f.left+f.width/2-(r.left+r.width/2),sy=f.top+f.height/2-(r.top+r.height/2);
+    holder.animate([{opacity:0,transform:`translate(${sx}px,${sy}px) scale(.22)`,borderRadius:"80px"},{opacity:1,transform:"none",borderRadius:"28px"}],{duration:620,easing:"cubic-bezier(.32,1.12,.45,1)",fill:"backwards"}).onfinish=()=>{holder.style.transformOrigin="";holder.style.animation=""};
+    [...holder.children].forEach((el,i)=>{if(el.classList.contains("seats"))return;
+      el.animate([{opacity:0,transform:"translateY(8px)"},{opacity:1,transform:"none"}],{duration:420,delay:200+i*50,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"})});
+    const fr=holder.querySelector(".seat-col:not(.mine)");if(fr)fr.animate([{opacity:0,transform:"scale(.6)"},{opacity:1,transform:"none"}],{duration:480,delay:260,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+  }
+  if(st.card){
+    /* the old card folds back into the dot as the dot flies home */
+    const g=st.card,[ox,oy]=st.cardOrigin,gr=g.getBoundingClientRect();
+    g.style.transformOrigin=`${ox}px ${oy}px`;
+    const tx=r.left+r.width/2-(gr.left+ox),ty=r.top+r.height/2-(gr.top+oy);
+    g.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translate(${tx}px,${ty}px) scale(.2)`,borderRadius:"80px"}],{duration:460,easing:"cubic-bezier(.5,0,.2,1)",fill:"forwards"});
+  }
+  setTimeout(done,D+40);
+}
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
