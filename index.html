@@ -435,6 +435,52 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .card-actions #inviteBtn[hidden]+#leaveRoom{flex:1 1 auto}
 #joinBtn{width:100%}
 
+/* ---------- room panel: the court and the stands ---------- */
+.chip-open{display:flex;align-items:center;gap:12px;min-width:0;height:44px;padding:0 10px 0 2px;border:0;border-radius:999px;background:none;color:inherit;transition:background-color .16s ease,scale .16s var(--out)}
+.chip-open:hover{background:var(--chip)}
+.chip-open:active{scale:.97}
+.room-pop{width:440px;max-height:calc(100dvh - 130px);overflow:auto;padding:10px 10px 12px}
+#dlgRoom .dlg-head h2{display:flex;align-items:baseline;gap:10px}
+#dlgRoom .dlg-head .ccode{font:500 15px var(--mono);letter-spacing:.18em;color:var(--mute)}
+.rp-share{display:flex;gap:8px;padding:0 6px 4px}
+.rp-share .btn{flex:1 1 auto;height:40px;font-size:13px}
+#rpQrWrap{padding:10px 0 4px}
+.rp-label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--faint);padding:14px 8px 8px}
+.court{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:0 4px}
+.court .vsx{font:500 11px var(--mono);color:var(--faint)}
+.stands{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;padding:0 4px}
+.seatc{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;padding:12px 6px 10px;border:0;border-radius:18px;background:var(--chip);color:var(--ink);font:inherit;text-align:center;transition:background-color .16s ease,scale .35s var(--spring),box-shadow .2s ease;animation:pop .45s var(--spring) both}
+button.seatc:hover{background:var(--chip-2);scale:1.04}
+button.seatc:active{scale:.97}
+button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.seatc .orb{width:36px;height:36px}
+.seatc.big{padding:16px 8px 12px}
+.seatc.big .orb{width:52px;height:52px}
+.seatc .sn{max-width:100%;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seatc .tag{font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.seatc.me{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 28%,transparent)}
+.seatc.empty{background:none;box-shadow:inset 0 0 0 1.5px var(--hair);color:var(--faint);animation:none}
+.seatc.empty .orb{background:none;border:1.5px dashed color-mix(in srgb,var(--ink) 18%,transparent)}
+.mk-badge{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:8px;background:var(--slab);display:grid;place-items:center;font-size:12px;font-weight:600}
+.mk-badge.X{color:var(--x)} .mk-badge.O{color:var(--o)}
+.rp-hint{margin:10px 8px 0;font-size:12px;color:var(--faint)}
+.rp-hint:empty{display:none}
+.rp-me{display:flex;align-items:center;gap:10px;padding:14px 6px 10px}
+.rp-me label{font-size:12px;color:var(--faint);white-space:nowrap}
+.rp-me input{flex:1;min-width:0;height:40px;padding:0 12px;border:0;border-radius:12px;background:var(--chip);box-shadow:inset 0 0 0 1px var(--hair);color:var(--ink);font:500 14px var(--sans)}
+.rp-me input:focus{outline:none;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 40%,transparent)}
+#rpLeave{width:calc(100% - 12px);margin:4px 6px 0}
+#rcPeople{width:100%}
+#rcPeople svg{width:16px;height:16px}
+.seat-menu{position:absolute;z-index:5;width:220px;padding:6px;border-radius:18px;background:var(--slab-2);box-shadow:var(--float);transform-origin:50% 0;animation:menuin .34s cubic-bezier(.34,1.3,.6,1) both}
+.seat-menu .who{padding:8px 12px 6px;font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seat-menu button{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:0;border-radius:12px;background:none;color:var(--ink);font:500 13px var(--sans);text-align:left;transition:background-color .15s}
+.seat-menu button:hover,.seat-menu button:focus-visible{background:var(--chip);outline:none}
+.seat-menu button small{font-weight:400;font-size:11px;color:var(--faint)}
+.seat-menu .danger{color:var(--red)}
+.seat-menu .danger.armed{background:color-mix(in srgb,var(--red) 16%,transparent)}
+@keyframes menuin{from{opacity:0;transform:translateY(-6px) scale(.92)}to{opacity:1;transform:none}}
+
 /* ---------- audience seats ---------- */
 .aud{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 8px;border-radius:999px;background:var(--chip);color:var(--mute);font-size:12px;animation:pop .5s var(--spring) both}
 .aud svg{width:15px;height:15px;flex:none}
@@ -506,6 +552,9 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   .app[data-mode="online"] .chip .ccode{flex:1 1 auto;padding-left:4px}
   .app[data-mode="online"][data-net="live"],.app[data-mode="online"][data-net="lost"]{--bs:min(calc(100vw - 32px),calc(100dvh - 380px),520px)}
   .pick{--pw:76px}
+  .stands{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .chip-open{flex:1 1 auto}
+  .room-pop{max-height:88dvh}
   .pick-txt{display:none}
   .actions .round{width:48px;height:48px}
   .actions #newBtn{height:52px}
@@ -643,9 +692,11 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
       </div>
       <button class="btn round" id="btnSettings" type="button" aria-label="Game settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/></svg></button>
       <div class="chip" id="chip" hidden>
-        <span class="orbs"><span class="orb" id="chipMe"></span><span class="orb friend" id="chipFriend"></span></span>
-        <span class="ccode" id="chipCode"></span>
-        <span class="aud" id="aud" role="img" aria-label="0 people watching" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="aud-orbs" id="audOrbs"></span><b id="audN">0</b></span>
+        <button class="chip-open" id="chipOpen" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Room: people, invite and QR">
+          <span class="orbs"><span class="orb" id="chipMe"></span><span class="orb friend" id="chipFriend"></span></span>
+          <span class="ccode" id="chipCode"></span>
+          <span class="aud" id="aud" role="img" aria-label="0 people watching" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="aud-orbs" id="audOrbs"></span><b id="audN">0</b></span>
+        </button>
         <button class="btn danger-soft" id="chipLeave" type="button">Leave</button>
       </div>
     </div>
@@ -659,6 +710,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
         </div>
         <div class="code-row" id="codeRow" hidden><span class="ccode" id="rcCode"></span><span class="tools"><button class="sq" id="qrBtn" type="button" aria-label="Show QR code" aria-expanded="false" aria-controls="qrWrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20h-3M17 20v.01M20 17v.01"/></svg></button><button class="sq" id="copyCode" type="button" aria-label="Copy room code"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></span></div>
         <div class="qr-wrap" id="qrWrap" hidden><div class="qr" id="qr" role="img" aria-label="QR code with the invite link"></div><p class="qr-hint">Point a phone camera here to join</p></div>
+        <button class="btn" id="rcPeople" type="button" hidden aria-haspopup="dialog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="rcPeopleTxt">Choose opponent</span></button>
         <div class="card-actions">
           <button class="btn primary grow" id="createRoom" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Create room</button>
           <button class="btn primary grow" id="inviteBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="inviteLbl">Copy invite link</span></button>
@@ -719,6 +771,25 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
       <div class="ins-rule stag" style="--i:5"><span class="group-label" id="gl-rule2">Oldest mark leaves</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule2"><span class="thumb"></span><button type="button" data-v="A">After you place</button><button type="button" data-v="B">Before</button></div></div>
     </div>
   </div>
+</section>
+
+<section class="dlg pop room-pop" id="dlgRoom" role="dialog" aria-modal="true" aria-labelledby="roomTitle" tabindex="-1" hidden>
+  <span class="grab" aria-hidden="true"></span>
+  <div class="dlg-head"><h2 id="roomTitle">Room <span class="ccode" id="rpCode"></span></h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="rp-share">
+    <button class="btn" id="rpCopyCode" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="lbl">Copy code</span></button>
+    <button class="btn" id="rpLink" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="rpLinkLbl">Copy link</span></button>
+    <button class="sq" id="rpQrBtn" type="button" aria-label="Show QR code" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20h-3M17 20v.01M20 17v.01"/></svg></button>
+  </div>
+  <div class="qr-wrap" id="rpQrWrap" hidden><div class="qr" id="rpQr" role="img" aria-label="QR code with the invite link"></div></div>
+  <div class="rp-label"><span>On the board</span><span id="rpPhase"></span></div>
+  <div class="court" id="rpCourt"></div>
+  <div class="rp-label"><span>In the stands</span><span id="rpStandsN"></span></div>
+  <div class="stands" id="rpStands"></div>
+  <p class="rp-hint" id="rpHint"></p>
+  <div class="rp-me"><label for="rpName">Your name</label><input id="rpName" type="text" maxlength="16" autocomplete="nickname" spellcheck="false"></div>
+  <button class="btn danger-soft" id="rpLeave" type="button">Leave room</button>
+  <div class="seat-menu" id="seatMenu" role="menu" hidden></div>
 </section>
 
 <section class="dlg modal" id="dlgScan" role="dialog" aria-modal="true" aria-labelledby="scanTitle" tabindex="-1" hidden>
@@ -1001,7 +1072,7 @@ function renderStatus(){
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
   if(over){
     const w=names[turn];
-    setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?(role==="aud"?`${esc(w)} wins`:"Friend wins"):`${turn} wins`);
+    setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:`${turn} wins`);
     return;
   }
   if(mode==="online"&&role==="aud"){
@@ -1015,11 +1086,11 @@ function renderStatus(){
     if(s==="idle")return setStatus("var(--friend)","Create or join a room");
     if(s==="host-wait")return setStatus("var(--amber)",`Waiting for friend<span class="code">${esc(room)}</span>`,true);
     if(s==="guest-wait")return setStatus("var(--amber)",`Looking for room<span class="code">${esc(room)}</span>`,true);
-    if(s==="full")return setStatus("var(--red)","Room is full");
+    if(s==="full")return setStatus("var(--red)",rejected==="removed"?"Removed from this room":"Room is full");
     if(s==="lost")return setStatus("var(--amber)","Friend is offline",true);
     if(phase==="lobby")return setStatus("var(--green)","Room ready");
     if(phase==="toss")return tossDone.has(tossId)?setStatus("var(--friend)",(tossWinner==="host")===isHost?"Pick your mark":"Friend is picking",true):setStatus("var(--friend)","Tossing the coin",true);
-    return turn===me?setStatus("var(--green)","Your turn"):setStatus("var(--friend)","Friend's turn",true);
+    return turn===me?setStatus("var(--green)","Your turn"):setStatus("var(--friend)",`${esc(names[turn])}'s turn`,true);
   }
   if(mode==="ai")return turn===aiSide?setStatus("var(--ai)","Computer is thinking",true):setStatus(sideVar(turn),"Your turn");
   const sub=marks[turn].length===3?`<span class="sub">oldest ${turn} fades next</span>`:"";
@@ -1049,7 +1120,7 @@ function render(){flipActions(renderNow)}
 function renderNow(){
   app.dataset.role=mode==="online"&&role==="aud"?"aud":"player";
   app.dataset.phase=mode==="online"&&room?phase:"play";
-  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();
+  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();
   $("undoBtn").disabled=mode==="online"||history.length===0;
   $("newBtn").disabled=mode==="online"&&!connOpen;
   syncWave();
@@ -1183,15 +1254,33 @@ function code(){const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
 function net(msg){$("netNote").textContent=msg||""}
 function setOnlineNames(){
-  if(role==="aud"){names[hostMark]="Host";names[other(hostMark)]="Guest";return}
-  names.X=me?(me==="X"?"You":"Friend"):"Player X";names.O=me?(me==="O"?"You":"Friend"):"Player O";
+  if(role==="aud"){names[hostMark]=nameOf(hostId)||"Host";names[other(hostMark)]=nameOf(guestId)||"Guest";return}
+  const opp=partner?nameOf(partner):"Friend";
+  names.X=me?(me==="X"?"You":opp):"Player X";names.O=me?(me==="O"?"You":opp):"Player O";
 }
 /* ---------- audience ---------- */
 /* Once both seats are taken, anyone else who opens the room joins as
    audience: they see every move live, can react, and can't play. The host
    keeps the list of who is watching and shares it with the room. */
 let role="player",hostId=null,guestId=null,audIds=[];const aud=new Map();const AUD_MAX=12;
-function pushAud(){if(isHost)publish({t:"aud",ids:[...aud.keys()],guest:partner})}
+/* ---------- names and the room roster ---------- */
+/* Everyone gets a friendly name and a colour from their id, and can rename
+   themselves. The host owns the roster (who plays, who watches) and shares
+   it with the room whenever it changes. */
+const ADJ=["Swift","Quiet","Lucky","Brave","Sunny","Clever","Bold","Calm","Witty","Mellow","Zippy","Cosmic"],ANI=["Otter","Fox","Panda","Heron","Lynx","Koala","Falcon","Gecko","Moose","Owl","Tiger","Whale"];
+function cleanName(n){return String(n||"").replace(/[\u0000-\u001f<>]/g,"").replace(/\s+/g," ").trim().slice(0,16)}
+let myName=cleanName(store.get("xo.name",""))||(ADJ[Math.random()*ADJ.length|0]+" "+ANI[Math.random()*ANI.length|0]);store.set("xo.name",myName);
+const pname=new Map(),banned=new Set(),devOf=new Map();
+/* a random id kept by this browser, so a removed person stays removed after a reload */
+const devId=(()=>{let d=store.get("xo.dev",null);if(typeof d!=="string"||d.length>40){d=rid()+rid();store.set("xo.dev",d)}return d})();
+let roster={host:null,guest:null,aud:[],names:{}};
+function nameOf(id){if(!id)return"";if(id===myId)return myName;return(isHost?pname.get(id):roster.names[id])||"Guest"}
+function hueOf(id){let h=7;for(const ch of String(id))h=(h*31+ch.charCodeAt(0))%360;return h}
+function orbBg(id){const h=hueOf(id);return`radial-gradient(circle at 32% 30%,hsl(${h} 90% 86%),hsl(${h} 72% 58%) 45%,hsl(${h} 70% 32%))`}
+function buildRoster(){const names={[myId]:myName};if(partner)names[partner]=pname.get(partner)||"Guest";for(const id of aud.keys())names[id]=pname.get(id)||"Guest";
+  return{host:myId,guest:partner,aud:[...aud.keys()],names}}
+function pushRoom(){if(!isHost)return;roster=buildRoster();audIds=roster.aud;publish({t:"room",...roster})}
+const pushAud=pushRoom;
 function sideOf(id){if(id===(isHost?myId:hostId))return hostMark;if(id===(isHost?partner:guestId))return other(hostMark);return null}
 function linkFor(c){return location.origin+location.pathname+"?room="+c+(customBroker?"&broker="+encodeURIComponent(customBroker):"")}
 function liveBrokers(){return clients.filter(c=>c.connected).length}
@@ -1259,7 +1348,8 @@ function startPing(){
     if(!room)return;
     publish({t:"ping",p:partner});
     if(isHost){const now=Date.now(),n=aud.size;for(const [id,t] of aud)if(now-t>PEER_LOST)aud.delete(id);
-      if(aud.size!==n){audIds=[...aud.keys()];render()}pushAud()}
+      if(aud.size!==n){audIds=[...aud.keys()];render()}
+      if(partner&&now-partnerSeen>PEER_LOST&&aud.size)fillSeat();else pushRoom()}
     if(role==="aud"&&connOpen&&Date.now()-partnerSeen>PEER_LOST){connOpen=false;render()}
     if(partner&&connOpen&&Date.now()-partnerSeen>PEER_LOST){connOpen=false;render()}
   },PING_EVERY);
@@ -1300,7 +1390,7 @@ function begin(c,host,restore){
 function setUrlRoom(c){
   try{const u=new URL(location.href);if(c)u.searchParams.set("room",c);else u.searchParams.delete("room");window.history.replaceState(null,"",u)}catch(e){}
 }
-function sendJoin(){publish({t:"join",v:version,s:snapshot()})}
+function sendJoin(){publish({t:"join",n:myName,d:devId,v:version,s:snapshot()})}
 
 function onMessage(m){
   if(!m||typeof m!=="object"||typeof m.from!=="string"||typeof m.mid!=="string")return;
@@ -1312,24 +1402,28 @@ function onMessage(m){
   const partnerStale=!partner||Date.now()-partnerSeen>PEER_LOST;
 
   if(isHost&&m.t==="join"){
+    const dev=typeof m.d==="string"?m.d.slice(0,40):null;
+    if(banned.has(m.from)||(dev&&banned.has(dev))){publish({t:"full",to:m.from,why:"removed"});return}
+    if(dev)devOf.set(m.from,dev);
+    pname.set(m.from,cleanName(m.n)||pname.get(m.from)||"Guest");
     if(!fromPartner&&!partnerStale){
       /* both seats are taken: this person watches */
       if(!aud.has(m.from)&&aud.size>=AUD_MAX){publish({t:"full",to:m.from});return}
       const fresh=!aud.has(m.from);aud.set(m.from,Date.now());audIds=[...aud.keys()];
-      publish({t:"welcome",to:m.from,role:"aud",guest:partner,v:version,s:snapshot(),ids:audIds});pushAud();
+      pushRoom();publish({t:"welcome",to:m.from,role:"aud",guest:partner,v:version,s:snapshot(),ids:audIds,room:roster});
       if(fresh)toast("Someone is watching");render();return;
     }
     if(aud.has(m.from)){aud.delete(m.from);audIds=[...aud.keys()];pushAud()}
     partner=m.from;markSeen();
     // keep whichever side has the newer game, so a refresh does not lose the game
     if(Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
-    publish({t:"welcome",to:m.from,v:version,s:snapshot()});
+    pushRoom();publish({t:"welcome",to:m.from,v:version,s:snapshot(),room:roster});
     return;
   }
   if(!isHost&&m.t==="welcome"&&m.role==="aud"){
     role="aud";hostId=m.from;guestId=typeof m.guest==="string"?m.guest:null;partner=null;
     audIds=Array.isArray(m.ids)?m.ids.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];
-    partnerSeen=Date.now();connOpen=true;clearInterval(joinTimer);updateMe();
+    partnerSeen=Date.now();connOpen=true;clearInterval(joinTimer);if(m.room)takeRoster(m.room,m.from);updateMe();
     if(Number.isInteger(m.v))adopt(m.s,m.v);else render();
     toast("You're watching","friend");return;
   }
@@ -1337,36 +1431,42 @@ function onMessage(m){
     /* audience: follow the game from either player, never act on it */
     if(m.from===hostId||m.from===guestId){partnerSeen=Date.now();if(!connOpen&&m.from===hostId){connOpen=true;render()}}
     if(m.t==="state"&&(m.from===hostId||m.from===guestId)&&Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
-    else if(m.t==="aud"&&m.from===hostId){audIds=Array.isArray(m.ids)?m.ids.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];guestId=typeof m.guest==="string"?m.guest:guestId;render()}
+    else if(m.t==="room"&&m.from===hostId)applyRoom(m);
+    else if(m.t==="kick"&&m.from===hostId)kicked();
     else if(m.t==="emote"&&EMO[m.e])receiveEmote(m.e,m.from,!!m.a);
     else if(m.t==="bye"&&m.from===hostId){connOpen=false;render()}
     return;
   }
   if(!isHost&&m.t==="welcome"){
     if(partner&&m.from!==partner&&!partnerStale)return;
-    partner=m.from;markSeen();clearInterval(joinTimer);
+    partner=m.from;markSeen();clearInterval(joinTimer);if(m.room)takeRoster(m.room,m.from);
     if(Number.isInteger(m.v))adopt(m.s,m.v);
     return;
   }
   if(!isHost&&m.t==="full"){
-    if(!partner||!connOpen){rejected=true;clearInterval(joinTimer);otpError("Room is full");render()}
+    if(!partner||!connOpen){rejected=m.why==="removed"?"removed":true;clearInterval(joinTimer);otpError(m.why==="removed"?"Removed from this room":"Room is full");render()}
     return;
   }
   if(isHost&&aud.has(m.from)){
     aud.set(m.from,Date.now());
-    if(m.t==="bye"){aud.delete(m.from);audIds=[...aud.keys()];pushAud();render()}
+    if(m.t==="bye"){aud.delete(m.from);audIds=[...aud.keys()];pushRoom();render()}
     else if(m.t==="emote"&&EMO[m.e])receiveEmote(m.e,m.from,true);
+    else if(m.t==="name"){pname.set(m.from,cleanName(m.n)||"Guest");pushRoom();render()}
     return;
   }
   if(!isHost&&m.t==="emote"&&m.a&&EMO[m.e]){receiveEmote(m.e,m.from,true);return}
-  if(!isHost&&m.t==="aud"&&fromPartner){const n=audIds.length;audIds=Array.isArray(m.ids)?m.ids.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];if(audIds.length>n)toast("Someone is watching");render()}
+  if(!isHost&&fromPartner&&m.t==="room"){applyRoom(m);return}
+  if(!isHost&&fromPartner&&m.t==="kick"){kicked();return}
   if(!fromPartner){
     // host came back after a refresh: ask again
     if(!isHost&&!rejected&&m.t==="ping"&&partnerStale)sendJoin();
     return;
   }
-  if(m.t==="bye"){connOpen=false;partnerSeen=0;inReq=null;outReq=null;render();return}
+  if(m.t==="bye"){connOpen=false;partnerSeen=0;inReq=null;outReq=null;
+    if(isHost&&aud.size){fillSeat();return}
+    render();return}
   markSeen();
+  if(isHost&&m.t==="name"){pname.set(m.from,cleanName(m.n)||"Guest");pushRoom();updateMe();render();return}
   if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
   if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e,m.from,false);return}
   if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
@@ -1401,7 +1501,7 @@ function leave(silent){
   const old=clients;clients=[];
   setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),silent?0:300);
   room=null;partner=null;connOpen=false;me=null;rejected=false;netShown="idle";
-  role="player";hostId=null;guestId=null;audIds=[];aud.clear();
+  role="player";hostId=null;guestId=null;audIds=[];aud.clear();pname.clear();banned.clear();devOf.clear();roster={host:null,guest:null,aud:[],names:{}};
   phase="play";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;clearTimeout(reqTimer);
   if(!silent){clearSession();setUrlRoom(null);net("")}
 }
@@ -1470,8 +1570,9 @@ function renderNet(){
   if(seat.dataset.state!==seatState){seat.dataset.state=seatState;if(seatState==="filled")dropIn(seat)}
   setText($("seatName"),joined?(isHost?"Friend":"Host"):s==="host-wait"?"Waiting":s==="guest-wait"?"Host":"Friend");
   if(room)$("rcCode").textContent=room;
+  $("rcPeopleTxt").textContent=`${audIds.length} watching · Choose opponent`;
   applyVis($("roomCard"),[[pill,!!pt],[$("codeRow"),isHost&&(s==="host-wait"||joined)],[$("createRoom"),s==="idle"||s==="full"],
-    [$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"],[$("qrWrap"),qrOpen&&isHost&&s==="host-wait"]]);
+    [$("rcPeople"),isHost&&s==="host-wait"&&audIds.length>0],[$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"],[$("qrWrap"),qrOpen&&isHost&&s==="host-wait"]]);
   if(s!=="host-wait"&&qrOpen){qrOpen=false;$("qrBtn").setAttribute("aria-expanded","false")}
   $("leaveRoom").textContent=s==="guest-wait"?"Cancel":"Leave";
   if(!$("inviteBtn").dataset.busy)$("inviteLbl").textContent=canShare?"Share invite":"Copy invite link";
@@ -1657,7 +1758,7 @@ function renderLobby(){
   if(key===lobbyKey)return;lobbyKey=key;
   if(role==="aud"){
     const hostWon=tossWinner==="host",oH=hostMark==="O"?" o":"",oG=hostMark==="O"?"":" o";
-    if(phase==="lobby"){L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb"></span><span class="seat-name">Host</span></div><span class="v">VS</span><div class="seat-col"><span class="orb o"></span><span class="seat-name">Guest</span></div></div><h3 class="swap">You're watching</h3><p class="swap">The players toss a coin to see who picks X or O.</p>`;return}
+    if(phase==="lobby"){L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb"></span><span class="seat-name">${esc(nameOf(hostId)||"Host")}</span></div><span class="v">VS</span><div class="seat-col"><span class="orb o"></span><span class="seat-name">${esc(nameOf(guestId)||"Guest")}</span></div></div><h3 class="swap">You're watching</h3><p class="swap">The players toss a coin to see who picks X or O.</p>`;return}
     if(!done){
       L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">Host</span><span class="face back" style="background:${faceStyle("o")}">Guest</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Coin toss</h3><p class="swap">Heads the host picks, tails the guest does.</p>`;
       const finish=()=>{tossDone.add(tossId);render()};if(still){finish();return}
@@ -1670,7 +1771,7 @@ function renderLobby(){
   }
   const myFace=me==="O"&&phase!=="lobby"?"o":"";
   if(phase==="lobby"){
-    L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}"></span><span class="seat-name me">You</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend"></span><span class="seat-name">Friend</span></div></div>
+    L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}"></span><span class="seat-name me">You</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend"></span><span class="seat-name">${esc(nameOf(partner)||"Friend")}</span></div></div>
       <h3 class="swap">Room ready</h3><p class="swap">Toss a coin. The winner picks X or O and moves first.</p>
       <button class="btn primary big" id="tossBtn" type="button"${netShown==="lost"?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Toss the coin</span></button>`;
     setTimeout(()=>dropIn(L.querySelector(".vs .orb.friend")),180);
@@ -1678,7 +1779,7 @@ function renderLobby(){
     return;
   }
   if(!done){
-    L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">You</span><span class="face back" style="background:${faceStyle("friend")}">Friend</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Tossing the coin</h3><p class="swap">Heads you pick, tails your friend does.</p>`;
+    L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">You</span><span class="face back" style="background:${faceStyle("friend")}">${esc((nameOf(partner)||"Friend").split(" ")[0])}</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Tossing the coin</h3><p class="swap">Heads you pick, tails your friend does.</p>`;
     const finish=()=>{tossDone.add(tossId);render()};
     if(still){finish();return}
     const end=iWon?0:180,coin=$("coin"),sh=$("coinShadow");
@@ -1698,7 +1799,7 @@ function renderLobby(){
     L.querySelectorAll(".choice").forEach(b=>b.onclick=()=>choose(b.dataset.m));
     setTimeout(()=>{const c=L.querySelector(".choice");c&&c.focus({preventScroll:true})},60);
   }else{
-    L.innerHTML=`<span class="orb friend" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">Friend won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
+    L.innerHTML=`<span class="orb friend" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">${esc(nameOf(partner)||"Friend")} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
   }
 }
 
@@ -1871,6 +1972,124 @@ function flyEmote(k,side,big){
       {duration:1100+i*60,delay:120,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"}).onfinish=()=>bit.remove();
   }
 }
+
+/* ---------- roster updates, host actions ---------- */
+function takeRoster(m,from){
+  const ids=a=>Array.isArray(a)?a.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];
+  const names={};if(m.names&&typeof m.names==="object")for(const k of Object.keys(m.names))if(typeof m.names[k]==="string")names[k]=cleanName(m.names[k]);
+  roster={host:from,guest:typeof m.guest==="string"?m.guest:null,aud:ids(m.aud),names};
+  audIds=roster.aud;if(role==="aud")guestId=roster.guest;
+}
+function applyRoom(m){
+  const before=audIds.length;takeRoster(m,m.from);
+  if(role==="player"&&roster.guest!==myId&&roster.aud.includes(myId)){
+    role="aud";hostId=m.from;guestId=roster.guest;partner=null;connOpen=true;partnerSeen=Date.now();netShown="live";outReq=null;inReq=null;
+    toast("You're in the stands now");
+  }else if(role==="aud"&&roster.guest===myId){
+    role="player";partner=m.from;partnerSeen=Date.now();hostId=null;guestId=null;connOpen=true;netShown="live";
+    toast("You're playing now","friend");
+  }else if(audIds.length>before)toast("Someone is watching");
+  updateMe();saveSession();render();
+}
+function kicked(){closeDialog(true);leaveAndReset();toast("The host removed you");}
+function resetToLobby(){phase="lobby";hostMark="X";tossWinner=null;tossId=null;marks={X:[],O:[]};over=false;winCells=null;history=[];turn=starter="X";score={X:0,O:0};outReq=null;inReq=null;updateMe()}
+/* a spectator takes the board; the old opponent (if still here) goes to the stands */
+function makeOpponent(id,dropOld){
+  if(!isHost||!aud.has(id))return;
+  const old=partner;aud.delete(id);if(old&&old!==id&&!dropOld)aud.set(old,Date.now());
+  partner=id;partnerSeen=Date.now();connOpen=true;netShown="live";resetToLobby();
+  pushRoom();pushState();toast(`${nameOf(id)} is your opponent`,"friend");render();
+}
+function fillSeat(){const next=[...aud.keys()][0];if(next)makeOpponent(next,true)}
+function toStands(id){
+  if(!isHost||id!==partner)return;
+  aud.set(id,Date.now());partner=null;connOpen=false;resetToLobby();pushRoom();pushState();toast(`${nameOf(id)} moved to the stands`);render();
+}
+function removePerson(id){
+  if(!isHost||id===myId)return;
+  const n=nameOf(id);publish({t:"kick",to:id});banned.add(id);if(devOf.get(id))banned.add(devOf.get(id));aud.delete(id);
+  if(id===partner){partner=null;connOpen=false;resetToLobby();pushState()}
+  pname.delete(id);pushRoom();toast(`${n} was removed`);render();
+}
+function setMyName(v){
+  const n=cleanName(v);if(!n||n===myName)return;myName=n;store.set("xo.name",n);
+  if(isHost)pushRoom();else if(room&&connOpen)publish({t:"name",n});
+  updateMe();render();
+}
+
+/* ---------- the room panel ---------- */
+let panelKey="";
+function seatHTML(id,o){
+  o=o||{};
+  if(!id)return`<div class="seatc empty${o.big?" big":""}"><span class="orb"></span><span class="sn">${o.label||"Open seat"}</span></div>`;
+  const act=isHost&&id!==myId,tag=act?"button":"div";
+  return`<${tag} class="seatc${o.big?" big":""}${id===myId?" me":""}" data-id="${esc(id)}"${act?` type="button" aria-haspopup="menu" aria-expanded="false" aria-label="${esc(nameOf(id))}: options"`:""} style="animation-delay:${o.i?o.i*40:0}ms">`+
+    `<span class="orb" style="background:${orbBg(id)}"></span><span class="sn">${esc(nameOf(id))}</span>${o.tag?`<span class="tag">${o.tag}</span>`:""}${o.mark?`<span class="mk-badge ${o.mark}">${o.mark}</span>`:""}</${tag}>`;
+}
+function renderRoomPanel(force){
+  if(!openDlg||openDlg.id!=="dlgRoom")return;
+  const hId=isHost?myId:(role==="aud"?hostId:partner),gId=isHost?partner:(role==="aud"?guestId:myId);
+  const people=isHost?[...aud.keys()]:roster.aud;
+  const marks2=phase==="play"?[hostMark,other(hostMark)]:[null,null];
+  const key=[hId,gId,people.join(","),people.map(nameOf).join(","),nameOf(hId),nameOf(gId),marks2.join(""),isHost,phase].join("|");
+  $("rpCode").textContent=room||"";
+  $("rpLinkLbl").textContent=canShare?"Share link":"Copy link";
+  $("rpPhase").textContent=phase==="play"?"Playing":phase==="toss"?"Coin toss":"Getting ready";
+  $("rpStandsN").textContent=`${people.length} / ${AUD_MAX}`;
+  $("rpHint").textContent=isHost?(people.length?"Tap a seat to change your opponent or remove someone.":"Share the link or QR. Anyone who joins after your opponent sits in the stands."):"";
+  if(key===panelKey&&!force)return;panelKey=key;
+  $("rpCourt").innerHTML=seatHTML(hId,{big:1,tag:hId===myId?"You · host":"Host",mark:marks2[0]})+'<span class="vsx">VS</span>'+seatHTML(gId,{big:1,tag:gId===myId?"You":"",mark:marks2[1],label:"Open seat"});
+  /* whole rows of seats: one more empty seat than people, rounded up to the row */
+  const cols=narrowMQ.matches?3:4,slots=Math.min(AUD_MAX,Math.max(cols,Math.ceil((people.length+1)/cols)*cols));
+  let h=people.map((id,i)=>seatHTML(id,{tag:id===myId?"You":"",i})).join("");
+  for(let i=people.length;i<slots;i++)h+=seatHTML(null,{label:"Empty"});
+  $("rpStands").innerHTML=h;
+}
+$("chipOpen").addEventListener("click",e=>openDialog("dlgRoom",e.currentTarget));
+$("rcPeople").addEventListener("click",e=>openDialog("dlgRoom",e.currentTarget));
+$("rpCopyCode").addEventListener("click",async e=>{const l=e.currentTarget.querySelector(".lbl");setText(l,await copyText(room||"")?"Copied":"Copy failed");setTimeout(()=>setText(l,"Copy code"),1400)});
+$("rpLink").addEventListener("click",async()=>{const url=linkFor(room);if(canShare){navigator.share({title:"X n O",text:"Join my X n O room "+room,url}).catch(()=>{});return}
+  const l=$("rpLinkLbl");setText(l,await copyText(url)?"Link copied":"Copy failed");setTimeout(()=>setText(l,"Copy link"),1400)});
+$("rpQrBtn").addEventListener("click",e=>{
+  const w=$("rpQrWrap"),b=e.currentTarget,open=w.hidden;
+  if(open){if(!drawQR(linkFor(room)))return;$("rpQr").innerHTML=$("qr").innerHTML}
+  b.setAttribute("aria-expanded",String(open));
+  flipHeight($("dlgRoom"),()=>{w.hidden=!open});
+  if(open&&!still)w.animate(VIS_IN,{duration:480,easing:"cubic-bezier(.34,1.3,.6,1)"});
+});
+$("rpName").addEventListener("change",e=>setMyName(e.target.value));
+$("rpName").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();e.target.blur()}});
+$("rpLeave").addEventListener("click",()=>{closeDialog(true);leaveAndReset()});
+
+/* host: tap a seat for options */
+const seatMenu=$("seatMenu");let menuFor=null;
+function closeSeatMenu(){if(seatMenu.hidden)return;seatMenu.hidden=true;const b=document.querySelector(`.seatc[aria-expanded="true"]`);if(b)b.setAttribute("aria-expanded","false");menuFor=null}
+function openSeatMenu(btn){
+  const id=btn.dataset.id;if(!isHost||!id||id===myId)return;
+  if(menuFor===id){closeSeatMenu();return}
+  closeSeatMenu();menuFor=id;btn.setAttribute("aria-expanded","true");
+  const inGame=phase==="play"&&(history.length>0||marks.X.length+marks.O.length>0);
+  let h=`<div class="who">${esc(nameOf(id))}</div>`;
+  if(id===partner)h+=`<button type="button" role="menuitem" data-a="stands">Move to the stands<small>${inGame?"Ends this game":"They keep watching"}</small></button>`;
+  else h+=`<button type="button" role="menuitem" data-a="play">Make opponent<small>${inGame?"Restarts with a new coin toss":"They take the open seat"}</small></button>`;
+  h+=`<button type="button" role="menuitem" class="danger" data-a="remove">Remove from room<small>They can't rejoin</small></button>`;
+  seatMenu.innerHTML=h;seatMenu.hidden=false;
+  const d=$("dlgRoom"),dr=d.getBoundingClientRect(),br=btn.getBoundingClientRect(),mw=220;
+  let left=br.left-dr.left+br.width/2-mw/2;left=Math.max(8,Math.min(dr.width-mw-8,left));
+  let top=br.bottom-dr.top+d.scrollTop+6;
+  if(br.bottom+170>dr.bottom)top=br.top-dr.top+d.scrollTop-seatMenu.offsetHeight-6;
+  seatMenu.style.left=left+"px";seatMenu.style.top=top+"px";
+  setTimeout(()=>{const f=seatMenu.querySelector("button");f&&f.focus({preventScroll:true})},still?0:60);
+}
+["rpCourt","rpStands"].forEach(x=>$(x).addEventListener("click",e=>{const b=e.target.closest("button.seatc");if(b)openSeatMenu(b)}));
+seatMenu.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b||!menuFor)return;const id=menuFor,a=b.dataset.a;
+  if(a==="remove"&&!b.classList.contains("armed")){b.classList.add("armed");b.firstChild.textContent="Tap again to remove";return}
+  closeSeatMenu();
+  if(a==="play")makeOpponent(id);else if(a==="stands")toStands(id);else if(a==="remove")removePerson(id);
+});
+seatMenu.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();closeSeatMenu()}});
+$("dlgRoom").addEventListener("pointerdown",e=>{if(!seatMenu.hidden&&!seatMenu.contains(e.target)&&!e.target.closest("button.seatc"))closeSeatMenu()});
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
@@ -1886,7 +2105,7 @@ function fillResult(){
   const w=names[turn],k=kindOf(turn);
   $("resOrb").className="orb"+(k?" "+k:"");
   const cls=turn.toLowerCase();
-  $("resTitle").innerHTML=w==="You"?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?(role==="aud"?`${esc(w)} wins`:"Friend wins"):`<span class="${cls}">${turn}</span> wins`;
+  $("resTitle").innerHTML=w==="You"?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:`<span class="${cls}">${turn}</span> wins`;
   $("resScore").innerHTML=`${esc(names.X)} <b>${score.X}</b> : <b>${score.O}</b> ${esc(names.O)}`;
 }
 function showResult(show){
@@ -1930,7 +2149,7 @@ function anchorPop(d,btn){
   /* the settings panel unfolds out of its own button: placed above it, and
      scaled from the point the button sits under */
   if(narrowMQ.matches||!btn||!d.classList.contains("pop")){d.style.left=d.style.bottom=d.style.transformOrigin="";return}
-  const r=btn.getBoundingClientRect(),w=336,cx=r.left+r.width/2;
+  const r=btn.getBoundingClientRect(),w=d.classList.contains("room-pop")?440:336,cx=r.left+r.width/2;
   const left=Math.max(12,Math.min(innerWidth-w-12,cx-w/2));
   d.style.left=left+"px";d.style.bottom=(innerHeight-r.top+12)+"px";d.style.transformOrigin=`${cx-left}px calc(100% + 18px)`;
 }
@@ -1953,12 +2172,13 @@ function openDialog(id,btn){
   const d=$(id);openDlg=d;openerBtn=btn||null;
   if(id==="dlgRules")buildRules();
   if(id==="dlgInsight")updateInsight(true);
+  if(id==="dlgRoom"){$("rpName").value=myName;$("rpQrWrap").hidden=true;$("rpQrBtn").setAttribute("aria-expanded","false");closeSeatMenu()}
   anchorPop(d,btn);pickClose(false);
   d.hidden=false;scrim.hidden=false;d.style.transform="";
   scrim.classList.toggle("clear",d.classList.contains("pop")&&!narrowMQ.matches);
   requestAnimationFrame(()=>scrim.classList.add("show"));
   app.inert=true;if(btn)btn.setAttribute("aria-expanded","true");
-  syncOptSegs(false);restartStag(d);
+  syncOptSegs(false);restartStag(d);if(id==="dlgRoom")renderRoomPanel(true);
   if(!still)d.animate(openFrames(d),{duration:narrowMQ.matches?560:480,easing:narrowMQ.matches?"cubic-bezier(.2,1.1,.3,1)":"cubic-bezier(.34,1.36,.64,1)"});
   setTimeout(()=>{if(openDlg===d)d.focus({preventScroll:true})},20);
 }
