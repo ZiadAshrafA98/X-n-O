@@ -37,6 +37,8 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;height:100%}
+/* one screen: the page itself never scrolls, even when a sheet is parked below it */
+html,body{overflow:hidden;overflow:clip;overscroll-behavior:none}
 body{background:var(--bg);color:var(--ink);font:400 14px/1.4 var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;transition:background-color .4s var(--out),color .4s var(--out)}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer;-webkit-user-select:none;user-select:none}
@@ -421,9 +423,35 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .win-pill:active{scale:.96}
 .win-pill[aria-expanded="true"]{background:var(--primary);color:var(--primary-ink)}
 
+/* ---------- stacking in the row under the board ---------- */
+/* the picker and its panel sit over every button; settings rides over the
+   others while the row slides; ghosts of leaving buttons sit underneath */
+.actions>*{position:relative;z-index:2}
+.actions #btnSettings{z-index:3}
+.actions .pick{z-index:6}
+.actions .pick[data-open]{z-index:9}
+.actions .emo{z-index:7}
+.card-actions #leaveRoom{flex:0 0 auto}
+.card-actions #inviteBtn[hidden]+#leaveRoom{flex:1 1 auto}
+#joinBtn{width:100%}
+
+/* ---------- emotes ---------- */
+.emo{position:relative;flex:none}
+.emo-tray{position:absolute;bottom:calc(100% + 12px);left:50%;display:flex;gap:2px;padding:6px;border-radius:999px;background:var(--slab);box-shadow:var(--float);transform:translateX(calc(-50% + var(--shift,0px))) translateY(10px) scale(.6);transform-origin:50% 100%;opacity:0;pointer-events:none;transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .18s ease}
+.emo[data-open] .emo-tray{transform:translateX(calc(-50% + var(--shift,0px)));opacity:1;pointer-events:auto;transition:transform .55s cubic-bezier(.34,1.45,.5,1),opacity .2s ease}
+.emo-tray button{width:52px;height:52px;border:0;border-radius:99px;background:none;font-size:30px;line-height:1;display:grid;place-items:center;opacity:0;transform:translateY(8px) scale(.6);transition:transform .2s ease,opacity .15s ease,background-color .15s}
+.emo[data-open] .emo-tray button{opacity:1;transform:none;transition:transform .5s cubic-bezier(.34,1.6,.5,1),opacity .2s ease,background-color .15s}
+.emo[data-open] .emo-tray button:hover,.emo-tray button:focus-visible{background:var(--chip);transform:translateY(-6px) scale(1.22);outline:none}
+.emo-tray button:active{transform:scale(.9)!important}
+#emoBtn[aria-expanded="true"]{background:var(--primary);color:var(--primary-ink)}
+#emoBtn.cool{opacity:.5}
+.emote-fly{position:fixed;z-index:70;left:0;top:0;pointer-events:none;font-size:60px;line-height:1;will-change:transform,opacity}
+.emote-fly.bit{font-size:24px}
+
 /* ---------- QR code: show it, or scan one ---------- */
 .qr-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
-.qr{width:184px;height:184px;padding:12px;border-radius:22px;background:#fff;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.qr{width:152px;height:152px;padding:10px;border-radius:20px;background:#f4f4f5;opacity:.94;transition:opacity .2s}
+.qr:hover{opacity:1}
 .qr svg{display:block;width:100%;height:100%}
 .qr-hint{margin:0;font-size:12px;color:var(--mute);text-align:center}
 .code-row .tools{display:flex;gap:6px}
@@ -485,7 +513,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   .dock .card{width:100%;padding:0;background:none;box-shadow:none;border-radius:0;gap:14px;animation:none}
   .dock .card.join{padding-top:14px;border-top:1px solid var(--hair)}
   .dock .seats{padding:0}
-  .app:not([data-mode="online"]) .dock,.app[data-net="live"] .dock,.app[data-net="lost"] .dock{transform:translateY(110%);pointer-events:none}
+  .app:not([data-mode="online"]) .dock,.app[data-net="live"] .dock,.app[data-net="lost"] .dock{transform:translateY(110%);pointer-events:none;visibility:hidden;transition:transform .55s var(--spring-soft),visibility 0s linear .55s}
   .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .actions{visibility:hidden}
   .pop,.modal{top:auto;left:0;right:0;bottom:0;width:auto;translate:none;max-height:88dvh;overflow:auto;border-radius:30px 30px 0 0;padding:10px 12px max(24px,env(safe-area-inset-bottom));transform-origin:50% 100%}
   .dlg .grab{display:block;width:40px;height:5px;margin:0 auto 10px;border-radius:9px;background:var(--chip-2);touch-action:none}
@@ -598,6 +626,12 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
       </div>
       <button class="btn primary big" id="newBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>New round</button>
       <button class="btn round" id="undoBtn" type="button" aria-label="Undo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+      <div class="emo" id="emo" hidden>
+        <button class="btn round" id="emoBtn" type="button" aria-label="Send a reaction" aria-haspopup="true" aria-expanded="false" aria-controls="emoTray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
+        <div class="emo-tray" id="emoTray" role="menu" aria-label="Reactions">
+          <button type="button" role="menuitem" data-e="laugh" aria-label="Laugh">😂</button><button type="button" role="menuitem" data-e="angry" aria-label="Angry">😠</button><button type="button" role="menuitem" data-e="sad" aria-label="Sad">😢</button><button type="button" role="menuitem" data-e="down" aria-label="Thumbs down">👎</button>
+        </div>
+      </div>
       <button class="btn round" id="btnSettings" type="button" aria-label="Game settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/></svg></button>
       <div class="chip" id="chip" hidden>
         <span class="orbs"><span class="orb" id="chipMe"></span><span class="orb friend" id="chipFriend"></span></span>
@@ -638,6 +672,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 
 <div class="tst" id="tst" role="region" aria-label="Requests from your friend" aria-live="assertive"></div>
 <div class="scrim" id="scrim" hidden></div>
+<p class="sr" id="srLive" aria-live="assertive"></p>
 
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
@@ -818,14 +853,17 @@ function flipActions(change){
   try{change()}finally{flipping=false}
   kids.forEach(k=>{
     const a=before.get(k),b=k.offsetParent?k.getBoundingClientRect():null;
-    if(a&&b){const dx=a.left-b.left,dy=a.top-b.top;
-      if(Math.abs(dx)>.5||Math.abs(dy)>.5)k.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"none"}],{duration:560,easing:"cubic-bezier(.34,1.25,.5,1)"})}
+    if(a&&b){const dx=a.left-b.left,dy=a.top-b.top,dw=a.width-b.width;
+      /* a button that changes width grows or shrinks into it, instead of jumping */
+      if(Math.abs(dw)>1){k.style.flex="none";
+        k.animate([{width:a.width+"px",transform:`translate(${dx}px,${dy}px)`},{width:b.width+"px",transform:"none"}],{duration:560,easing:"cubic-bezier(.34,1.2,.5,1)"}).onfinish=()=>{k.style.flex=""}}
+      else if(Math.abs(dx)>.5||Math.abs(dy)>.5)k.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"none"}],{duration:560,easing:"cubic-bezier(.34,1.25,.5,1)"})}
     else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:560,delay:90,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
     else if(a&&!b){
       const g=k.cloneNode(true);g.removeAttribute("id");g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
       g.hidden=false;g.setAttribute("aria-hidden","true");g.removeAttribute("data-open");
-      Object.assign(g.style,{position:"fixed",left:a.left+"px",top:a.top+"px",width:a.width+"px",height:a.height+"px",margin:"0",pointerEvents:"none",zIndex:"4",display:"flex"});
-      document.body.appendChild(g);
+      Object.assign(g.style,{position:"fixed",left:a.left+"px",top:a.top+"px",width:a.width+"px",height:a.height+"px",margin:"0",pointerEvents:"none",zIndex:"1",display:"flex"});
+      app.appendChild(g); /* inside the app layer, under the row and under the sheet */
       g.animate([{opacity:1,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(16px) scale(.9)",filter:"blur(4px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
     }
   });
@@ -1258,6 +1296,7 @@ function onMessage(m){
   if(m.t==="bye"){connOpen=false;partnerSeen=0;inReq=null;outReq=null;render();return}
   markSeen();
   if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
+  if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e);return}
   if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
     if(m.kind==="rule"&&m.data!=="A"&&m.data!=="B")return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
@@ -1351,8 +1390,10 @@ function renderNet(){
   otpEl.classList.toggle("busy",s==="guest-wait");
   otpEl.classList.toggle("done",joined&&!isHost);
   otpIn.disabled=s==="guest-wait"||joined;
+  $("joinBtn").hidden=s==="guest-wait"||joined;
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
+  $("emo").hidden=s!=="live";if(s!=="live")emoClose();
   chip.hidden=!showChip;
   if(showChip){$("chipMe").className="orb"+(me==="O"?" o":"");$("chipFriend").className="orb friend"+(s==="lost"?" away":"");$("chipCode").textContent=room||""}
 }
@@ -1445,8 +1486,9 @@ function drawQR(text){
   if(typeof qrcode!=="function")return false;
   if(qrFor===text)return true;
   const q=qrcode(0,"M");q.addData(text);q.make();const n=q.getModuleCount();let d="";
-  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+=`M${c} ${r}h1v1h-1z`;
-  $("qr").innerHTML=`<svg viewBox="-1 -1 ${n+2} ${n+2}" shape-rendering="crispEdges" aria-hidden="true"><path d="${d}" fill="#111"/></svg>`;
+  /* soft modules: lightly rounded squares that still touch, so cameras read them */
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+=`<rect x="${c}" y="${r}" width="1.02" height="1.02" rx=".22"/>`;
+  $("qr").innerHTML=`<svg viewBox="-1 -1 ${n+2} ${n+2}" aria-hidden="true"><g fill="#26262a">${d}</g></svg>`;
   qrFor=text;return true;
 }
 $("qrBtn").addEventListener("click",()=>{
@@ -1642,6 +1684,77 @@ tst.addEventListener("pointerover",()=>{if(tItems.length>1&&!tst.hasAttribute("d
 tst.addEventListener("pointerout",e=>{if(!e.relatedTarget||!tst.contains(e.relatedTarget)){if(tst.hasAttribute("data-open")){tst.removeAttribute("data-open");tstLayout()}}});
 tst.addEventListener("focusin",()=>{if(tItems.length>1){tst.setAttribute("data-open","");tstLayout()}});
 tst.addEventListener("focusout",e=>{if(!tst.contains(e.relatedTarget)){tst.removeAttribute("data-open");tstLayout()}});
+
+/* ---------- Emotes ---------- */
+/* A quick reaction for the other player. Tap the smiley, the tray springs
+   open with each face arriving a beat after the last; pick one and it pops
+   out of your orb. Your friend sees it bounce up over yours with a small
+   burst and feels a short buzz. A brief cooldown keeps it from becoming spam. */
+const EMO={laugh:["😂","laughing"],angry:["😠","angry"],sad:["😢","sad"],down:["👎","thumbs down"]};
+const emo=$("emo"),emoBtn=$("emoBtn"),emoTray=$("emoTray");
+let emoCool=0,emoIn=[];
+function emoOpen(){
+  if(emo.hasAttribute("data-open"))return;
+  emo.style.setProperty("--shift","0px");emo.setAttribute("data-open","");emoBtn.setAttribute("aria-expanded","true");
+  emoTray.querySelectorAll("button").forEach((b,i)=>b.style.transitionDelay=(40+i*45)+"ms");
+  /* keep the tray on screen */
+  /* measured from its natural size, not its half-open scale */
+  const br=emoBtn.getBoundingClientRect(),w=emoTray.offsetWidth,pad=10,left=br.left+br.width/2-w/2;let sh=0;
+  if(left<pad)sh=pad-left;else if(left+w>innerWidth-pad)sh=innerWidth-pad-(left+w);
+  emo.style.setProperty("--shift",sh+"px");
+  setTimeout(()=>emoTray.querySelector("button").focus({preventScroll:true}),still?0:120);
+}
+function emoClose(focusBtn){
+  if(!emo.hasAttribute("data-open"))return;
+  emoTray.querySelectorAll("button").forEach(b=>b.style.transitionDelay="0ms");
+  emo.removeAttribute("data-open");emoBtn.setAttribute("aria-expanded","false");
+  if(focusBtn)emoBtn.focus({preventScroll:true});
+}
+emoBtn.addEventListener("click",()=>emo.hasAttribute("data-open")?emoClose():emoOpen());
+emoTray.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>sendEmote(b.dataset.e)));
+emo.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){e.stopPropagation();emoClose(true);return}
+  if(e.key==="ArrowRight"||e.key==="ArrowLeft"){const bs=[...emoTray.querySelectorAll("button")],i=bs.indexOf(document.activeElement);
+    if(i<0)return;e.preventDefault();bs[(i+(e.key==="ArrowRight"?1:bs.length-1))%bs.length].focus()}
+});
+document.addEventListener("pointerdown",e=>{if(e.isTrusted&&emo.hasAttribute("data-open")&&!emo.contains(e.target))emoClose()});
+function sendEmote(k){
+  if(!EMO[k]||!connOpen||Date.now()<emoCool)return;
+  emoCool=Date.now()+1200;emoBtn.classList.add("cool");setTimeout(()=>emoBtn.classList.remove("cool"),1200);
+  publish({t:"emote",e:k});emoClose(true);
+  flyEmote(k,me,false);
+}
+function receiveEmote(k){
+  const now=Date.now();emoIn=emoIn.filter(t=>now-t<3000);if(emoIn.length>=6)return;emoIn.push(now);
+  flyEmote(k,other(me),true);
+  try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
+  $("srLive").textContent="Your friend reacted: "+EMO[k][1];
+}
+function flyEmote(k,side,big){
+  const p=$("p"+side),orb=$("p"+side+"orb");
+  let r=orb&&orb.offsetParent&&getComputedStyle(p).visibility!=="hidden"?orb.getBoundingClientRect():null;
+  if(!r){const b=boardWrap.getBoundingClientRect();r={left:b.left+b.width/2-1,top:b.top+b.height/2-1,width:2,height:2}}
+  const x=r.left+r.width/2,y=r.top+r.height/2;
+  const el=document.createElement("span");el.className="emote-fly";el.textContent=EMO[k][0];el.setAttribute("aria-hidden","true");
+  document.body.appendChild(el);
+  const s0=big?1:.8,T=(dx,dy,sc)=>`translate(${x+dx}px,${y+dy}px) translate(-50%,-50%) scale(${sc})`;
+  if(still){el.animate([{opacity:1,transform:T(0,-40,s0)},{opacity:0,transform:T(0,-40,s0)}],{duration:1400}).onfinish=()=>el.remove();return}
+  el.animate([
+    {opacity:0,transform:T(0,0,.2)},
+    {opacity:1,transform:T(0,-34,1.35*s0),offset:.18,easing:"cubic-bezier(.34,1.6,.5,1)"},
+    {transform:T(0,-28,.9*s0),offset:.3},
+    {transform:T(0,-32,1.06*s0),offset:.4},
+    {opacity:1,transform:T(0,-34,s0),offset:.62},
+    {opacity:0,transform:T(0,-130,.85*s0)}
+  ],{duration:2000,easing:"cubic-bezier(.22,1,.36,1)"}).onfinish=()=>el.remove();
+  if(!big)return;
+  for(let i=0;i<5;i++){
+    const bit=document.createElement("span");bit.className="emote-fly bit";bit.textContent=EMO[k][0];bit.setAttribute("aria-hidden","true");document.body.appendChild(bit);
+    const a=-Math.PI/2+(i-2)*.55+(Math.random()-.5)*.3,d=70+Math.random()*40;
+    bit.animate([{opacity:0,transform:T(0,-20,.3)},{opacity:1,transform:T(Math.cos(a)*d*.6,Math.sin(a)*d*.6-20,1),offset:.35},{opacity:0,transform:T(Math.cos(a)*d,Math.sin(a)*d-40,.6)}],
+      {duration:1100+i*60,delay:120,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"}).onfinish=()=>bit.remove();
+  }
+}
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
@@ -1829,6 +1942,8 @@ $("btnTheme").addEventListener("click",e=>{
 });
 
 /* ---------- Layout upkeep ---------- */
+/* one screen: if anything ever nudges the page (a focused field, a browser quirk), put it back */
+addEventListener("scroll",()=>{if(scrollX||scrollY)scrollTo(0,0)},{passive:true});
 function placeAll(){placeThumb($("tabs"),false);document.querySelectorAll(".seg[data-opt]").forEach(s=>placeThumb(s,false))}
 addEventListener("resize",placeAll);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(placeAll);
