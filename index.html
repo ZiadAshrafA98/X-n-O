@@ -445,15 +445,16 @@ button.mark{border:0;background:none;padding:0}
 .about{width:min(540px,calc(100vw - 48px))}
 .about-lead{margin:-6px 12px 0;color:var(--mute);font-size:14px}
 .creators{display:flex;justify-content:center;gap:clamp(12px,4vw,36px);padding:18px 8px 6px}
-.creator{display:flex;flex-direction:column;align-items:center;width:clamp(140px,40vw,200px)}
-.head3d{position:relative;width:100%;aspect-ratio:200/230;perspective:700px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.head3d .rig{width:100%;height:100%;transform-style:preserve-3d;transform:rotateY(calc(var(--mx,0)*16deg)) rotateX(calc(var(--my,0)*-11deg));transition:transform .6s cubic-bezier(.22,1,.36,1);animation:bob 4.6s ease-in-out infinite}
+.creator{display:flex;flex-direction:column;align-items:center;width:clamp(120px,34vw,170px)}
+.head3d{position:relative;width:100%;aspect-ratio:120/180;perspective:800px}
+.head3d .rig{width:100%;height:100%;transform-style:preserve-3d;transform:rotateY(calc(var(--mx,0)*8deg)) rotateX(calc(var(--my,0)*-6deg));transition:transform .9s cubic-bezier(.22,1,.36,1);animation:bob 4.6s ease-in-out infinite}
 .creator+.creator .rig{animation-delay:-2.3s}
 .head3d svg{display:block;width:100%;height:100%;overflow:visible;filter:drop-shadow(0 16px 22px rgba(0,0,0,.32))}
-.head3d g{transition:transform .6s cubic-bezier(.22,1,.36,1)}
-.head3d .l-back{transform:translate(calc(var(--mx,0)*-5px),calc(var(--my,0)*-3px))}
-.head3d .l-mid{transform:translate(calc(var(--mx,0)*4px),calc(var(--my,0)*3px))}
-.head3d .l-front{transform:translate(calc(var(--mx,0)*8px),calc(var(--my,0)*5px))}
+.head3d g{transition:transform .9s cubic-bezier(.22,1,.36,1)}
+.head3d .l-back{transform:translate(calc(var(--mx,0)*-2px),calc(var(--my,0)*-1.5px))}
+.head3d .l-mid{transform:translate(calc(var(--mx,0)*2px),calc(var(--my,0)*1.5px))}
+.head3d .pupil{transform:translate(calc(var(--mx,0)*2.4px),calc(var(--my,0)*1.4px))}
+.head3d .l-front{transform:translate(calc(var(--mx,0)*3.5px),calc(var(--my,0)*2.5px))}
 .head-shadow{width:58%;height:14px;margin-top:-4px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.4),transparent);animation:shadowbob 4.6s ease-in-out infinite}
 .creator+.creator .head-shadow{animation-delay:-2.3s}
 :root[data-theme="light"] .head-shadow{background:radial-gradient(closest-side,rgba(0,0,0,.18),transparent)}
@@ -2388,73 +2389,76 @@ if(saved&&saved.room&&(saved.isHost?(!roomParam||roomParam===saved.room):roomPar
 else setMode("local");
 placeAll();
 /* ---------- About the makers ---------- */
-/* Drawn from photos as stylized heads, not a likeness. Each one is an SVG in
-   four layers so the pointer can move them at different depths. */
-function avatarSVG(o){
-  const id=o.id,g=(n,stops)=>`<radialGradient id="${id}${n}" cx="38%" cy="30%" r="75%">${stops}</radialGradient>`;
-  const hair=o.curly
-    ? `<path d="M50 96C46 62 66 30 100 28C134 30 154 62 150 96C146 80 138 68 128 62C114 56 86 56 72 62C62 68 54 80 50 96Z" fill="${o.hair}"/>`+
-      [[52,82],[56,66],[64,52],[75,42],[88,35],[100,33],[112,35],[125,42],[136,52],[144,66],[148,82],[70,58],[84,48],[100,45],[116,48],[130,58]].map(([x,y],i)=>`<circle cx="${x}" cy="${y}" r="${i>10?8:9.5}" fill="${o.hair}"/><circle cx="${x-2.5}" cy="${y-3}" r="3" fill="#fff" opacity=".06"/>`).join("")
-    : `<path d="M50 94C47 60 70 33 100 32C130 33 153 60 150 94C147 78 139 65 127 60C113 55 87 55 73 60C61 65 53 78 50 94Z" fill="${o.hair}"/><path d="M50 94C50 84 52 76 56 70L58 98Z M150 94C150 84 148 76 144 70L142 98Z" fill="${o.hair}" opacity=".85"/>`;
-  const beardPath=o.full
-    ? "M48 108C50 148 70 178 100 180C130 178 150 148 152 108C147 127 138 140 124 143C116 135 84 135 76 143C62 140 53 127 48 108Z"
-    : "M50 112C52 142 70 166 100 168C130 166 148 142 150 112C146 128 136 140 124 142C116 134 84 134 76 142C64 140 54 128 50 112Z";
-  const glasses=o.round
-    ? `<circle cx="80" cy="105" r="17" fill="#fff" fill-opacity=".1" stroke="${o.frame}" stroke-width="2.4"/><circle cx="120" cy="105" r="17" fill="#fff" fill-opacity=".1" stroke="${o.frame}" stroke-width="2.4"/><path d="M96 102Q100 98 104 102" fill="none" stroke="${o.frame}" stroke-width="2.4"/><path d="M63 102L49 98M137 102L151 98" stroke="${o.frame}" stroke-width="2.4" stroke-linecap="round"/><path d="M70 95q5-4 11-3M110 95q5-4 11-3" stroke="#fff" stroke-opacity=".45" stroke-width="2" stroke-linecap="round" fill="none"/>`
-    : `<rect x="61" y="94" width="36" height="23" rx="8" fill="#fff" fill-opacity=".1" stroke="${o.frame}" stroke-width="3.6"/><rect x="103" y="94" width="36" height="23" rx="8" fill="#fff" fill-opacity=".1" stroke="${o.frame}" stroke-width="3.6"/><path d="M63 95.5H95M105 95.5H137" stroke="${o.accent}" stroke-width="2" stroke-linecap="round"/><path d="M97 101Q100 98 103 101" fill="none" stroke="${o.frame}" stroke-width="3"/><path d="M61 100L49 97M139 100L151 97" stroke="${o.frame}" stroke-width="3" stroke-linecap="round"/><path d="M68 99q5-3 10-2M110 99q5-3 10-2" stroke="#fff" stroke-opacity=".4" stroke-width="2" stroke-linecap="round" fill="none"/>`;
-  const mouth=o.smile
-    ? `<path d="M86 146C93 155 107 155 114 146Z" fill="#3a1d18"/><path d="M89 147.5C95 151 105 151 111 147.5" stroke="#fff" stroke-width="3" stroke-linecap="round" fill="none" opacity=".9"/>`
-    : `<path d="M90 147C96 151.5 104 151.5 110 147" fill="none" stroke="#3a1f1a" stroke-width="3.2" stroke-linecap="round"/>`;
-  const collar=o.collar
-    ? `<path d="M76 176L100 200L88 214L66 186Z" fill="${o.shirtHi}"/><path d="M124 176L100 200L112 214L134 186Z" fill="${o.shirtHi}"/><circle cx="100" cy="214" r="2.6" fill="#fff" opacity=".8"/>`
-    : `<path d="M78 176C86 190 114 190 122 176" fill="none" stroke="${o.shirtHi}" stroke-width="6" stroke-linecap="round"/>`;
-  return `<svg viewBox="0 0 200 230" role="img" aria-label="${o.label}"><defs>
-    ${g("s",`<stop offset="0" stop-color="${o.skinHi}"/><stop offset=".55" stop-color="${o.skin}"/><stop offset="1" stop-color="${o.skinLo}"/>`)}
-    ${g("t",`<stop offset="0" stop-color="${o.shirtHi}"/><stop offset="1" stop-color="${o.shirt}"/>`)}
-    ${g("b",`<stop offset="0" stop-color="${o.beardHi}"/><stop offset="1" stop-color="${o.hair}"/>`)}
-  </defs>
-  <g class="l-back">
-    <path d="M18 232C24 190 60 174 100 174C140 174 176 190 182 232Z" fill="url(#${id}t)"/>
-    ${collar}
-    <rect x="80" y="140" width="40" height="44" rx="16" fill="${o.skinLo}"/>
-    <ellipse cx="47" cy="112" rx="11" ry="16" fill="${o.skin}"/><ellipse cx="153" cy="112" rx="11" ry="16" fill="${o.skin}"/>
-    <ellipse cx="47" cy="112" rx="5" ry="9" fill="${o.skinLo}" opacity=".6"/><ellipse cx="153" cy="112" rx="5" ry="9" fill="${o.skinLo}" opacity=".6"/>
-  </g>
+/* Drawn as comic heads in a modern hero style: three-tone cel shading,
+   crisp highlights and a cool rim light on the shadow side. Built in four
+   layers (ears, face and light, features, glasses) so the pointer can move
+   them at slightly different depths. Facing forward, no clicks. */
+const AV={
+  FACE:"M62 96C61 60 79 40 100 40C121 40 139 60 138 96L139 120C139 143 129 162 116 173C108 180 92 180 84 173C71 162 61 143 61 120Z",
+  EARL:"M63 103C55 99 52 110 54 119C56 128 61 131 64 127Z",EARR:"M137 103C145 99 148 110 146 119C144 128 139 131 136 127Z",
+  SHADE:"M113 40C133 52 141 80 139 120C138 146 127 166 109 177L170 200L170 20Z",
+  DEEP:"M122 60C138 80 142 120 132 150C126 162 118 172 108 180L170 200V40Z",
+  HAIR_S:"M61 97C58 63 76 37 100 36C124 37 142 63 139 97C137 84 133 74 126 68C119 62 111 59 100 59C89 59 81 62 74 68C67 74 63 84 61 97Z",
+  BEARD_S:"M62 116C63 140 72 160 84 171C92 178 108 178 116 171C128 160 137 140 138 116C134 128 128 136 120 141C114 136 106 136 100 138C94 136 86 136 80 141C72 136 66 128 62 116Z",
+  BEARD_F:"M60 110C60 146 70 172 84 184C93 192 107 192 116 184C130 172 140 146 140 110C136 128 129 138 120 142C114 137 106 137 100 139C94 137 86 137 80 142C71 138 64 128 60 110Z",
+  MUST:"M85 140C92 135 108 135 115 140C108 141.5 92 141.5 85 140Z",
+  BROWS:"M67 99Q79 91 93 96Q80 94 67 101Z M133 99Q121 91 107 96Q120 94 133 101Z",
+  NOSE:"M101 101C102 112 104 121 108 127C104 132 99 133 96 131C100 128 102 118 101 101Z"
+};
+AV.HAIR_C=(()=>{let d="M60 100";const n=13;for(let i=0;i<=n;i++){const t=Math.PI*(1-i/n),r=46+((i%2)?3:0),x=100+r*Math.cos(t)*1.02,y=72-r*Math.sin(t)*.95;d+=` Q${(100+(r+9)*Math.cos(t+.12)*1.02).toFixed(1)} ${(72-(r+9)*Math.sin(t+.12)*.95).toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}`}
+  return d+" C138 84 132 70 124 63C116 57 108 55 100 55C92 55 84 57 76 63C68 70 62 84 60 100Z"})();
+const avEye=(cx,cy)=>`M${cx-10} ${cy}Q${cx-1} ${cy-5.5} ${cx+10} ${cy-.5}Q${cx} ${cy+3.6} ${cx-10} ${cy}Z`;
+const avLid=(cx,cy)=>`M${cx-11} ${cy+.3}Q${cx-1} ${cy-7} ${cx+11} ${cy-.6}`;
+function avatarSVG(p){
+  const id="av"+p.id,ink="#0d0a14",w=2.2,hi="#ffe7cf",rim="#5ad1ff",hair=p.hair,beard=p.full?AV.BEARD_F:AV.BEARD_S;
+  const curls=p.curly?[[72,50],[84,42],[97,38],[110,40],[122,46],[132,56],[66,64],[78,56],[91,50],[104,49],[117,53],[128,63],[70,78],[136,76],[86,62],[112,62]]
+      .map(([x,y])=>`<path d="M${x-4} ${y+1}a4.2 4.2 0 1 1 7 -2.5" fill="none" stroke="#3b2e39" stroke-width="1.6" stroke-linecap="round"/>`).join("")
+    :`<g clip-path="url(#${id}h)">`+Array.from({length:60},(_,i)=>{const a=Math.PI*(.04+.92*((i*37)%60)/60),r=18+((i*13)%11)*2.6;return`<circle cx="${(100+r*1.3*Math.cos(a)).toFixed(1)}" cy="${(70-r*.9*Math.sin(a)).toFixed(1)}" r=".9" fill="#3b2e39" opacity=".8"/>`}).join("")+"</g>";
+  const glasses=p.round
+    ?`<circle cx="81" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><circle cx="119" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><path d="M95 105Q100 101 105 105M67 105L57 103M133 105L143 103" fill="none" stroke="${p.frame}" stroke-width="1.8" stroke-linecap="round"/><path d="M72 100l6 -5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`
+    :`<rect x="65" y="97" width="31" height="21" rx="5" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="3.2"/><rect x="104" y="97" width="31" height="21" rx="5" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="3.2"/><path d="M67 98.5H94M106 98.5H133" stroke="${p.accent}" stroke-width="1.6"/><path d="M96 103Q100 100 104 103M65 102L56 100M135 102L144 100" fill="none" stroke="${p.frame}" stroke-width="2.4" stroke-linecap="round"/><path d="M70 101l6 -4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
+  return`<svg viewBox="40 20 120 180" role="img" aria-label="${p.label}"><defs>
+    <clipPath id="${id}c"><path d="${AV.FACE}"/></clipPath><clipPath id="${id}h"><path d="${AV.HAIR_S}"/></clipPath>
+    <clipPath id="${id}eL"><path d="${avEye(81,108)}"/></clipPath><clipPath id="${id}eR"><path d="${avEye(119,108)}"/></clipPath></defs>
+  <g class="l-back"><path d="${AV.EARL}" fill="${p.skin}" stroke="${ink}" stroke-width="${w}"/><path d="${AV.EARR}" fill="${p.lo}" stroke="${ink}" stroke-width="${w}"/></g>
   <g class="l-face">
-    <path d="M48 95C48 55 72 38 100 38C128 38 152 55 152 95L152 118C152 150 128 170 100 170C72 170 48 150 48 118Z" fill="url(#${id}s)"/>
-    <ellipse cx="72" cy="124" rx="12" ry="8" fill="#ff8a7a" opacity=".12"/><ellipse cx="128" cy="124" rx="12" ry="8" fill="#ff8a7a" opacity=".12"/>
-    <ellipse cx="84" cy="70" rx="22" ry="12" fill="#fff" opacity=".1"/>
+    <path d="${AV.FACE}" fill="${p.skin}"/>
+    <g clip-path="url(#${id}c)">
+      <path d="${AV.SHADE}" fill="${p.lo}"/><path d="${AV.DEEP}" fill="${p.deep}"/>
+      <path d="M68 100Q81 94 93 99Q81 106 68 100Z" fill="${p.lo}" opacity=".75"/><path d="M107 99Q119 94 132 100Q119 106 107 99Z" fill="${p.deep}" opacity=".7"/>
+      <path d="${AV.NOSE}" fill="${p.lo}"/><path d="M66 126Q74 138 84 140" fill="none" stroke="${p.lo}" stroke-width="5" opacity=".5"/>
+      <path d="M74 66Q86 56 100 56" fill="none" stroke="${hi}" stroke-width="5" stroke-linecap="round" opacity=".55"/><path d="M98 104L97 122" stroke="${hi}" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><ellipse cx="74" cy="120" rx="6" ry="3" fill="${hi}" opacity=".35"/>
+    </g>
+    <path d="${AV.FACE}" fill="none" stroke="${ink}" stroke-width="${w}"/>
+    <path d="M139 96L139 120C139 143 129 162 116 173" fill="none" stroke="${ink}" stroke-width="${w*1.8}" stroke-linecap="round"/>
+    <path d="${AV.FACE}" fill="none" stroke="${rim}" stroke-width="2.2" clip-path="url(#${id}c)" transform="translate(-2 0)" opacity=".9"/>
   </g>
   <g class="l-mid">
-    <path d="${beardPath}" fill="url(#${id}b)"/>
-    <path d="M82 137C91 130 109 130 118 137C109 134.5 91 134.5 82 137Z" fill="${o.hair}" stroke="${o.hair}" stroke-width="4" stroke-linejoin="round"/>
-    ${mouth}
-    <path d="M100 108C97 119 93 125 95.5 129.5C98.5 132 102.5 132 105 129.5" fill="none" stroke="${o.skinLo}" stroke-width="3" stroke-linecap="round" opacity=".7"/>
-    <ellipse cx="80" cy="105" rx="9" ry="7" fill="#fff"/><ellipse cx="120" cy="105" rx="9" ry="7" fill="#fff"/>
-    <circle cx="81" cy="106" r="5.4" fill="#3b2418"/><circle cx="121" cy="106" r="5.4" fill="#3b2418"/>
-    <circle cx="81" cy="106" r="2.6" fill="#0d0907"/><circle cx="121" cy="106" r="2.6" fill="#0d0907"/>
-    <circle cx="83" cy="103.6" r="1.7" fill="#fff"/><circle cx="123" cy="103.6" r="1.7" fill="#fff"/>
-    <path d="M70 99Q80 96 90 99M110 99Q120 96 130 99" fill="none" stroke="${o.skinLo}" stroke-width="2" stroke-linecap="round" opacity=".6"/>
-    <path d="M67 ${o.browY}Q79 ${o.browY-6} 91 ${o.browY-1}M109 ${o.browY-1}Q121 ${o.browY-6} 133 ${o.browY}" fill="none" stroke="${o.hair}" stroke-width="5.5" stroke-linecap="round"/>
-    ${hair}
+    <path d="${beard}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
+    ${Array.from({length:14},(_,i)=>{const x=70+i*4.6,y=150+Math.sin(i)*6+(p.full?6:0);return`<path d="M${x} ${y}q1.5 6 0 12" stroke="#5b4636" stroke-width="1.1" fill="none" opacity=".5"/>`}).join("")}
+    <path d="${AV.MUST}" fill="${hair}" stroke="${ink}" stroke-width="${w*.9}" stroke-linejoin="round"/>
+    <path d="M90 146Q100 149 110 146" fill="none" stroke="${ink}" stroke-width="${w}" stroke-linecap="round"/>
+    <path d="M94 150Q100 152.5 106 150" fill="none" stroke="${p.lo}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M96 131Q99 133 101 131M104 130.5Q107 132 109 129" fill="none" stroke="${ink}" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M99 101C99 112 97 121 95 127" fill="none" stroke="${ink}" stroke-width="1.4" opacity=".55"/>
+    ${[81,119].map((cx,i)=>`<path d="${avEye(cx,108)}" fill="#efe9e1"/><g clip-path="url(#${id}e${i?"R":"L"})"><g class="pupil"><circle cx="${cx+1}" cy="108.5" r="4.4" fill="#3a2418"/><circle cx="${cx+1}" cy="108.5" r="2" fill="#000"/><circle cx="${cx+2.4}" cy="107" r="1" fill="#fff"/></g><path d="M${cx-11} 104H${cx+11}V108Q${cx} 103 ${cx-11} 108Z" fill="${p.lo}" opacity=".5"/></g><path d="${avLid(cx,108)}" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/><path d="M${cx-8} 111Q${cx} 113.5 ${cx+8} 111" fill="none" stroke="${ink}" stroke-width="1" opacity=".5"/>`).join("")}
+    <path d="${AV.BROWS}" fill="${hair}" stroke="${ink}" stroke-width="1"/>
+    <path d="${p.curly?AV.HAIR_C:AV.HAIR_S}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
+    ${curls}
   </g>
   <g class="l-front">${glasses}</g>
   </svg>`;
 }
 const CREATORS=[
-  {id:"az",name:"Ziad Ashraf",title:"Product Designer",label:"Ziad, drawn as a friendly 3D style head with round glasses and a short beard",
-   skin:"#8a5b3d",skinHi:"#b07a54",skinLo:"#5e3b26",hair:"#1d1511",beardHi:"#3a2a20",shirt:"#93b4dd",shirtHi:"#b9d0ee",frame:"#cfc8bc",round:1,collar:1,browY:89},
-  {id:"aa",name:"Adham Salah",title:"Software Engineer",label:"Adham, drawn as a friendly 3D style head with curly hair, rectangular glasses and a full beard",
-   skin:"#c38a62",skinHi:"#e0a77d",skinLo:"#93613f",hair:"#1b1411",beardHi:"#3b2b22",shirt:"#3f68a8",shirtHi:"#5b84c4",frame:"#2b2226",accent:"#9b3443",curly:1,full:1,smile:1,browY:88}
+  {id:"z",name:"Ziad Ashraf",title:"Product Designer",label:"Ziad drawn as a comic hero style head with round glasses and a full short beard",
+   skin:"#8f5f40",lo:"#5d3a25",deep:"#3e2618",hair:"#16100c",frame:"#c9c2b6",round:1},
+  {id:"a",name:"Adham Salah",title:"Software Engineer",label:"Adham drawn as a comic hero style head with curly hair, rectangular glasses and a full beard",
+   skin:"#c48b63",lo:"#92603f",deep:"#6a4128",hair:"#15100d",frame:"#231b1e",accent:"#8e2f3b",curly:1,full:1}
 ];
 let aboutBuilt=false;
 function buildAbout(){
   if(!aboutBuilt){aboutBuilt=true;
-    $("creators").innerHTML=CREATORS.map(c=>`<figure class="creator" style="margin:0"><div class="head3d" tabindex="0" aria-label="${c.name}"><div class="rig">${avatarSVG(c)}</div></div><span class="head-shadow" aria-hidden="true"></span><figcaption><h3>${c.name}</h3><p>${c.title}</p></figcaption></figure>`).join("");
-    document.querySelectorAll(".head3d").forEach(h=>{
-      const hop=()=>springAnim(h,{from:.9,to:1,k:300,c:11,prop:v=>`translateY(${((1-v)*60).toFixed(2)}px) scale(${(.92+.08*v).toFixed(4)})`});
-      h.addEventListener("click",hop);h.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();hop()}});
-    });
+    $("creators").innerHTML=CREATORS.map(c=>`<figure class="creator" style="margin:0"><div class="head3d"><div class="rig">${avatarSVG(c)}</div></div><span class="head-shadow" aria-hidden="true"></span><figcaption><h3>${c.name}</h3><p>${c.title}</p></figcaption></figure>`).join("");
   }
   /* each head springs in, one after the other */
   document.querySelectorAll(".head3d").forEach((h,i)=>{h.style.setProperty("--mx",0);h.style.setProperty("--my",0);setTimeout(()=>dropIn(h),120+i*160)});
