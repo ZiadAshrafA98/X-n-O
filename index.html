@@ -1149,6 +1149,25 @@ const AVATARS={
       `<path d="M46.5 66.5H53.5L50 70.5Z" fill="#e5879e" stroke="${AINK}" stroke-width="1.3" stroke-linejoin="round"/>`+
       `<path d="M50 70.5V72.5M50 72.5Q47 75.5 43.5 73.5M50 72.5Q53 75.5 56.5 73.5" fill="none" stroke="${AINK}" stroke-width="1.5" stroke-linecap="round"/>`+
       `<path d="M37 71L13 68M37 74L14 77M63 71L87 68M63 74L86 77" stroke="#f2eef7" stroke-width="1.1" stroke-linecap="round" opacity=".9"/>`}}
+,
+  lion:{name:"Lion",art:()=>{
+    const m=["#b8662b","#8e4a1b","#64310f"],c=["#e6b266","#c38945","#96642c"];
+    /* the mane: a ring of soft points around the face */
+    const mane=(()=>{const n=14,cx=50,cy=56,P=(a,r)=>`${(cx+r*Math.cos(a)).toFixed(1)} ${(cy+r*Math.sin(a)*.96).toFixed(1)}`;
+      let d="M"+P(-Math.PI/2,38);for(let i=1;i<=n;i++){const a0=-Math.PI/2+(i-.5)/n*Math.PI*2,a1=-Math.PI/2+i/n*Math.PI*2;d+=` Q${P(a0,48)} ${P(a1,38)}`}return d+"Z"})();
+    const ear="M27 33C24 25 30 19 37 22C41 24 41 30 38 33Z";
+    const face="M50 31C65 31 75 42 75 57C75 71 65 82 50 85C35 82 25 71 25 57C25 42 35 31 50 31Z";
+    return aBg("#3c6687",mane)+cel(mane,m,[7,86],`<path d="M20 40Q26 30 36 25M16 58Q17 48 21 42M24 76Q19 68 18 62" fill="none" stroke="#e0914a" stroke-width="2.4" stroke-linecap="round" opacity=".7"/><path d="M70 82Q78 76 82 68M79 30Q85 38 86 48" fill="none" stroke="${m[2]}" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>`)+
+      cel(ear,c,[24,17],`<path d="M31 29C30 26 33 24 35 26" fill="none" stroke="${c[2]}" stroke-width="2.2" stroke-linecap="round"/>`)+cel(mirror(ear),c,[59,17])+
+      cel(face,c,[25,50],hiStroke("M34 40Q42 34 50 34","#ffd99a",2.8,.75)+hiStroke("M28 54Q28 47 31 43","#ffd99a",1.8,.5)+
+        `<path d="M44 34Q50 40 56 34M46 38Q50 42 54 38" fill="none" stroke="${c[1]}" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>`+
+        `<path d="M37 70C37 63 63 63 63 70C63 79 57 83 50 83C43 83 37 79 37 70Z" fill="#f4e0b8"/><path d="M50 64C57 64 63 66 63 70C63 79 57 83 50 83Z" fill="#dcc394"/>`,
+        "M75 57C75 71 65 82 50 85")+
+      aEye(39,55,{iris:"#d99a1e",lid:.36,lidColor:c[0]})+aEye(61,55,{iris:"#d99a1e",lid:.36,lidColor:c[1]})+
+      `<path d="M30 48.5L45 51L44 52.5L30 50.5Z" fill="#5a3214"/><path d="M70 48.5L55 51L56 52.5L70 50.5Z" fill="#4a280f"/>`+
+      `<path d="M43.5 64H56.5L52.5 70.5Q50 72.5 47.5 70.5Z" fill="#5b2c20" stroke="${AINK}" stroke-width="1.5" stroke-linejoin="round"/><ellipse cx="47.5" cy="65.6" rx="2.4" ry=".9" fill="#fff" opacity=".45"/>`+
+      `<path d="M50 72V75M43.5 76.5Q47 79.5 50 75Q53 79.5 56.5 76.5" fill="none" stroke="${AINK}" stroke-width="1.6" stroke-linecap="round"/>`+
+      [[41,72],[38,74],[42,75.5],[59,72],[62,74],[58,75.5]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r=".75" fill="${AINK}" opacity=".55"/>`).join("")}}
 };
 const AV_KEYS=Object.keys(AVATARS),avURI={};
 function avSVG(k){return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${AVATARS[k].art()}</svg>`}
@@ -2830,25 +2849,31 @@ function avatarSVG(p){
       .map(([x,y])=>`<path d="M${(100+(x-100)*1.04-4).toFixed(1)} ${(64+(y+5-64)*1.04).toFixed(1)}a4.2 4.2 0 1 1 7 -2.5" fill="none" stroke="#3b2e39" stroke-width="1.6" stroke-linecap="round"/>`).join("")
     :`<g clip-path="url(#${id}h)">`+Array.from({length:60},(_,i)=>{const a=Math.PI*(.04+.92*((i*37)%60)/60),r=18+((i*13)%11)*2.6;return`<circle cx="${(100+r*1.3*Math.cos(a)).toFixed(1)}" cy="${(70-r*.9*Math.sin(a)).toFixed(1)}" r=".9" fill="#3b2e39" opacity=".8"/>`}).join("")+"</g>";
   const glasses=p.round
-    ?`<circle cx="81" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><circle cx="119" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><path d="M95 105Q100 101 105 105M67 105L57 103M133 105L143 103" fill="none" stroke="${p.frame}" stroke-width="1.8" stroke-linecap="round"/><path d="M72 100l6 -5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`
-    :`<path d="M62 100Q62 96 66 96H94Q97 96 97 99V112Q97 118 91 118H69Q63 118 62 112Z" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="2.8"/><path d="M138 100Q138 96 134 96H106Q103 96 103 99V112Q103 118 109 118H131Q137 118 138 112Z" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="2.8"/><path d="M97 102Q100 99 103 102" fill="none" stroke="${p.frame}" stroke-width="2.4"/><path d="M62 100L51 98M138 100L149 98" fill="none" stroke="#8d8a86" stroke-width="2.4" stroke-linecap="round"/><path d="M68 101l6 -4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
+    ?`<circle cx="81" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><circle cx="119" cy="108" r="14" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="1.8"/><path d="M95 105Q100 101 105 105" fill="none" stroke="${p.frame}" stroke-width="1.8" stroke-linecap="round"/><path d="M72 100l6 -5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`
+    :`<path d="M62 100Q62 96 66 96H94Q97 96 97 99V112Q97 118 91 118H69Q63 118 62 112Z" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="2.8"/><path d="M138 100Q138 96 134 96H106Q103 96 103 99V112Q103 118 109 118H131Q137 118 138 112Z" fill="rgba(255,255,255,.07)" stroke="${p.frame}" stroke-width="2.8"/><path d="M97 102Q100 99 103 102" fill="none" stroke="${p.frame}" stroke-width="2.4"/><path d="M68 101l6 -4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>`;
+  /* glasses arms run from each hinge back to its ear; they are drawn behind
+     the face, so the far one tucks behind the head as it turns */
+  const arm=(h,e,c,wd)=>`<path class="arm" data-h="${h}" data-e="${e}" d="M${h}L${e}" fill="none" stroke="${c}" stroke-width="${wd}" stroke-linecap="round"/>`;
+  const arms=p.round?arm("67 105","57 103",p.frame,1.8)+arm("133 105","143 103",p.frame,1.8):arm("62 100","51 98","#8d8a86",2.4)+arm("138 100","149 98","#8d8a86",2.4);
   return`<svg viewBox="40 20 120 180" role="img" aria-label="${p.label}"><defs>
     <clipPath id="${id}c"><path d="${FACE}"/></clipPath><clipPath id="${id}h"><path d="${hairPath}"/></clipPath>
     <clipPath id="${id}eL"><path d="${avEye(81,108)}"/></clipPath><clipPath id="${id}eR"><path d="${avEye(119,108)}"/></clipPath></defs>
-  <g class="l-back"><path d="${p.long?AV.EARL_B:AV.EARL}" fill="${p.skin}" stroke="${ink}" stroke-width="${w}"/><path d="${p.long?AV.EARR_B:AV.EARR}" fill="${p.lo}" stroke="${ink}" stroke-width="${w}"/>${p.long?`<path d="M58 108Q54 116 58 124M142 108Q146 116 142 124" fill="none" stroke="${p.deep}" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`:""}</g>
+  <g class="l-earL"><path d="${p.long?AV.EARL_B:AV.EARL}" fill="${p.skin}" stroke="${ink}" stroke-width="${w}"/>${p.long?`<path d="M58 108Q54 116 58 124" fill="none" stroke="${p.deep}" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`:""}</g>
+  <g class="l-earR"><path d="${p.long?AV.EARR_B:AV.EARR}" fill="${p.lo}" stroke="${ink}" stroke-width="${w}"/>${p.long?`<path d="M142 108Q146 116 142 124" fill="none" stroke="${p.deep}" stroke-width="1.6" stroke-linecap="round" opacity=".6"/>`:""}</g>
+  <g class="l-arms">${arms}</g>
   <g class="l-face">
     <path d="${FACE}" fill="${p.skin}"/>
     <g clip-path="url(#${id}c)">
-      <path d="${AV.SHADE}" fill="${p.lo}"/><path d="${AV.DEEP}" fill="${p.deep}"/>
-      <path d="M68 100Q81 94 93 99Q81 106 68 100Z" fill="${p.lo}" opacity=".75"/><path d="M107 99Q119 94 132 100Q119 106 107 99Z" fill="${p.deep}" opacity=".7"/>
-      <path d="${AV.NOSE}" fill="${p.lo}"/><path d="M66 126Q74 138 84 140" fill="none" stroke="${p.lo}" stroke-width="5" opacity=".5"/>
-      <path d="M74 66Q86 56 100 56" fill="none" stroke="${hi}" stroke-width="5" stroke-linecap="round" opacity=".55"/><path d="M98 104L97 122" stroke="${hi}" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><ellipse cx="74" cy="120" rx="6" ry="3" fill="${hi}" opacity=".35"/>
+      <g class="l-shade"><path d="${AV.SHADE}" fill="${p.lo}"/><path d="${AV.DEEP}" fill="${p.deep}"/></g>
+      <g class="l-fshade"><path d="M68 100Q81 94 93 99Q81 106 68 100Z" fill="${p.lo}" opacity=".75"/><path d="M107 99Q119 94 132 100Q119 106 107 99Z" fill="${p.deep}" opacity=".7"/>
+      <path d="${AV.NOSE}" fill="${p.lo}"/><path d="M98 104L97 122" stroke="${hi}" stroke-width="2.4" stroke-linecap="round" opacity=".6"/></g><path d="M66 126Q74 138 84 140" fill="none" stroke="${p.lo}" stroke-width="5" opacity=".5"/>
+      <path d="M74 66Q86 56 100 56" fill="none" stroke="${hi}" stroke-width="5" stroke-linecap="round" opacity=".55"/><ellipse cx="74" cy="120" rx="6" ry="3" fill="${hi}" opacity=".35"/>
     </g>
     <path d="${FACE}" fill="none" stroke="${ink}" stroke-width="${w}"/>
     <path d="${p.long?"M139 94L140 121C140 146 130 165 116 175":"M139 96L139 120C139 143 129 162 116 173"}" fill="none" stroke="${ink}" stroke-width="${w*1.8}" stroke-linecap="round"/>
     <path d="${FACE}" fill="none" stroke="${rim}" stroke-width="2.2" clip-path="url(#${id}c)" transform="translate(-2 0)" opacity=".9"/>
   </g>
-  <g class="l-mid">
+  <g class="l-beard">
     ${p.goatee
       ?`<path d="M64 128Q70 160 90 175Q100 179 110 175Q130 160 136 128" fill="none" stroke="${hair}" stroke-width="8" opacity=".14" stroke-linecap="round"/>
         ${Array.from({length:170},(_,i)=>{const fr=v=>v-Math.floor(v),x=64+fr(Math.sin(i*12.9898)*43758.55)*72,y=126+fr(Math.sin(i*78.233)*12345.67)*52,dx=(x-100)/37,dy=(y-150)/28;return dx*dx+dy*dy<1&&dy>-.3?`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r=".65" fill="${hair}" opacity=".42"/>`:""}).join("")}
@@ -2859,6 +2884,8 @@ function avatarSVG(p){
         ${[0,1,2,3,4].map(i=>`<path d="M${93+i*3.5} 163q1 4 0 8" stroke="#5b4636" stroke-width="1" fill="none" opacity=".6"/>`).join("")}`
       :`<path d="${beard}" fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
         ${Array.from({length:14},(_,i)=>{const x=70+i*4.6,y=150+Math.sin(i)*6+(p.full?6:0);return`<path d="M${x} ${y}q1.5 6 0 12" stroke="#5b4636" stroke-width="1.1" fill="none" opacity=".5"/>`}).join("")}`}
+  </g>
+  <g class="l-feat">
     ${p.smile
       ?`<path d="M84 144C91 157 109 157 116 144C108 147 92 147 84 144Z" fill="#3a1c1c" stroke="${ink}" stroke-width="1.8" stroke-linejoin="round"/>
         <path d="M88 146.2C95 148.6 105 148.6 112 146.2L111 150C104 151.6 96 151.6 89 150Z" fill="#f6f1ea"/>
@@ -2871,6 +2898,8 @@ function avatarSVG(p){
     <path d="M99 101C99 112 97 121 95 127" fill="none" stroke="${ink}" stroke-width="1.4" opacity=".55"/>
     ${[81,119].map((cx,i)=>`<path d="${avEye(cx,108)}" fill="#efe9e1"/><g clip-path="url(#${id}e${i?"R":"L"})"><g class="pupil"><circle cx="${cx+1}" cy="108.5" r="4.4" fill="#3a2418"/><circle cx="${cx+1}" cy="108.5" r="2" fill="#000"/><circle cx="${cx+2.4}" cy="107" r="1" fill="#fff"/></g><path d="M${cx-11} 104H${cx+11}V108Q${cx} 103 ${cx-11} 108Z" fill="${p.lo}" opacity=".5"/></g><path d="${avLid(cx,108)}" fill="none" stroke="${ink}" stroke-width="2.6" stroke-linecap="round"/><path d="M${cx-8} 111Q${cx} 113.5 ${cx+8} 111" fill="none" stroke="${ink}" stroke-width="1" opacity=".5"/>`).join("")}
     <path d="${AV.BROWS}" fill="${hair}" stroke="${ink}" stroke-width="1"/>
+  </g>
+  <g class="l-hair">
     <path d="${p.curly?AV.HAIR_C:hairPath}" ${p.curly?`transform="translate(100 64) scale(1.04 1.04) translate(-100 -64)"`:""} fill="${hair}" stroke="${ink}" stroke-width="${w}" stroke-linejoin="round"/>
     ${curls}
   </g>
@@ -2911,7 +2940,10 @@ function buildAbout(){
 const look={heads:[],raf:0,touch:false,home:0,t:0};
 const clamp1=v=>Math.max(-1,Math.min(1,v));
 function lookHeads(){
-  look.heads=[...document.querySelectorAll(".head3d")].map(el=>({el,rig:el.querySelector(".rig"),back:el.querySelector(".l-back"),mid:el.querySelector(".l-mid"),front:el.querySelector(".l-front"),
+  const q=(el,c)=>el.querySelector("."+c);
+  look.heads=[...document.querySelectorAll(".head3d")].map(el=>({el,rig:q(el,"rig"),earL:q(el,"l-earL"),earR:q(el,"l-earR"),face:q(el,"l-face"),shade:q(el,"l-shade"),fshade:q(el,"l-fshade"),
+    beard:q(el,"l-beard"),feat:q(el,"l-feat"),hair:q(el,"l-hair"),front:q(el,"l-front"),
+    arms:[...el.querySelectorAll(".arm")].map(a=>({a,h:a.dataset.h.split(" ").map(Number),e:a.dataset.e.split(" ").map(Number)})),
     pupils:[...el.querySelectorAll(".pupil")],x:0,y:0,tx:0,ty:0}));
 }
 function lookAt(x,y){
@@ -2922,20 +2954,36 @@ function lookAt(x,y){
 }
 function lookAhead(){look.heads.forEach(h=>{h.tx=0;h.ty=0});lookKick()}
 function lookKick(){if(!look.raf){look.t=performance.now();look.raf=requestAnimationFrame(lookStep)}}
-/* time-based easing, so it feels the same at any frame rate: about a
-   quarter second to catch a finger, a little softer for the mouse */
+/* The head turns like a rounded thing, not a card: parts nearer the viewer
+   slide further (glasses, then eyes, nose and mouth, then beard, hair, the
+   outline), the features narrow a touch, the far ear slides in behind the
+   head while the near one stays out, the shadow bands hold still as the
+   head turns under the light, and each glasses arm is redrawn from its
+   hinge to its ear. Time-based easing keeps it the same at any frame rate. */
+const DEPTH={face:[1.5,1],beard:[3,2.2],feat:[6,3.5],hair:[3,1.2],front:[7.5,4.5]};
 function lookStep(now){
-  look.raf=0;const dt=Math.min(64,Math.max(1,(now||performance.now())-look.t));look.t=now||performance.now();
+  look.raf=0;now=now||performance.now();const dt=Math.min(64,Math.max(1,now-look.t));look.t=now;
   const k=1-Math.exp(-dt/(look.touch?95:150));let busy=false;
   look.heads.forEach(h=>{
     h.x+=(h.tx-h.x)*k;h.y+=(h.ty-h.y)*k;
     if(Math.abs(h.tx-h.x)+Math.abs(h.ty-h.y)>.001)busy=true;else{h.x=h.tx;h.y=h.ty}
-    const x=h.x,y=h.y,t=(a,b)=>`translate(${(x*a).toFixed(2)} ${(y*b).toFixed(2)})`;
-    h.rig.style.transform=`translate(${(x*6).toFixed(2)}px,${(y*4).toFixed(2)}px) rotateY(${(x*16).toFixed(2)}deg) rotateX(${(-y*11).toFixed(2)}deg)`;
-    if(h.back)h.back.setAttribute("transform",t(-3.5,-2.5));
-    if(h.mid)h.mid.setAttribute("transform",t(3.5,2.5));
-    if(h.front)h.front.setAttribute("transform",t(6,4));
-    h.pupils.forEach(p=>p.setAttribute("transform",t(3.4,2.2)));
+    const x=h.x,y=h.y,ax=Math.abs(x),f=v=>v.toFixed(2);
+    const squash={face:1,beard:1-.07*ax,feat:1-.08*ax,hair:1-.03*ax,front:1-.08*ax};
+    const T=(dx,dy,sc)=>`translate(${f(100+dx)} ${f(dy)}) scale(${f(sc)} 1) translate(-100 0)`;
+    h.rig.style.transform=`translate(${f(x*5)}px,${f(y*3)}px)`;
+    for(const n in DEPTH)if(h[n])h[n].setAttribute("transform",T(x*DEPTH[n][0],y*DEPTH[n][1],squash[n]));
+    /* ears: the far one slides in behind the head, the near one barely moves */
+    const earDx=side=>(side<0?(x>0?x*1.2:-x*7):(x<0?x*1.2:-x*7));
+    if(h.earL)h.earL.setAttribute("transform",`translate(${f(earDx(-1))} ${f(-y*1.5)})`);
+    if(h.earR)h.earR.setAttribute("transform",`translate(${f(earDx(1))} ${f(-y*1.5)})`);
+    if(h.shade)h.shade.setAttribute("transform",`translate(${f(-x*3.5)} 0)`);
+    if(h.fshade)h.fshade.setAttribute("transform",`translate(${f(x*(DEPTH.feat[0]-DEPTH.face[0]))} ${f(y*(DEPTH.feat[1]-DEPTH.face[1]))})`);
+    h.arms.forEach(a=>{
+      const sc=squash.front,hx=100+(a.h[0]-100)*sc+x*DEPTH.front[0],hy=a.h[1]+y*DEPTH.front[1];
+      const ex=a.e[0]+earDx(a.e[0]<100?-1:1),ey=a.e[1]-y*1.5;
+      a.a.setAttribute("d",`M${f(hx)} ${f(hy)}L${f(ex)} ${f(ey)}`);
+    });
+    h.pupils.forEach(p=>p.setAttribute("transform",`translate(${f(x*3.4)} ${f(y*2.2)})`));
   });
   if(busy)look.raf=requestAnimationFrame(lookStep);
 }
