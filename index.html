@@ -684,10 +684,10 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 /* A small board builds itself, a quick game plays out, then the board flies
    down into the real one while the page comes up around it. */
 .splash{--sp:min(200px,52vw);position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:var(--bg);cursor:pointer}
-.sp-board{width:var(--sp);height:var(--sp);display:grid;grid-template-columns:repeat(3,1fr);gap:calc(var(--sp) * .04);transform-origin:50% 50%}
-.sp-board i{position:relative;display:flex;align-items:center;justify-content:center;border-radius:22%;background:var(--tile);transition:background-color .35s var(--out),box-shadow .35s var(--out)}
+.sp-board{width:var(--sp);height:var(--sp);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--sp) * .04);transform-origin:50% 50%}
+.sp-board i{position:relative;display:block;min-width:0;min-height:0;aspect-ratio:1;border-radius:22%;background:var(--tile);transition:background-color .35s var(--out),box-shadow .35s var(--out)}
 .sp-board i.win{background:color-mix(in srgb,var(--x) 22%,var(--tile));box-shadow:0 0 0 2px color-mix(in srgb,var(--x) 45%,transparent),0 10px 30px color-mix(in srgb,var(--x) 25%,transparent)}
-.sp-board svg{width:56%;height:56%;overflow:visible}
+.sp-board svg{position:absolute;left:22%;top:22%;width:56%;height:56%;overflow:visible}
 .sp-board path,.sp-board circle{fill:none;stroke-width:6;stroke-linecap:round;stroke-dasharray:1;stroke-dashoffset:1}
 .sp-board .X path{stroke:var(--x);animation:draw .2s cubic-bezier(.4,0,.2,1) forwards}
 .sp-board .X path+path{animation-delay:.12s}
