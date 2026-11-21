@@ -435,6 +435,15 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .card-actions #inviteBtn[hidden]+#leaveRoom{flex:1 1 auto}
 #joinBtn{width:100%}
 
+/* ---------- audience seats ---------- */
+.aud{display:flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 8px;border-radius:999px;background:var(--chip);color:var(--mute);font-size:12px;animation:pop .5s var(--spring) both}
+.aud svg{width:15px;height:15px;flex:none}
+.aud-orbs{display:flex}
+.aud-orbs .orb{width:18px;height:18px;box-shadow:0 0 0 2px var(--slab);background:radial-gradient(circle at 32% 30%,#e9e9ee,#a1a1aa 50%,#52525b)}
+.aud-orbs .orb+.orb{margin-left:-6px}
+.aud b{font-weight:600;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.app[data-role="aud"] #newBtn,.app[data-role="aud"] #undoBtn,.app[data-role="aud"] #btnSettings,.app[data-role="aud"] #seeBoard,.app[data-role="aud"] #playAgain{display:none}
+
 /* ---------- emotes ---------- */
 .emo{position:relative;flex:none}
 .emo-tray{position:absolute;bottom:calc(100% + 12px);left:50%;display:flex;gap:2px;padding:6px;border-radius:999px;background:var(--slab);box-shadow:var(--float);transform:translateX(calc(-50% + var(--shift,0px))) translateY(10px) scale(.6);transform-origin:50% 100%;opacity:0;pointer-events:none;transition:transform .32s cubic-bezier(.4,0,.2,1),opacity .18s ease}
@@ -636,6 +645,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
       <div class="chip" id="chip" hidden>
         <span class="orbs"><span class="orb" id="chipMe"></span><span class="orb friend" id="chipFriend"></span></span>
         <span class="ccode" id="chipCode"></span>
+        <span class="aud" id="aud" role="img" aria-label="0 people watching" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span class="aud-orbs" id="audOrbs"></span><b id="audN">0</b></span>
         <button class="btn danger-soft" id="chipLeave" type="button">Leave</button>
       </div>
     </div>
@@ -842,9 +852,17 @@ function springAnim(el,o){
 const dropIn=el=>springAnim(el,{k:260,c:12,prop:v=>`translateY(${((1-v)*-18).toFixed(2)}px) scale(${Math.max(0,v).toFixed(4)})`});
 
 /* ---------- The row under the board slides between modes ---------- */
-/* Buttons that stay glide to their new places on a spring; ones that arrive
-   rise in from below; ones that leave sink and fade where they stood. */
-let flipping=false;
+/* Buttons that stay glide to their new place and size; ones that arrive rise
+   in from below; ones that leave sink and fade where they stood. The moving
+   buttons travel as copies laid over the row, each with its own box, so a
+   button that is still shrinking can never squeeze its neighbours. */
+let flipping=false;const flyers=new Map();
+function ghostOf(k,r,z){
+  const g=k.cloneNode(true);g.removeAttribute("id");g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
+  g.hidden=false;g.setAttribute("aria-hidden","true");g.removeAttribute("data-open");g.removeAttribute("data-sink");
+  Object.assign(g.style,{position:"fixed",left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",margin:"0",pointerEvents:"none",zIndex:String(z),display:"flex",boxSizing:"border-box",flex:"none",visibility:"visible"});
+  app.appendChild(g);return g;
+}
 function flipActions(change){
   if(flipping||still){change();return}
   flipping=true;
@@ -853,17 +871,19 @@ function flipActions(change){
   try{change()}finally{flipping=false}
   kids.forEach(k=>{
     const a=before.get(k),b=k.offsetParent?k.getBoundingClientRect():null;
-    if(a&&b){const dx=a.left-b.left,dy=a.top-b.top,dw=a.width-b.width;
-      /* a button that changes width grows or shrinks into it, instead of jumping */
-      if(Math.abs(dw)>1){k.style.flex="none";
-        k.animate([{width:a.width+"px",transform:`translate(${dx}px,${dy}px)`},{width:b.width+"px",transform:"none"}],{duration:560,easing:"cubic-bezier(.34,1.2,.5,1)"}).onfinish=()=>{k.style.flex=""}}
-      else if(Math.abs(dx)>.5||Math.abs(dy)>.5)k.animate([{transform:`translate(${dx}px,${dy}px)`},{transform:"none"}],{duration:560,easing:"cubic-bezier(.34,1.25,.5,1)"})}
+    if(a&&b){
+      const moved=Math.abs(a.left-b.left)>.5||Math.abs(a.top-b.top)>.5||Math.abs(a.width-b.width)>1;
+      if(!moved)return;
+      const prev=flyers.get(k);if(prev){prev.g.remove();prev.a.cancel()}
+      const z=k.id==="btnSettings"?4:k.classList.contains("pick")?6:3;
+      const g=ghostOf(k,a,z);k.style.visibility="hidden";
+      const an=g.animate([{left:a.left+"px",top:a.top+"px",width:a.width+"px"},{left:b.left+"px",top:b.top+"px",width:b.width+"px"}],{duration:560,easing:"cubic-bezier(.34,1.22,.5,1)"});
+      flyers.set(k,{g,a:an});
+      an.onfinish=an.oncancel=()=>{g.remove();if(flyers.get(k)&&flyers.get(k).g===g){flyers.delete(k);k.style.visibility=""}};
+    }
     else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:560,delay:90,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
     else if(a&&!b){
-      const g=k.cloneNode(true);g.removeAttribute("id");g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
-      g.hidden=false;g.setAttribute("aria-hidden","true");g.removeAttribute("data-open");
-      Object.assign(g.style,{position:"fixed",left:a.left+"px",top:a.top+"px",width:a.width+"px",height:a.height+"px",margin:"0",pointerEvents:"none",zIndex:"1",display:"flex"});
-      app.appendChild(g); /* inside the app layer, under the row and under the sheet */
+      const g=ghostOf(k,a,1);
       g.animate([{opacity:1,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(16px) scale(.9)",filter:"blur(4px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
     }
   });
@@ -981,8 +1001,14 @@ function renderStatus(){
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
   if(over){
     const w=names[turn];
-    setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?"Friend wins":`${turn} wins`);
+    setStatus("var(--green)",w==="You"?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?(role==="aud"?`${esc(w)} wins`:"Friend wins"):`${turn} wins`);
     return;
+  }
+  if(mode==="online"&&role==="aud"){
+    if(!connOpen)return setStatus("var(--amber)","Host is offline",true);
+    if(phase==="lobby")return setStatus("var(--friend)","Watching · players getting ready",true);
+    if(phase==="toss")return setStatus("var(--friend)","Watching · coin toss",true);
+    return setStatus(sideVar(turn),`Watching · ${esc(names[turn])}'s turn`);
   }
   if(mode==="online"){
     const s=netState();
@@ -1021,6 +1047,7 @@ function renderPlayers(){
 }
 function render(){flipActions(renderNow)}
 function renderNow(){
+  app.dataset.role=mode==="online"&&role==="aud"?"aud":"player";
   app.dataset.phase=mode==="online"&&room?phase:"play";
   renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();
   $("undoBtn").disabled=mode==="online"||history.length===0;
@@ -1099,7 +1126,7 @@ let modeSwitch=0;
 $("tabs").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||b.dataset.mode===mode)return;
   const m=b.dataset.mode;setSeg($("tabs"),m,true);
-  flipActions(()=>{app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;app.dataset.net="idle"}});
+  flipActions(()=>{app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;$("emo").hidden=true;emoClose();app.dataset.net="idle";app.dataset.role="player"}});
   cancelAnimationFrame(modeSwitch);
   modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m)}));
 });
@@ -1155,13 +1182,23 @@ const JOIN_TIMEOUT=20000,PING_EVERY=4000,PEER_LOST=12000;
 function code(){const a="ABCDEFGHJKMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<5;i++)s+=a[Math.floor(Math.random()*a.length)];return s}
 function rid(){return Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4)}
 function net(msg){$("netNote").textContent=msg||""}
-function setOnlineNames(){names.X=me?(me==="X"?"You":"Friend"):"Player X";names.O=me?(me==="O"?"You":"Friend"):"Player O"}
+function setOnlineNames(){
+  if(role==="aud"){names[hostMark]="Host";names[other(hostMark)]="Guest";return}
+  names.X=me?(me==="X"?"You":"Friend"):"Player X";names.O=me?(me==="O"?"You":"Friend"):"Player O";
+}
+/* ---------- audience ---------- */
+/* Once both seats are taken, anyone else who opens the room joins as
+   audience: they see every move live, can react, and can't play. The host
+   keeps the list of who is watching and shares it with the room. */
+let role="player",hostId=null,guestId=null,audIds=[];const aud=new Map();const AUD_MAX=12;
+function pushAud(){if(isHost)publish({t:"aud",ids:[...aud.keys()],guest:partner})}
+function sideOf(id){if(id===(isHost?myId:hostId))return hostMark;if(id===(isHost?partner:guestId))return other(hostMark);return null}
 function linkFor(c){return location.origin+location.pathname+"?room="+c+(customBroker?"&broker="+encodeURIComponent(customBroker):"")}
 function liveBrokers(){return clients.filter(c=>c.connected).length}
-function netState(){if(!room)return"idle";if(rejected)return"full";if(connOpen)return"live";if(partner)return"lost";return isHost?"host-wait":"guest-wait"}
+function netState(){if(!room)return"idle";if(role==="aud")return connOpen?"live":"lost";if(rejected)return"full";if(connOpen)return"live";if(partner)return"lost";return isHost?"host-wait":"guest-wait"}
 
 function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),turn,starter,over,score:{X:score.X,O:score.O},rule,phase,hostMark,tossWinner,tossId}}
-function updateMe(){me=room?(isHost?hostMark:other(hostMark)):null;setOnlineNames()}
+function updateMe(){me=room&&role!=="aud"?(isHost?hostMark:other(hostMark)):null;setOnlineNames()}
 function validCells(a){return Array.isArray(a)&&a.length<=3&&a.every(c=>Number.isInteger(c)&&c>=0&&c<9)&&new Set(a).size===a.length}
 function adopt(s,v){
   if(!s||!validCells(s.X)||!validCells(s.O))return;
@@ -1176,11 +1213,11 @@ function adopt(s,v){
   tossWinner=s.tossWinner==="host"||s.tossWinner==="guest"?s.tossWinner:null;
   tossId=typeof s.tossId==="string"&&s.tossId.length<40?s.tossId:null;
   updateMe();
-  if(prevPhase==="toss"&&phase==="play"&&connOpen){const iWon=(tossWinner==="host")===isHost;
+  if(prevPhase==="toss"&&phase==="play"&&connOpen&&role!=="aud"){const iWon=(tossWinner==="host")===isHost;
     toast(iWon?`You're ${me} · you start`:`You're ${me}`,iWon?null:"friend")}
   history=[];version=v;saveSession();render();
 }
-function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,partner,version,state:snapshot()}))}catch(e){}}
+function saveSession(){try{sessionStorage.setItem("xo.online",JSON.stringify({room,isHost,myId,partner,version,role,hostId,state:snapshot()}))}catch(e){}}
 function clearSession(){try{sessionStorage.removeItem("xo.online")}catch(e){}}
 
 function publish(o){
@@ -1221,6 +1258,9 @@ function startPing(){
   pingTimer=setInterval(()=>{
     if(!room)return;
     publish({t:"ping",p:partner});
+    if(isHost){const now=Date.now(),n=aud.size;for(const [id,t] of aud)if(now-t>PEER_LOST)aud.delete(id);
+      if(aud.size!==n){audIds=[...aud.keys()];render()}pushAud()}
+    if(role==="aud"&&connOpen&&Date.now()-partnerSeen>PEER_LOST){connOpen=false;render()}
     if(partner&&connOpen&&Date.now()-partnerSeen>PEER_LOST){connOpen=false;render()}
   },PING_EVERY);
 }
@@ -1234,7 +1274,8 @@ function begin(c,host,restore){
   room=c;isHost=host;phase="lobby";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;updateMe();
   myId=(restore&&restore.myId)||rid();seq=Math.floor(Math.random()*1e6);seen=new Set();
   if(restore&&typeof restore.partner==="string"){partner=restore.partner;partnerSeen=Date.now()}
-  rejected=false;netShown="idle";
+  rejected=false;netShown="idle";aud.clear();audIds=[];guestId=null;
+  role=restore&&restore.role==="aud"?"aud":"player";hostId=restore&&restore.hostId||null;updateMe();
   setOnlineNames();
   if(restore&&restore.state){adopt(restore.state,restore.version||0)}
   else{version=0;score={X:0,O:0};newRound("X")}
@@ -1271,11 +1312,34 @@ function onMessage(m){
   const partnerStale=!partner||Date.now()-partnerSeen>PEER_LOST;
 
   if(isHost&&m.t==="join"){
-    if(!fromPartner&&!partnerStale){publish({t:"full",to:m.from});return}
+    if(!fromPartner&&!partnerStale){
+      /* both seats are taken: this person watches */
+      if(!aud.has(m.from)&&aud.size>=AUD_MAX){publish({t:"full",to:m.from});return}
+      const fresh=!aud.has(m.from);aud.set(m.from,Date.now());audIds=[...aud.keys()];
+      publish({t:"welcome",to:m.from,role:"aud",guest:partner,v:version,s:snapshot(),ids:audIds});pushAud();
+      if(fresh)toast("Someone is watching");render();return;
+    }
+    if(aud.has(m.from)){aud.delete(m.from);audIds=[...aud.keys()];pushAud()}
     partner=m.from;markSeen();
     // keep whichever side has the newer game, so a refresh does not lose the game
     if(Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
     publish({t:"welcome",to:m.from,v:version,s:snapshot()});
+    return;
+  }
+  if(!isHost&&m.t==="welcome"&&m.role==="aud"){
+    role="aud";hostId=m.from;guestId=typeof m.guest==="string"?m.guest:null;partner=null;
+    audIds=Array.isArray(m.ids)?m.ids.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];
+    partnerSeen=Date.now();connOpen=true;clearInterval(joinTimer);updateMe();
+    if(Number.isInteger(m.v))adopt(m.s,m.v);else render();
+    toast("You're watching","friend");return;
+  }
+  if(role==="aud"){
+    /* audience: follow the game from either player, never act on it */
+    if(m.from===hostId||m.from===guestId){partnerSeen=Date.now();if(!connOpen&&m.from===hostId){connOpen=true;render()}}
+    if(m.t==="state"&&(m.from===hostId||m.from===guestId)&&Number.isInteger(m.v)&&m.v>version)adopt(m.s,m.v);
+    else if(m.t==="aud"&&m.from===hostId){audIds=Array.isArray(m.ids)?m.ids.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];guestId=typeof m.guest==="string"?m.guest:guestId;render()}
+    else if(m.t==="emote"&&EMO[m.e])receiveEmote(m.e,m.from,!!m.a);
+    else if(m.t==="bye"&&m.from===hostId){connOpen=false;render()}
     return;
   }
   if(!isHost&&m.t==="welcome"){
@@ -1288,6 +1352,14 @@ function onMessage(m){
     if(!partner||!connOpen){rejected=true;clearInterval(joinTimer);otpError("Room is full");render()}
     return;
   }
+  if(isHost&&aud.has(m.from)){
+    aud.set(m.from,Date.now());
+    if(m.t==="bye"){aud.delete(m.from);audIds=[...aud.keys()];pushAud();render()}
+    else if(m.t==="emote"&&EMO[m.e])receiveEmote(m.e,m.from,true);
+    return;
+  }
+  if(!isHost&&m.t==="emote"&&m.a&&EMO[m.e]){receiveEmote(m.e,m.from,true);return}
+  if(!isHost&&m.t==="aud"&&fromPartner){const n=audIds.length;audIds=Array.isArray(m.ids)?m.ids.filter(x=>typeof x==="string").slice(0,AUD_MAX):[];if(audIds.length>n)toast("Someone is watching");render()}
   if(!fromPartner){
     // host came back after a refresh: ask again
     if(!isHost&&!rejected&&m.t==="ping"&&partnerStale)sendJoin();
@@ -1296,7 +1368,7 @@ function onMessage(m){
   if(m.t==="bye"){connOpen=false;partnerSeen=0;inReq=null;outReq=null;render();return}
   markSeen();
   if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
-  if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e);return}
+  if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e,m.from,false);return}
   if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
     if(m.kind==="rule"&&m.data!=="A"&&m.data!=="B")return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
@@ -1329,10 +1401,11 @@ function leave(silent){
   const old=clients;clients=[];
   setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),silent?0:300);
   room=null;partner=null;connOpen=false;me=null;rejected=false;netShown="idle";
+  role="player";hostId=null;guestId=null;audIds=[];aud.clear();
   phase="play";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;clearTimeout(reqTimer);
   if(!silent){clearSession();setUrlRoom(null);net("")}
 }
-function leaveAndReset(){leave();setOnlineNames();setOtp("",{auto:false});newRound("X")}
+function leaveAndReset(){leave();setOnlineNames();drainOtp(0);newRound("X")}
 $("createRoom").addEventListener("click",createRoom);
 $("leaveRoom").addEventListener("click",leaveAndReset);
 $("chipLeave").addEventListener("click",leaveAndReset);
@@ -1349,8 +1422,23 @@ function toast(text,orb){
 function setText(el,txt){if(el.textContent===txt)return;el.textContent=txt;if(!still){el.classList.remove("swap");void el.offsetWidth;el.classList.add("swap")}}
 const canShare=!!navigator.share&&matchMedia("(pointer:coarse)").matches;
 
+function renderAud(){
+  const box=$("aud"),n=audIds.length;
+  box.hidden=!(n>0);
+  $("audN").textContent=String(n);
+  box.setAttribute("aria-label",n===1?"1 person watching":n+" people watching");
+  const wrap=$("audOrbs"),want=Math.min(n,3);
+  while(wrap.children.length>want)wrap.lastChild.remove();
+  while(wrap.children.length<want){const o=document.createElement("span");o.className="orb aud";wrap.appendChild(o);setTimeout(()=>dropIn(o),60)}
+}
 function renderNet(){
-  if(mode!=="online"){app.dataset.net="idle";$("chip").hidden=true;return}
+  if(mode!=="online"){app.dataset.net="idle";$("chip").hidden=true;$("emo").hidden=true;emoClose();return}
+  if(role==="aud"){
+    netShown=connOpen?"live":"lost";app.dataset.net=netShown;
+    const chip=$("chip");if(chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
+    chip.hidden=false;$("chipMe").className="orb"+(hostMark==="O"?" o":"");$("chipFriend").className="orb"+(hostMark==="O"?"":" o")+(connOpen?"":" away");
+    $("chipCode").textContent=room||"";$("emo").hidden=!connOpen;renderAud();return;
+  }
   const st=netState();
   if(st==="live"&&(netShown==="idle"||netShown==="host-wait"||netShown==="guest-wait"||netShown==="full")){
     /* the room fills: the empty seat pops into an orb, the code fuses into a
@@ -1394,6 +1482,7 @@ function renderNet(){
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
   $("emo").hidden=s!=="live";if(s!=="live")emoClose();
+  renderAud();
   chip.hidden=!showChip;
   if(showChip){$("chipMe").className="orb"+(me==="O"?" o":"");$("chipFriend").className="orb friend"+(s==="lost"?" away":"");$("chipCode").textContent=room||""}
 }
@@ -1465,10 +1554,21 @@ function setOtp(v,o){
   if(auto&&v.length===5&&prev.length<5)joinRoom(v);
 }
 function updateCaret(){const f=document.activeElement===otpIn;otpCells.forEach((c,i)=>c.classList.toggle("on",f&&i===Math.min(otpVal.length,4)))}
+/* The code drains out right to left: each character sinks and blurs a
+   beat after its neighbour, then the row is empty and ready again. */
+function drainOtp(delay){
+  const spans=otpCells.map(c=>c.firstChild).filter(Boolean);
+  if(still||!spans.length){setOtp("",{auto:false});return}
+  otpEl.classList.remove("busy","done");
+  spans.reverse().forEach((sp,i)=>sp.animate([{opacity:1,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(45%) scale(.86)",filter:"blur(3px)"}],
+    {duration:240,delay:(delay||0)+i*55,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
+  setTimeout(()=>setOtp("",{auto:false}),(delay||0)+spans.length*55+250);
+}
 function otpError(msg){
   if(msg)toast(msg);
   otpEl.classList.remove("shake");void otpEl.offsetWidth;otpEl.classList.add("shake");
-  setTimeout(()=>{otpEl.classList.remove("shake");setOtp("",{auto:false})},still?0:620);
+  setTimeout(()=>otpEl.classList.remove("shake"),still?0:520);
+  drainOtp(still?0:300);
 }
 otpIn.addEventListener("input",()=>setOtp(otpIn.value));
 otpIn.addEventListener("paste",e=>{const t=(e.clipboardData||window.clipboardData)?.getData("text");if(t==null)return;e.preventDefault();const c=extractCode(t);c?setOtp(c):otpError("No code found")});
@@ -1553,8 +1653,21 @@ function renderLobby(){
   }
   L.hidden=false;L.classList.remove("out");
   const iWon=(tossWinner==="host")===isHost,done=tossDone.has(tossId);
-  const key=phase+"|"+tossId+"|"+done+"|"+netShown;
+  const key=phase+"|"+tossId+"|"+done+"|"+netShown+"|"+role;
   if(key===lobbyKey)return;lobbyKey=key;
+  if(role==="aud"){
+    const hostWon=tossWinner==="host",oH=hostMark==="O"?" o":"",oG=hostMark==="O"?"":" o";
+    if(phase==="lobby"){L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb"></span><span class="seat-name">Host</span></div><span class="v">VS</span><div class="seat-col"><span class="orb o"></span><span class="seat-name">Guest</span></div></div><h3 class="swap">You're watching</h3><p class="swap">The players toss a coin to see who picks X or O.</p>`;return}
+    if(!done){
+      L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">Host</span><span class="face back" style="background:${faceStyle("o")}">Guest</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Coin toss</h3><p class="swap">Heads the host picks, tails the guest does.</p>`;
+      const finish=()=>{tossDone.add(tossId);render()};if(still){finish();return}
+      const end=hostWon?0:180;
+      $("coin").animate([{transform:"translateY(0) rotateY(0deg) rotateX(12deg)",easing:"cubic-bezier(.2,.7,.4,1)"},{transform:"translateY(-120px) rotateY(900deg) rotateX(12deg)",offset:.45,easing:"cubic-bezier(.6,0,.8,.4)"},{transform:`translateY(0) rotateY(${1800+end}deg) rotateX(0deg)`,offset:.85},{transform:`translateY(-14px) rotateY(${1800+end}deg)`,offset:.92},{transform:`translateY(0) rotateY(${1800+end}deg)`}],{duration:1900,fill:"forwards"}).onfinish=()=>setTimeout(finish,350);
+      return;
+    }
+    L.innerHTML=`<span class="orb${hostWon?"":" o"}" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">${hostWon?"Host":"Guest"} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
+    return;
+  }
   const myFace=me==="O"&&phase!=="lobby"?"o":"";
   if(phase==="lobby"){
     L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}"></span><span class="seat-name me">You</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend"></span><span class="seat-name">Friend</span></div></div>
@@ -1720,19 +1833,22 @@ emo.addEventListener("keydown",e=>{
 document.addEventListener("pointerdown",e=>{if(e.isTrusted&&emo.hasAttribute("data-open")&&!emo.contains(e.target))emoClose()});
 function sendEmote(k){
   if(!EMO[k]||!connOpen||Date.now()<emoCool)return;
+  /* audience reactions rise from the audience seats */
   emoCool=Date.now()+1200;emoBtn.classList.add("cool");setTimeout(()=>emoBtn.classList.remove("cool"),1200);
-  publish({t:"emote",e:k});emoClose(true);
-  flyEmote(k,me,false);
+  publish(role==="aud"?{t:"emote",e:k,a:1}:{t:"emote",e:k});emoClose(true);
+  flyEmote(k,role==="aud"?null:me,false);
 }
-function receiveEmote(k){
+function receiveEmote(k,from,isAud){
   const now=Date.now();emoIn=emoIn.filter(t=>now-t<3000);if(emoIn.length>=6)return;emoIn.push(now);
-  flyEmote(k,other(me),true);
+  const side=isAud?null:(role==="aud"?sideOf(from):other(me));
+  flyEmote(k,side,true);
   try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
-  $("srLive").textContent="Your friend reacted: "+EMO[k][1];
+  $("srLive").textContent=(isAud?"Someone watching":role==="aud"?(names[side]||"A player"):"Your friend")+" reacted: "+EMO[k][1];
 }
 function flyEmote(k,side,big){
-  const p=$("p"+side),orb=$("p"+side+"orb");
+  const p=side?$("p"+side):null,orb=side?$("p"+side+"orb"):null;
   let r=orb&&orb.offsetParent&&getComputedStyle(p).visibility!=="hidden"?orb.getBoundingClientRect():null;
+  if(!side){const a=$("aud");const tgt=a&&!a.hidden&&a.offsetParent?a:$("chip");if(tgt&&!tgt.hidden&&tgt.offsetParent)r=tgt.getBoundingClientRect()}
   if(!r){const b=boardWrap.getBoundingClientRect();r={left:b.left+b.width/2-1,top:b.top+b.height/2-1,width:2,height:2}}
   const x=r.left+r.width/2,y=r.top+r.height/2;
   const el=document.createElement("span");el.className="emote-fly";el.textContent=EMO[k][0];el.setAttribute("aria-hidden","true");
@@ -1770,7 +1886,7 @@ function fillResult(){
   const w=names[turn],k=kindOf(turn);
   $("resOrb").className="orb"+(k?" "+k:"");
   const cls=turn.toLowerCase();
-  $("resTitle").innerHTML=w==="You"?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?"Friend wins":`<span class="${cls}">${turn}</span> wins`;
+  $("resTitle").innerHTML=w==="You"?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?(role==="aud"?`${esc(w)} wins`:"Friend wins"):`<span class="${cls}">${turn}</span> wins`;
   $("resScore").innerHTML=`${esc(names.X)} <b>${score.X}</b> : <b>${score.O}</b> ${esc(names.O)}`;
 }
 function showResult(show){
