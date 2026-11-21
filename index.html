@@ -145,7 +145,8 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .res-actions{display:flex;flex-direction:column;gap:8px;width:min(100%,260px)}
 
 /* ---------- players ---------- */
-.player{display:flex;flex-direction:column;align-items:center;gap:12px;justify-self:center;align-self:center;transition:opacity .4s var(--out),transform .5s var(--spring-soft)}
+.player{display:flex;flex-direction:column;align-items:center;gap:12px;justify-self:center;align-self:center;transition:opacity .4s var(--out),transform .5s var(--spring-soft);animation:rise .6s var(--spring-soft) both}
+.player.pr{animation-delay:.08s}
 .player.pl{grid-area:pl} .player.pr{grid-area:pr}
 .player:not(.on){opacity:.5;transform:scale(.94)}
 .pname{font-size:15px;font-weight:500}
@@ -216,7 +217,11 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .seat[data-state="waiting"] i:nth-child(2){animation-delay:.15s} .seat[data-state="waiting"] i:nth-child(3){animation-delay:.3s}
 .seat[data-state="waiting"]::before,.seat[data-state="waiting"]::after{content:"";position:absolute;inset:-2px;border-radius:99px;border:1.5px solid var(--friend);opacity:0;animation:ripple 2s var(--out) infinite}
 .seat[data-state="waiting"]::after{animation-delay:1s}
-.seat[data-state="filled"]{border:0;background:radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e);animation:pop .6s var(--spring) both}
+.seat[data-state="filled"]{border:0;background:radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e);animation:seatpop .75s cubic-bezier(.34,1.2,.5,1) both}
+.seat[data-state="filled"]::after{content:"";position:absolute;inset:-2px;border-radius:99px;border:2px solid var(--friend);opacity:0;animation:ripple .9s var(--out) .15s 2 both}
+.seat[data-state="waiting"]{animation:seatpop .6s cubic-bezier(.34,1.2,.5,1) both}
+.card.leaving{animation:cardout .34s cubic-bezier(.4,0,1,1) both}
+.card.join.leaving{animation-delay:.05s}
 .seat[data-state="filled"] i{display:none}
 .code-row{display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 8px 0 18px;border-radius:18px;background:var(--chip)}
 .code-row .ccode{font:500 22px var(--mono);letter-spacing:.24em}
@@ -308,37 +313,34 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
    own corner, upward, because it sits at the bottom of the screen. Width,
    height and corner run one curve with no overshoot: a spring past the target
    would drag the corner radius past it too, which reads as a wobble. */
-.pick{position:relative;height:52px;width:var(--pw);flex:none;--pw:132px;--panel-w:240px;--panel-h:300px}
+.pick{position:relative;height:52px;width:var(--pw);flex:none;--pw:132px;--panel-w:296px;--panel-h:290px}
 .app:not([data-mode="ai"]) .pick{display:none}
-.pick-body{position:absolute;left:0;bottom:0;width:var(--pw);height:52px;border-radius:26px;background:var(--chip);transition:width .32s var(--out),height .32s var(--out),border-radius .32s var(--out),background-color .2s ease,box-shadow .3s ease,scale .42s var(--out);transform-origin:left bottom}
+.pick-body{position:absolute;left:0;bottom:0;width:var(--pw);height:52px;border-radius:26px;background:var(--chip);transition:width .5s cubic-bezier(.32,.72,0,1),height .5s cubic-bezier(.32,.72,0,1),border-radius .5s cubic-bezier(.32,.72,0,1),background-color .3s ease,box-shadow .4s ease,scale .5s cubic-bezier(.32,.72,0,1);transform-origin:left bottom}
 .pick[data-open] .pick-body{width:var(--panel-w);height:var(--panel-h);border-radius:26px;background:var(--slab);box-shadow:var(--float)}
-.pick[data-sink] .pick-body,.pick[data-sink] .pick-pill{scale:.94;transition:scale .16s var(--out)}
-.pick-pill{position:absolute;inset:0;display:flex;align-items:center;gap:10px;padding:0 14px 0 8px;border:0;border-radius:26px;background:none;font-weight:500;font-size:14px;white-space:nowrap;transition:opacity .16s ease,scale .42s var(--out)}
+.pick[data-sink] .pick-body,.pick[data-sink] .pick-pill{scale:.97;transition:scale .14s ease-out}
+.pick-pill{position:absolute;inset:0;display:flex;align-items:center;gap:10px;padding:0 14px 0 8px;border:0;border-radius:26px;background:none;font-weight:500;font-size:14px;white-space:nowrap;transition:opacity .2s ease,scale .5s cubic-bezier(.32,.72,0,1)}
 .pick[data-open] .pick-pill{opacity:0;pointer-events:none}
 .pick[data-sink] .pick-pill{opacity:1}
 .pick-glyph{width:36px;height:36px;flex:none;border-radius:99px;display:flex;align-items:center;justify-content:center;background:var(--chip-2);font-weight:600;font-size:17px;color:var(--x)}
 .pick-glyph.O{color:var(--o)}
-.pick-glyph span{display:block;animation:otpin .34s var(--out) both}
+.pick-glyph span{display:block;animation:otpin .4s cubic-bezier(.32,.72,0,1) both}
 .pick-chev{width:16px;height:16px;margin-left:auto;color:var(--faint);transition:color .16s,transform .3s var(--spring)}
 .pick-pill:hover .pick-chev{color:var(--ink);transform:translateY(-2px)}
-.pick-panel{position:absolute;left:0;bottom:0;width:var(--panel-w);height:var(--panel-h);padding:10px;display:flex;flex-direction:column;gap:2px;pointer-events:none;z-index:2}
+.pick-panel{position:absolute;left:0;bottom:0;width:var(--panel-w);padding:12px;display:flex;flex-direction:column;gap:4px;pointer-events:none;z-index:2}
 .pick[data-open] .pick-panel{pointer-events:auto}
-.pick-item{opacity:0;transform:translateY(6px);transition:opacity .16s ease,transform .22s var(--out)}
-.pick[data-open] .pick-item{opacity:1;transform:none}
-.pick-label{font-size:11px;color:var(--faint);padding:8px 12px 4px}
-.pick-sep{height:1px;background:var(--hair);margin:6px 10px}
-.pick-row{position:relative;isolation:isolate;width:100%;height:38px;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;border-radius:16px;background:none;color:color-mix(in srgb,var(--ink) 78%,transparent);font-size:13px;text-align:left;transition:color .2s ease}
-.pick-row::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:color-mix(in srgb,var(--ink) 8%,transparent);opacity:0;transition:opacity .2s ease}
-@media (hover:hover){.pick-row:hover::before{opacity:1;transition-duration:.16s}}
-.pick-row:focus-visible{outline:none}.pick-row:focus-visible::before{opacity:1}
-.pick-row:hover,.pick-row[aria-selected="true"]{color:var(--ink)}
-.pick-row b{width:22px;font-weight:600;font-size:15px;text-align:center}
-.pick-row b.X{color:var(--x)} .pick-row b.O{color:var(--o)}
-.pick-row small{color:var(--faint);font-size:12px}
-.pick-row .tick{margin-left:auto;width:18px;height:18px;border-radius:6px;display:grid;place-items:center;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 22%,transparent);transition:background-color .16s,box-shadow .16s}
-.pick-row .tick svg{width:12px;height:12px;color:var(--slab);opacity:0;transform:scale(.4);transition:opacity .16s,transform .3s var(--spring)}
-.pick-row[aria-selected="true"] .tick{background:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink)}
-.pick-row[aria-selected="true"] .tick svg{opacity:1;transform:none}
+.pick-item{opacity:0;transform:translateY(8px);filter:blur(2px);transition:opacity .14s ease,transform .3s cubic-bezier(.32,.72,0,1),filter .2s ease}
+.pick[data-open] .pick-item{transition:opacity .32s ease,transform .5s cubic-bezier(.32,.72,0,1),filter .32s ease}
+.pick[data-open] .pick-item{opacity:1;transform:none;filter:none}
+.pick-label{font-size:12px;color:var(--faint);padding:6px 6px 2px}
+
+.mcards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.mcard{position:relative;height:84px;border:0;border-radius:18px;background:var(--chip);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:32px;font-weight:600;line-height:1;transition:background-color .2s ease,box-shadow .3s ease,scale .4s cubic-bezier(.32,.72,0,1)}
+.mcard small{font-size:11px;font-weight:500;color:var(--mute)}
+.mcard.X{color:var(--x)} .mcard.O{color:var(--o)}
+.mcard:hover{background:var(--chip-2)}
+.mcard:active{scale:.96}
+.mcard[aria-pressed="true"]{background:var(--thumb);box-shadow:var(--raise),inset 0 0 0 2px color-mix(in srgb,currentColor 70%,transparent)}
+.mcard[aria-pressed="true"]::after{content:"";position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:9px;background:currentColor;animation:pop .45s var(--spring) both}
 
 /* ---------- online lobby: room ready, coin toss, pick a mark ---------- */
 .lobby{grid-area:board;justify-self:center;align-self:center;z-index:3;width:var(--bs);height:var(--bs);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;border-radius:36px;background:color-mix(in srgb,var(--slab) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--float);animation:cardin .6s var(--spring-soft) both}
@@ -379,36 +381,30 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
    under critical so it settles with a hint of give. The cards are white in
    both themes: on the dark board that is the one thing on screen that is
    not part of the game, which is the point of a request. */
-.tst{position:fixed;z-index:62;top:max(14px,env(safe-area-inset-top));left:50%;width:min(420px,calc(100vw - 24px));translate:-50% 0;pointer-events:none;
-  --tst-slab:#ffffff;--tst-ink:#17181a;--tst-mute:color-mix(in srgb,#17181a 52%,#fff);--tst-wash:color-mix(in srgb,#17181a 6%,#fff);transition:height .45s cubic-bezier(.3,1.15,.5,1)}
-.tst-toast{position:absolute;left:0;top:0;width:100%;height:68px;display:flex;align-items:center;gap:12px;padding:0 10px 0 14px;border-radius:22px;background:var(--tst-slab);color:var(--tst-ink);overflow:hidden;pointer-events:auto;transform-origin:50% 100%;
-  box-shadow:0 0 0 1px rgba(0,0,0,.06),0 18px 50px rgba(0,0,0,.35);transition:transform .45s cubic-bezier(.3,1.15,.5,1),opacity .25s ease,background-color .22s ease,translate .22s cubic-bezier(.4,0,1,1)}
-:root[data-theme="light"] .tst-toast{box-shadow:0 0 0 1px rgba(0,0,0,.08),0 18px 50px rgba(0,0,0,.14)}
-.tst-toast.enter{opacity:0;transform:translateY(-24px) scale(.96)}
-.tst-toast.leave{opacity:0;translate:70px 0}
-.tst:not([data-open]) .tst-toast:not([data-front]){background:var(--tst-wash)}
+.tst{position:fixed;z-index:62;top:max(14px,env(safe-area-inset-top));left:50%;width:min(400px,calc(100vw - 24px));translate:-50% 0;pointer-events:none;transition:height .5s cubic-bezier(.32,.72,0,1)}
+.tst-toast{--kc:var(--faint);position:absolute;left:0;top:0;width:100%;height:128px;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:16px;border-radius:26px;background:var(--slab);color:var(--ink);pointer-events:auto;transform-origin:50% 100%;
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--kc) 35%,var(--hair)),0 2px 6px rgba(0,0,0,.12),0 24px 64px rgba(0,0,0,.35);transition:transform .5s cubic-bezier(.34,1.2,.5,1),opacity .28s ease,background-color .25s ease,translate .24s cubic-bezier(.4,0,1,1)}
+:root[data-theme="light"] .tst-toast{box-shadow:0 0 0 1px color-mix(in srgb,var(--kc) 35%,var(--hair)),0 2px 6px rgba(0,0,0,.05),0 24px 64px rgba(0,0,0,.14)}
+.tst-toast[data-kind="again"]{--kc:var(--green)} .tst-toast[data-kind="reset"]{--kc:var(--amber)} .tst-toast[data-kind="rule"]{--kc:var(--o)}
+.tst-toast.enter{opacity:0;transform:translateY(-28px) scale(.94)}
+.tst-toast.leave{opacity:0;translate:0 -16px;transform:scale(.94)!important}
+.tst:not([data-open]) .tst-toast:not([data-front]){background:var(--slab-2)}
 .tst-toast>*{transition:opacity .22s ease}
 .tst:not([data-open]) .tst-toast:not([data-front])>*{opacity:0}
-.tst-icon{flex:none;width:36px;height:36px;border-radius:99px;display:grid;place-items:center;background:var(--tst-wash)}
-.tst-icon svg{width:18px;height:18px}
-.tst-toast[data-kind="again"] .tst-icon{color:#1f9d55;background:color-mix(in srgb,#1f9d55 12%,#fff)}
-.tst-toast[data-kind="reset"] .tst-icon{color:#d08a0e;background:color-mix(in srgb,#e09a12 14%,#fff)}
-.tst-toast[data-kind="rule"] .tst-icon{color:#2f6fdb;background:color-mix(in srgb,#2f6fdb 12%,#fff)}
-.tst-toast[data-kind="out"] .tst-icon{color:var(--tst-mute)}
+.tst-top{display:flex;align-items:center;gap:12px}
+.tst-icon{flex:none;width:40px;height:40px;border-radius:99px;display:grid;place-items:center;color:var(--kc);background:color-mix(in srgb,var(--kc) 16%,transparent)}
+.tst-icon svg{width:19px;height:19px}
 .tst-toast[data-kind="out"] .tst-icon svg{animation:spin 1.4s linear infinite}
 .tst-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.tst-text b{font-size:14px;font-weight:600;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
-.tst-text span{font-size:13px;line-height:17px;color:var(--tst-mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tst-act{flex:none;height:34px;padding:0 16px;border:0;border-radius:999px;background:var(--tst-ink);color:#fff;font-size:13px;font-weight:500;transition:scale .16s var(--out),opacity .16s}
-.tst-act:hover{opacity:.88}.tst-act:active{scale:.96}
-.tst-x{flex:none;width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:999px;background:none;color:var(--tst-mute);transition:background-color .16s ease,color .16s ease,scale .16s var(--out)}
-.tst-x:hover{background:var(--tst-wash);color:var(--tst-ink)}.tst-x:active{scale:.9}
-.tst-x svg{width:16px;height:16px}
-.tst-act:focus-visible,.tst-x:focus-visible{outline:none;box-shadow:0 0 0 2px #2f6fdb}
-.tst-bar{position:absolute;left:14px;right:14px;bottom:0;height:3px;border-radius:3px 3px 0 0;background:var(--tst-wash);overflow:hidden}
-.tst-bar i{position:absolute;inset:0;background:color-mix(in srgb,var(--tst-ink) 30%,transparent);transform-origin:left;animation:countdown linear both}
-.tst-toast[data-kind="again"] .tst-bar i{background:#1f9d55}
-/* while your friend is asking, the room says so: the glow turns amber and breathes */
+.tst-text b{font-size:15px;font-weight:600;line-height:19px;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tst-text span{font-size:13px;line-height:17px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* the time left, as a ring that empties */
+.tst-ring{flex:none;width:30px;height:30px;transform:rotate(-90deg)}
+.tst-ring circle{fill:none;stroke-width:3}
+.tst-ring .bg{stroke:var(--chip-2)}
+.tst-ring .fg{stroke:var(--kc);stroke-linecap:round;stroke-dasharray:1 1;animation:ring linear both}
+.tst-btns{display:flex;gap:8px}
+.tst-btns .btn{flex:1 1 0;height:44px}
 .glow .gk{background:radial-gradient(min(720px,95vw) circle at 50% 54%,rgba(245,181,70,.2),transparent 70%)}
 .app[data-asking]~.glow .gk,.glow.asking .gk{opacity:1;animation:askglow 1.8s ease-in-out infinite alternate}
 .glow.asking .gl,.glow.asking .ga,.glow.asking .go{opacity:0!important}
@@ -485,6 +481,9 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 @keyframes drawo{0%{stroke-dashoffset:1;transform:rotate(-90deg) scale(.7)}60%{transform:rotate(-90deg) scale(1.12)}100%{stroke-dashoffset:0;transform:rotate(-90deg) scale(1)}}
 @keyframes askin{from{opacity:0;transform:translate(-50%,-130%) scale(.9)}to{opacity:1;transform:translateX(-50%)}}
 @keyframes lobbyout{to{opacity:0;transform:scale(.92)}}
+@keyframes ring{from{stroke-dashoffset:0}to{stroke-dashoffset:-1}}
+@keyframes seatpop{0%{transform:scale(.3);opacity:0}55%{transform:scale(1.18);opacity:1}75%{transform:scale(.94)}100%{transform:none}}
+@keyframes cardout{to{opacity:0;transform:translateY(12px) scale(.94);filter:blur(4px)}}
 @keyframes countdown{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes askglow{from{opacity:.55}to{opacity:1}}
@@ -556,16 +555,14 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
     <div class="actions">
       <div class="pick" id="pick">
         <span class="pick-body" aria-hidden="true"></span>
-        <button class="pick-pill" id="pickPill" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose your mark and level"><span class="pick-glyph" id="pickGlyph"><span>X</span></span><span class="pick-txt" id="pickTxt">You're X</span><svg class="pick-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
-        <div class="pick-panel" role="listbox" aria-label="Your mark and level">
+        <button class="pick-pill" id="pickPill" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="pickPanel" aria-label="Your mark, who starts and level"><span class="pick-glyph" id="pickGlyph"><span>X</span></span><span class="pick-txt" id="pickTxt">You're X</span><svg class="pick-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+        <div class="pick-panel" id="pickPanel" role="dialog" aria-label="Play the computer">
           <div class="pick-item pick-label">You play</div>
-          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="youAre" data-v="X"><b class="X">X</b>Play X<small>first</small><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
-          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="youAre" data-v="O"><b class="O">O</b>Play O<small>second</small><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
-          <div class="pick-item pick-sep"></div>
-          <div class="pick-item pick-label">Computer</div>
-          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="level" data-v="easy">Easy<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
-          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="level" data-v="medium">Medium<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
-          <div class="pick-item"><button class="pick-row" type="button" role="option" data-k="level" data-v="perfect">Perfect<span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></button></div>
+          <div class="pick-item mcards"><button class="mcard X" type="button" data-v="X" aria-pressed="true">X<small>Crosses</small></button><button class="mcard O" type="button" data-v="O" aria-pressed="false">O<small>Noughts</small></button></div>
+          <div class="pick-item pick-label" id="pl-first">Who starts</div>
+          <div class="pick-item"><div class="seg sm full" data-opt="first" role="group" aria-labelledby="pl-first"><span class="thumb"></span><button type="button" data-v="me">You</button><button type="button" data-v="ai">Computer</button></div></div>
+          <div class="pick-item pick-label" id="pl-level">Level</div>
+          <div class="pick-item"><div class="seg sm full" data-opt="level" role="group" aria-labelledby="pl-level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div></div>
         </div>
       </div>
       <button class="btn primary big" id="newBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>New round</button>
@@ -726,7 +723,7 @@ function pickMove(me,op,rule,level){
 }
 
 /* ---------- Options (segmented controls) ---------- */
-const defaults={level:"medium",youAre:"X",rule:"A",hints:"0",age:"1",alt:"1"};
+const defaults={level:"medium",youAre:"X",first:"me",rule:"A",hints:"0",age:"1",alt:"1"};
 let opt=store.get("xo.opt",null);
 if(!opt){ // carry over settings from the previous version of the site
   opt={...defaults,rule:store.get("xo.rule","A"),hints:store.get("xo.hints",false)?"1":"0",
@@ -962,7 +959,7 @@ function onOpt(k,v){
   }
   if(opt[k]===v)return;
   opt[k]=v;saveOpt();syncOptSegs(true);
-  if(k==="youAre"&&mode==="ai")setMode("ai");else render();
+  if((k==="youAre"||k==="first")&&mode==="ai")setMode("ai");else render();
 }
 
 function setMode(m){
@@ -973,7 +970,7 @@ function setMode(m){
   if(m==="ai"){aiSide=other(opt.youAre);names[aiSide]="Computer";names[opt.youAre]="You"}
   else if(m==="local"){names.X="Player X";names.O="Player O"}
   else setOnlineNames();
-  newRound("X");
+  newRound(m==="ai"?(opt.first==="ai"?aiSide:opt.youAre):"X");
 }
 /* The thumb moves on the press itself, before any game work, so the switch
    answers at once; the mode change runs on the next frame. */
@@ -986,20 +983,27 @@ $("tabs").addEventListener("click",e=>{
 });
 
 /* ---------- Quick picker (vs computer) ---------- */
-const pick=$("pick"),pickPill=$("pickPill");
+/* A pill that becomes its own panel. The press sinks it a little, the shape
+   grows out of the pill's corner on one long, soft curve that never passes
+   its target, and the contents fade up after it, one row at a time. */
+const pick=$("pick"),pickPill=$("pickPill"),pickPanel=$("pickPanel");
 let pickBeat=0,lastGlyph="";
 function renderPick(){
   const m=opt.youAre==="O"?"O":"X";
   if(lastGlyph!==m){lastGlyph=m;const g=$("pickGlyph");g.className="pick-glyph "+m;g.innerHTML="<span>"+m+"</span>";$("pickTxt").textContent="You're "+m}
-  pick.querySelectorAll(".pick-row").forEach(r=>r.setAttribute("aria-selected",String(opt[r.dataset.k]===r.dataset.v)));
+  pick.querySelectorAll(".mcard").forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.v===m)));
 }
 function pickOpen(){
   if(pick.hasAttribute("data-open"))return;
+  pick.style.setProperty("--panel-h",pickPanel.offsetHeight+"px");
   pick.setAttribute("data-sink","");clearTimeout(pickBeat);
-  pickBeat=setTimeout(()=>{pick.removeAttribute("data-sink");pick.setAttribute("data-open","");pickPill.setAttribute("aria-expanded","true");
-    pick.querySelectorAll(".pick-item").forEach((it,i)=>it.style.transitionDelay=(30+i*22)+"ms");
-    const sel=pick.querySelector('.pick-row[aria-selected="true"]');setTimeout(()=>sel&&sel.focus({preventScroll:true}),still?0:120);
-  },still?0:60);
+  pickBeat=setTimeout(()=>{
+    pick.removeAttribute("data-sink");
+    pick.querySelectorAll(".pick-item").forEach((it,i)=>it.style.transitionDelay=(90+i*38)+"ms");
+    pick.setAttribute("data-open","");pickPill.setAttribute("aria-expanded","true");
+    pick.querySelectorAll(".seg[data-opt]").forEach(sg=>placeThumb(sg,false));
+    setTimeout(()=>{const c=pick.querySelector('.mcard[aria-pressed="true"]');c&&c.focus({preventScroll:true})},still?0:260);
+  },still?0:90);
 }
 function pickClose(focusPill){
   if(!pick.hasAttribute("data-open"))return;
@@ -1008,16 +1012,10 @@ function pickClose(focusPill){
   if(focusPill)pickPill.focus({preventScroll:true});
 }
 pickPill.addEventListener("click",pickOpen);
-pick.querySelectorAll(".pick-row").forEach(r=>r.addEventListener("click",()=>{
-  onOpt(r.dataset.k,r.dataset.v);renderPick();setTimeout(()=>pickClose(true),still?0:140);
-}));
-/* anywhere but the menu puts it away; a press by a person, not by a script */
+pick.querySelectorAll(".mcard").forEach(c=>c.addEventListener("click",()=>{onOpt("youAre",c.dataset.v);renderPick()}));
+/* anywhere but the panel puts it away; a press by a person, not by a script */
 document.addEventListener("pointerdown",e=>{if(e.isTrusted&&pick.hasAttribute("data-open")&&!pick.contains(e.target))pickClose(false)});
-pick.addEventListener("keydown",e=>{
-  if(e.key==="Escape"){e.stopPropagation();pickClose(true);return}
-  if(e.key==="ArrowDown"||e.key==="ArrowUp"){const rows=[...pick.querySelectorAll(".pick-row")],i=rows.indexOf(document.activeElement);
-    if(i<0)return;e.preventDefault();rows[(i+(e.key==="ArrowDown"?1:rows.length-1))%rows.length].focus()}
-});
+pick.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();pickClose(true)}});
 /* ---------- Online (MQTT relay over secure WebSockets) ---------- */
 /* Both players connect to several public brokers at once and send every
    message through all of them. Duplicates are dropped by message id, so the
@@ -1236,27 +1234,33 @@ function renderNet(){
        capsule for the one who joined, then the cards make way for the board */
     netShown="joined";
     toast(isHost?"Your friend joined the room":"You're in. You play O","friend");
-    clearTimeout(joinedTimer);joinedTimer=setTimeout(()=>{if(netShown==="joined"){netShown="live";render()}},still?0:1200);
+    clearTimeout(joinedTimer);joinedTimer=setTimeout(()=>{
+      if(netShown!=="joined")return;
+      /* the cards bow out before the board takes the stage */
+      const cards=document.querySelectorAll(".card");cards.forEach(c=>c.classList.add("leaving"));
+      setTimeout(()=>{cards.forEach(c=>c.classList.remove("leaving"));if(netShown==="joined"){netShown="live";render()}},still?0:400);
+    },still?0:1300);
   }else if(netShown==="joined"&&st==="live"){/* hold the moment */}
   else{
     if(st==="lost"&&netShown==="live")toast("Your friend left the room");
     if(st==="live"&&netShown==="lost")toast("Your friend is back","friend");
     netShown=st;
   }
+  const prevNet=app.dataset.net;
   app.dataset.net=netShown;
   const s=netShown,joined=s==="joined";
+  if((s==="host-wait"||s==="guest-wait")&&prevNet!==s&&!still)
+    $("meOrb").animate([{transform:"scale(.6)"},{transform:"scale(1.14)",offset:.55},{transform:"scale(.96)",offset:.78},{transform:"none"}],{duration:700,easing:"cubic-bezier(.34,1.2,.5,1)"});
   setText($("rcTitle"),{idle:"Play a friend","host-wait":"Your room","guest-wait":"Joining room",full:"Room is full",joined:isHost?"Your room":"Joined"}[s]||"Your room");
   const pill=$("rcPill"),pt={"host-wait":"1 of 2","guest-wait":room||"",joined:"2 of 2"}[s];
-  pill.hidden=!pt;if(pt)setText(pill,pt);
+  if(pt)setText(pill,pt);
   $("meOrb").className="orb"+(me==="O"?" o":"");
   const seat=$("seat"),seatState=joined?"filled":(s==="host-wait"||s==="guest-wait")?"waiting":"empty";
   if(seat.dataset.state!==seatState)seat.dataset.state=seatState;
   setText($("seatName"),joined?(isHost?"Friend":"Host"):s==="host-wait"?"Waiting":s==="guest-wait"?"Host":"Friend");
-  $("codeRow").hidden=!(isHost&&(s==="host-wait"||joined));
-  $("rcCode").textContent=room||"";
-  $("createRoom").hidden=!(s==="idle"||s==="full");
-  $("inviteBtn").hidden=s!=="host-wait";
-  $("leaveRoom").hidden=!(s==="host-wait"||s==="guest-wait");
+  if(room)$("rcCode").textContent=room;
+  applyVis($("roomCard"),[[pill,!!pt],[$("codeRow"),isHost&&(s==="host-wait"||joined)],[$("createRoom"),s==="idle"||s==="full"],
+    [$("inviteBtn"),s==="host-wait"],[$("leaveRoom"),s==="host-wait"||s==="guest-wait"]]);
   $("leaveRoom").textContent=s==="guest-wait"?"Cancel":"Leave";
   if(!$("inviteBtn").dataset.busy)$("inviteLbl").textContent=canShare?"Share invite":"Copy invite link";
   otpEl.classList.toggle("busy",s==="guest-wait");
@@ -1265,6 +1269,36 @@ function renderNet(){
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   chip.hidden=!showChip;
   if(showChip){$("chipMe").className="orb"+(me==="O"?" o":"");$("chipFriend").className="orb friend"+(s==="lost"?" away":"");$("chipCode").textContent=room||""}
+}
+/* Parts of the room card come and go as the room changes. Leaving parts fade
+   and lift away first; then the card eases to its new height in one move and
+   the arriving parts rise in after it, one after another. */
+const VIS_IN=[{opacity:0,transform:"translateY(10px) scale(.94)",filter:"blur(4px)"},{opacity:1,transform:"none",filter:"blur(0)"}];
+const VIS_OUT=[{opacity:1,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(-6px) scale(.96)",filter:"blur(3px)"}];
+let visPending=false;
+function flipHeight(card,fn){
+  if(still||!card||!card.offsetParent){fn();return}
+  const h0=card.offsetHeight;fn();const h1=card.offsetHeight;
+  if(Math.abs(h0-h1)<1)return;
+  card.style.overflow="hidden";
+  card.animate([{height:h0+"px"},{height:h1+"px"}],{duration:480,easing:"cubic-bezier(.32,.72,0,1)"}).onfinish=()=>{card.style.overflow=""};
+}
+function applyVis(card,list){
+  list.forEach(([el,w])=>el._want=!!w);
+  if(visPending)return;
+  const commit=()=>{
+    visPending=false;
+    const show=list.map(x=>x[0]).filter(el=>el._want&&el.hidden),hide=list.map(x=>x[0]).filter(el=>!el._want&&!el.hidden);
+    list.forEach(([el])=>{if(el._want&&!el.hidden&&el._out){el._out.cancel();el._out=null}});
+    if(!show.length&&!hide.length)return;
+    flipHeight(card,()=>{hide.forEach(el=>{el.hidden=true;if(el._out){el._out.cancel();el._out=null}});show.forEach(el=>el.hidden=false)});
+    if(!still)show.forEach((el,i)=>el.animate(VIS_IN,{duration:520,delay:90+i*80,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"}));
+  };
+  const hiding=list.filter(([el,w])=>!w&&!el.hidden&&!el._out);
+  if(still||!hiding.length||!card.offsetParent){commit();return}
+  visPending=true;
+  hiding.forEach(([el])=>{el._out=el.animate(VIS_OUT,{duration:200,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
+  setTimeout(commit,210);
 }
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){return false}}
 $("copyCode").addEventListener("click",async()=>{toast(await copyText(room||"")?"Code copied":"Copy failed")});
@@ -1406,7 +1440,7 @@ const REQ_MS=30000;
 function cancelReq(){if(!outReq)return;publish({t:"cancel",rid:outReq.rid});outReq=null;clearTimeout(reqTimer);toast("Request cancelled");render()}
 
 /* ---------- Toast stack for requests ---------- */
-const tst=$("tst"),TH=68,PEEK=12,TGAP=10;
+const tst=$("tst"),TH=128,PEEK=12,TGAP=10;
 let tItems=[]; // newest first: {key,el}
 const ICONS={
   again:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
@@ -1428,12 +1462,11 @@ function makeToast(r,incoming){
   const el=document.createElement("div");el.className="tst-toast enter";
   el.dataset.kind=incoming?r.kind:"out";el.setAttribute("role",incoming?"alertdialog":"status");
   const [t,b]=reqCopy(r,incoming);
-  el.innerHTML=`<span class="tst-icon">${svg(ICONS[incoming?r.kind:"out"])}</span><span class="tst-text"><b>${esc(t)}</b><span>${esc(b)}</span></span>`+
-    (incoming?`<button type="button" class="tst-act">Accept</button>`:"")+
-    `<button type="button" class="tst-x" aria-label="${incoming?"Decline":"Cancel request"}">${svg('<path d="M18 6 6 18M6 6l12 12"/>')}</button>`+
-    `<span class="tst-bar" aria-hidden="true"><i style="animation-duration:${REQ_MS}ms"></i></span>`;
-  if(incoming){el.querySelector(".tst-act").onclick=()=>answer(true);el.querySelector(".tst-x").onclick=()=>answer(false)}
-  else el.querySelector(".tst-x").onclick=cancelReq;
+  el.innerHTML=`<div class="tst-top"><span class="tst-icon">${svg(ICONS[incoming?r.kind:"out"])}</span><span class="tst-text"><b>${esc(t)}</b><span>${esc(b)}</span></span>`+
+    `<svg class="tst-ring" viewBox="0 0 30 30" role="img" aria-label="Time left to answer"><circle class="bg" cx="15" cy="15" r="12"/><circle class="fg" cx="15" cy="15" r="12" pathLength="1" style="animation-duration:${REQ_MS}ms"/></svg></div>`+
+    `<div class="tst-btns">`+(incoming?`<button type="button" class="btn tst-no">Decline</button><button type="button" class="btn primary tst-yes">Accept</button>`:`<button type="button" class="btn tst-no">Cancel request</button>`)+`</div>`;
+  if(incoming){el.querySelector(".tst-yes").onclick=()=>answer(true);el.querySelector(".tst-no").onclick=()=>answer(false)}
+  else el.querySelector(".tst-no").onclick=cancelReq;
   return el;
 }
 function tstLayout(){
@@ -1459,7 +1492,7 @@ function renderRequests(){
   for(const w of want)if(!tItems.some(t=>t.key===w.key)){
     const el=w.make();tst.appendChild(el);tItems.unshift({key:w.key,el});changed=true;
     if(still)el.classList.remove("enter");else requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.remove("enter")));
-    if(w.key.startsWith("in:"))setTimeout(()=>{const a=el.querySelector(".tst-act");a&&!openDlg&&a.focus({preventScroll:true})},80);
+    if(w.key.startsWith("in:"))setTimeout(()=>{const a=el.querySelector(".tst-yes");a&&!openDlg&&a.focus({preventScroll:true})},80);
   }
   if(!tItems.length)tst.removeAttribute("data-open");
   if(changed)tstLayout();
@@ -1651,7 +1684,11 @@ $("btnTheme").addEventListener("click",e=>{
   const next=root.dataset.theme==="light"?"dark":"light";
   if(still||!document.startViewTransition){applyTheme(next);return}
   const r=e.currentTarget.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;
-  const R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  /* size the circle from the whole screen, not just the page area: on phones
+     the toolbar makes the screen taller than innerHeight, and a circle sized
+     to innerHeight stops short of the bottom corner */
+  const H=Math.max(innerHeight,document.documentElement.clientHeight,screen.height||0)+120,Wd=Math.max(innerWidth,screen.width||0)+40;
+  const R=Math.hypot(Math.max(x,Wd-x),Math.max(y,H-y));
   const t=document.startViewTransition(()=>applyTheme(next));
   t.ready.then(()=>root.animate({clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${R}px at ${x}px ${y}px)`]},
     {duration:700,easing:"cubic-bezier(.22,1,.36,1)",pseudoElement:"::view-transition-new(root)"})).catch(()=>{});
