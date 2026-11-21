@@ -443,7 +443,9 @@ button.mark{border:0;background:none;padding:0}
 .made-by{display:block;margin:12px auto 2px;padding:8px 14px;border:0;border-radius:999px;background:none;color:var(--faint);font:500 12px var(--sans);transition:color .2s,background-color .2s}
 .made-by:hover{color:var(--ink);background:var(--chip)}
 .about{width:min(540px,calc(100vw - 48px))}
-#dlgAbout{overflow:visible}
+#dlgAbout{overflow:clip}
+.creators{touch-action:none;-webkit-user-select:none;user-select:none}
+.head3d .pupil{transform:translate(calc(var(--mx,0)*2.6px),calc(var(--my,0)*1.6px));transition:transform .45s cubic-bezier(.22,1,.36,1)}
 .about-lead{margin:-6px 12px 0;color:var(--mute);font-size:14px}
 .creators{display:flex;justify-content:center;gap:clamp(12px,4vw,36px);padding:18px 8px 6px}
 .creator{display:flex;flex-direction:column;align-items:center;width:clamp(120px,34vw,170px)}
@@ -1158,10 +1160,11 @@ function flipActions(change){
       flyers.set(k,{g,a:an});
       an.onfinish=an.oncancel=()=>{g.remove();if(flyers.get(k)&&flyers.get(k).g===g){flyers.delete(k);k.style.visibility=""}};
     }
-    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:560,delay:90,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+    /* fade to the button's own resting opacity, so a disabled one never looks live on the way in */
+    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:getComputedStyle(k).opacity,transform:"none",filter:"blur(0)"}],{duration:560,delay:90,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
     else if(a&&!b){
       const g=ghostOf(k,a,1);
-      g.animate([{opacity:1,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(16px) scale(.9)",filter:"blur(4px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
+      g.animate([{opacity:getComputedStyle(g).opacity,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(16px) scale(.9)",filter:"blur(4px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
     }
   });
 }
@@ -1846,6 +1849,7 @@ function renderNet(){
   otpEl.classList.toggle("done",joined&&!isHost);
   otpIn.disabled=s==="guest-wait"||joined;
   applyVis($("joinCard"),[[$("joinBtn"),!(s==="guest-wait"||joined)]]);
+  joinVis(!(matchMedia("(max-width:1079px)").matches&&isHost&&!!room&&(s==="host-wait"||joined)));
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
   $("emo").hidden=s!=="live";if(s!=="live")emoClose();
@@ -1887,6 +1891,22 @@ function applyVis(card,list){
   card._vp=true;
   hiding.forEach(([el])=>{el._out=el.animate(VIS_OUT,{duration:200,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
   setTimeout(commit,210);
+}
+/* On a phone, while you host a room, joining another one makes no sense:
+   that half of the sheet folds away, so the code and QR have the room */
+function joinVis(show){
+  const jc=$("joinCard"),dk=$("dock");jc._want=show;
+  if(jc._busy||jc.hidden===!show)return;
+  if(still||!dk.offsetParent){jc.hidden=!show;return}
+  jc._busy=true;
+  if(!show){
+    jc.animate(VIS_OUT,{duration:200,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=a=>{
+      flipHeight(dk,()=>{jc.hidden=true});a.target.cancel();jc._busy=false;if(jc._want)joinVis(true)};
+  }else{
+    flipHeight(dk,()=>{jc.hidden=false});
+    jc.animate(VIS_IN,{duration:520,delay:120,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+    jc._busy=false;
+  }
 }
 async function copyText(t){try{await navigator.clipboard.writeText(t);return true}catch(e){return false}}
 $("copyCode").addEventListener("click",async()=>{toast(await copyText(room||"")?"Code copied":"Copy failed")});
@@ -2584,7 +2604,7 @@ document.addEventListener("keydown",e=>{
 });
 /* drag a sheet down to put it away: from anywhere on it that is not a
    control, as long as its content is scrolled to the top */
-const NO_DRAG="button,input,textarea,select,a,video,.seg,.seat-menu";
+const NO_DRAG="button,input,textarea,select,a,video,.seg,.seat-menu,.creators";
 document.querySelectorAll(".dlg").forEach(d=>{
   let y0=null,x0=0,dy=0,live=false,lastY=0,lastT=0,vel=0;
   const begin=(x,y,t)=>{
@@ -2797,20 +2817,28 @@ function buildAbout(){
   document.querySelectorAll(".creator").forEach((c,i)=>{
     const h=c.querySelector(".head3d"),sh=c.querySelector(".head-shadow");h.style.setProperty("--mx",0);h.style.setProperty("--my",0);
     if(still)return;
-    const lift=innerHeight-h.getBoundingClientRect().top+40;
+    /* start just under the card's bottom edge: the card clips them, so they rise into view from inside it */
+    const lift=$("dlgAbout").getBoundingClientRect().bottom-h.getBoundingClientRect().top+16;
     h.style.opacity="0";
     setTimeout(()=>{h.style.opacity="";springAnim(h,{from:0,to:1,k:90,c:10.5,prop:v=>`translateY(${((1-v)*lift).toFixed(1)}px) rotate(${((1-v)*(i?6:-6)).toFixed(2)}deg)`})},140+i*170);
     sh.animate([{transform:"scale(0)",opacity:0},{transform:"scale(1)",opacity:1}],{duration:600,delay:520+i*170,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
   });
 }
-/* the heads turn toward the pointer (or a finger dragging across them) */
-$("dlgAbout").addEventListener("pointermove",e=>{
+/* the heads turn toward the pointer; on a phone they follow your finger
+   while you touch and drag across them, then look ahead again */
+function lookAt(e){
   document.querySelectorAll(".head3d").forEach(h=>{
     const r=h.getBoundingClientRect(),mx=Math.max(-1,Math.min(1,(e.clientX-(r.left+r.width/2))/(r.width*1.2))),my=Math.max(-1,Math.min(1,(e.clientY-(r.top+r.height/2))/(r.height*1.2)));
     h.style.setProperty("--mx",mx.toFixed(3));h.style.setProperty("--my",my.toFixed(3));
   });
-});
-$("dlgAbout").addEventListener("pointerleave",()=>document.querySelectorAll(".head3d").forEach(h=>{h.style.setProperty("--mx",0);h.style.setProperty("--my",0)}));
+}
+const lookAhead=()=>document.querySelectorAll(".head3d").forEach(h=>{h.style.setProperty("--mx",0);h.style.setProperty("--my",0)});
+let touchLook=false;
+$("dlgAbout").addEventListener("pointermove",e=>{if(e.pointerType!=="touch"||touchLook)lookAt(e)});
+$("creators").addEventListener("pointerdown",e=>{if(e.pointerType!=="touch")return;touchLook=true;$("creators").setPointerCapture(e.pointerId);lookAt(e)});
+const endLook=e=>{if(e.pointerType==="touch"&&touchLook){touchLook=false;setTimeout(()=>{if(!touchLook)lookAhead()},600)}};
+$("creators").addEventListener("pointerup",endLook);$("creators").addEventListener("pointercancel",endLook);
+$("dlgAbout").addEventListener("pointerleave",e=>{if(e.pointerType!=="touch")lookAhead()});
 $("madeBy").addEventListener("click",()=>openDialog("dlgAbout",$("logo")));
 
 const logo=$("logo");
