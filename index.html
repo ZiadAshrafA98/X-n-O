@@ -678,7 +678,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 /* A small board builds itself, a quick game plays out, then the board flies
    down into the real one while the page comes up around it. */
 .splash{--sp:min(200px,52vw);position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;background:var(--bg);cursor:pointer}
-.sp-board{width:var(--sp);height:var(--sp);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--sp) * .04);transform-origin:50% 50%}
+.sp-board{width:var(--sp);height:var(--sp);display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:calc(var(--sp) * .026);transform-origin:50% 50%}
 .sp-board i{position:relative;display:block;min-width:0;min-height:0;aspect-ratio:1;border-radius:22%;background:var(--tile);transition:background-color .35s var(--out),box-shadow .35s var(--out)}
 .sp-board i.win{background:color-mix(in srgb,var(--x) 22%,var(--tile));box-shadow:0 0 0 2px color-mix(in srgb,var(--x) 45%,transparent),0 10px 30px color-mix(in srgb,var(--x) 25%,transparent)}
 .sp-board svg{position:absolute;left:22%;top:22%;width:56%;height:56%;overflow:visible}
@@ -3020,6 +3020,9 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
   const lg=$("spLogo"),lgSvg=lg.querySelector("svg"),tag=sp.querySelector(".sp-tag"),realLogo=$("logo");
   /* the mark draws itself the way the corner logo does: the X strokes in as it turns, then the O circles round */
   realLogo.style.visibility="hidden";
+  /* the real board waits under the splash and appears in the very frame the
+     little board lands on it, so the two never show at once */
+  const realBoard=$("board");realBoard.style.visibility="hidden";
   at(320,()=>lg.classList.add("intro"));
   tag.animate([{opacity:0,transform:"translateY(8px)"},{opacity:1,transform:"none"}],{duration:500,delay:560,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"});
   const SVG={X:'<svg viewBox="0 0 40 40" class="X"><path pathLength="1" d="M10 10L30 30"/><path pathLength="1" d="M30 10L10 30"/></svg>',
@@ -3040,13 +3043,15 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
     lg.classList.add("out");lg.classList.remove("intro");
     lgSvg.animate([{transform:"none"},{transform:`translate(${to.left-from.left}px,${to.top-from.top}px) scale(${to.width/from.width})`}],{duration:760,easing:"cubic-bezier(.5,0,.15,1)",fill:"forwards"});
     setTimeout(()=>{realLogo.style.visibility="";lg.style.visibility="hidden"},770);
+    setTimeout(()=>{realBoard.style.visibility="";bd.style.visibility="hidden"},130+720);
     const bg=getComputedStyle(sp).backgroundColor;
     sp.animate([{backgroundColor:bg},{backgroundColor:"transparent"}],{duration:520,delay:160,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
     /* the page comes up around the landing board */
     const parts=[...document.querySelectorAll(".top > :not(#logo)"),$("status"),$("pX"),$("pO"),document.querySelector(".actions")].filter(Boolean);
-    parts.forEach((el,i)=>el.animate([{opacity:0,transform:"translateY(14px) scale(.97)"},{opacity:1,transform:"none"}],{duration:620,delay:260+i*60,easing:"cubic-bezier(.34,1.25,.6,1)",fill:"backwards"}));
+    /* translate and scale, not transform: some parts (the mode switcher) are centred with their own transform */
+    parts.forEach((el,i)=>el.animate([{opacity:0,translate:"0 16px"},{opacity:1,translate:"0 0"}],{duration:620,delay:260+i*60,easing:"cubic-bezier(.34,1.25,.6,1)",fill:"backwards"}));
     sp.style.pointerEvents="none";
-    setTimeout(()=>{bd.animate([{opacity:1},{opacity:0}],{duration:180,fill:"forwards"}).onfinish=()=>sp.remove()},860);
+    setTimeout(()=>sp.remove(),900);
   }
   sp.addEventListener("pointerdown",exit);
   addEventListener("keydown",function k(){removeEventListener("keydown",k);exit()});
