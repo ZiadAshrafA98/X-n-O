@@ -1278,7 +1278,7 @@ function renderStatus(){
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
   if(over){
     const w=names[turn];
-    setStatus("var(--green)",isYou(turn)?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:localProf[turn].n?`${esc(w)} wins`:`${turn} wins`);
+    setStatus("var(--green)",isYou(turn)?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:hasName(turn)?`${esc(w)} wins`:`${turn} wins`);
     return;
   }
   if(mode==="online"&&role==="aud"){
@@ -1300,7 +1300,7 @@ function renderStatus(){
   }
   if(mode==="ai")return turn===aiSide?setStatus("var(--ai)","Computer is thinking",true):setStatus(sideVar(turn),"Your turn");
   const sub=marks[turn].length===3?`<span class="sub">oldest ${turn} fades next</span>`:"";
-  setStatus(sideVar(turn),localProf[turn].n?`${esc(names[turn])}'s turn${sub}`:`${turn} to move${sub}`);
+  setStatus(sideVar(turn),hasName(turn)?`${esc(names[turn])}'s turn${sub}`:`${turn} to move${sub}`);
 }
 
 function tick(el,val){
@@ -1310,7 +1310,16 @@ function tick(el,val){
   if(cur){if(still)cur.remove();else{cur.className="outgoing";setTimeout(()=>cur.remove(),320);n.className="in"}}
   el.appendChild(n);
 }
+let flipped=false;
 function renderPlayers(){
+  /* keep you on the left: when you play O the two players trade places */
+  const f=mySide()==="O";
+  if(f!==flipped){
+    const els=[$("pX"),$("pO")],before=els.map(e=>e.getBoundingClientRect());
+    flipped=f;$("pX").classList.toggle("pl",!f);$("pX").classList.toggle("pr",f);$("pO").classList.toggle("pl",f);$("pO").classList.toggle("pr",!f);
+    if(!still)els.forEach((e,i)=>{const a=e.getBoundingClientRect(),b=before[i];if(!b.width||!a.width)return;
+      e.animate([{transform:`translate(${b.left-a.left}px,${b.top-a.top}px)`},{transform:"none"}],{duration:720,easing:"cubic-bezier(.34,1.25,.5,1)"})});
+  }
   for(const s of ["X","O"]){
     const el=$("p"+s),orb=$("p"+s+"orb"),k=kindOf(s);
     orb.className="orb"+(k?" "+k:"");
@@ -1467,7 +1476,7 @@ function net(msg){$("netNote").textContent=msg||""}
 function setOnlineNames(){
   if(role==="aud"){names[hostMark]=nameOf(hostId)||"Host";names[other(hostMark)]=nameOf(guestId)||"Guest";return}
   const opp=partner?nameOf(partner):"Friend";
-  names.X=me?(me==="X"?"You":opp):"Player X";names.O=me?(me==="O"?"You":opp):"Player O";
+  names.X=me?(me==="X"?myName:opp):"Player X";names.O=me?(me==="O"?myName:opp):"Player O";
 }
 /* ---------- audience ---------- */
 /* Once both seats are taken, anyone else who opens the room joins as
@@ -1497,16 +1506,20 @@ function orbBg(id){return avBg(id)||orbHue(id)}
 /* Same device: each side keeps its own name and avatar on this device */
 const localProf=(()=>{const v=store.get("xo.local",null)||{},o={};for(const s of ["X","O"]){const p=v[s]||{};o[s]={n:cleanName(p.n||""),av:cleanAv(p.av)}}return o})();
 const MARK_BG={X:"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",O:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)"};
-function localName(s){return localProf[s].n||"Player "+s}
+/* you are always the left player: X on a shared device, your mark against
+   the computer or online */
+function mySide(){if(mode==="online")return role!=="aud"?me:null;if(mode==="ai")return opt.youAre;return"X"}
+function localName(s){return s==="X"?myName:localProf[s].n||"Player "+s}
+function hasName(s){return mode==="local"&&(s==="X"||!!localProf[s].n)}
 /* who a side's dot belongs to: "me", a same-device side, or nobody to edit */
 function sideTarget(s){
   if(mode==="online")return idOfSide(s)===myId&&role!=="aud"?"me":null;
   if(mode==="ai")return s===opt.youAre?"me":null;
-  return s;
+  return s==="X"?"me":s;
 }
 function sideAvBg(s){
   if(mode==="online"){const id=idOfSide(s);return id?avBg(id):""}
-  const k=mode==="ai"?(s===opt.youAre?myAv:""):localProf[s].av;
+  const k=s===mySide()?myAv:mode==="ai"?"":localProf[s].av;
   return k?`url('${avUri(k)}') center/cover`:"";
 }
 function isYou(s){return(mode==="ai"&&s===opt.youAre)||(mode==="online"&&!!me&&s===me)}
@@ -2265,6 +2278,7 @@ function setMyProfile(v,av){
   myName=n;myAv=av;store.set("xo.name",n);store.set("xo.av",av);
   if(isHost)pushRoom();else if(room&&connOpen)publish({t:"name",n,av});
   if(mode==="ai")names[opt.youAre]=myName;
+  if(mode==="local")names.X=myName;
   if(mode==="online")updateMe();
   render();
 }
@@ -2281,7 +2295,7 @@ let profFor="me";
 function profCur(){return profFor==="me"?{n:myName,av:myAv}:{n:localName(profFor),av:localProf[profFor].av}}
 function profDot(){
   if(profFor!=="me")return MARK_BG[profFor];
-  return mode==="online"?orbHue(myId):MARK_BG[mode==="ai"?opt.youAre:"X"];
+  return mode==="online"?orbHue(myId):MARK_BG[mySide()||"X"];
 }
 function paintProf(){const k=profCur().av;$("profOrb").style.background=k?`url('${avUri(k)}') center/cover`:profDot()}
 function buildProfile(){
@@ -2436,7 +2450,7 @@ function fillResult(){
   const w=names[turn],k=kindOf(turn);
   $("resOrb").className="orb"+(k?" "+k:"");$("resOrb").style.background=sideAvBg(turn);
   const cls=turn.toLowerCase();
-  $("resTitle").innerHTML=isYou(turn)?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"||localProf[turn].n?`${esc(w)} wins`:`<span class="${cls}">${turn}</span> wins`;
+  $("resTitle").innerHTML=isYou(turn)?"You win!":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"||hasName(turn)?`${esc(w)} wins`:`<span class="${cls}">${turn}</span> wins`;
   $("resScore").innerHTML=`${esc(names.X)} <b>${score.X}</b> : <b>${score.O}</b> ${esc(names.O)}`;
 }
 function showResult(show){
