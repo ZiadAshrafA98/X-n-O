@@ -2115,7 +2115,7 @@ function renderNet(){
       /* the cards bow out before the board takes the stage */
       const cards=document.querySelectorAll(".card");cards.forEach(c=>c.classList.add("leaving"));
       setTimeout(()=>{cards.forEach(c=>c.classList.remove("leaving"));if(netShown==="joined"){netShown="live";viaMatch=null;render()}},still?0:400);
-    },still?0:quick?250:1300);
+    },still?0:quick?Math.max(150,viaMatch.at+1000-Date.now()):1300);
   }else if(netShown==="joined"&&st==="live"){/* hold the moment */}
   else{
     if(st==="lost"&&netShown==="live")toast("Friend left");
@@ -2125,7 +2125,7 @@ function renderNet(){
   const prevNet=app.dataset.net;
   app.dataset.net=netShown;
   const s=netShown,joined=s==="joined";
-  if((s==="host-wait"||s==="guest-wait")&&prevNet!==s&&!still)
+  if((s==="host-wait"||s==="guest-wait")&&prevNet!==s&&!still&&!viaMatch)
     $("meOrb").animate([{transform:"scale(.6)"},{transform:"scale(1.14)",offset:.55},{transform:"scale(.96)",offset:.78},{transform:"none"}],{duration:700,easing:"cubic-bezier(.34,1.2,.5,1)"});
   /* a matched room shows "Match found" until it is live: no code, invite or
      waiting seat, because nobody needs to be invited */
@@ -2848,7 +2848,14 @@ function morphLand(st){
   if(!st||st!==morph)return;
   const p=meParts(),narrow=matchMedia("(max-width:1079px)").matches;
   const done=()=>{if(morph!==st)return;
+    /* the page may have shifted while we flew (a phone's address bar, a late
+       layout change): if the seat moved, glide the last few pixels first */
+    if(!st.fixed&&p){const r2=where();if(r2&&Math.hypot(r2.left-r.left,r2.top-r.top,r2.width-r.width)>1.5){st.fixed=true;
+      const k=r.width/r2.width;flyTo(st.orb,r,r2,k,200,"cubic-bezier(.22,1,.36,1)");
+      if(st.name&&nr){const n2=p.name.getBoundingClientRect();flyTo(st.name,nr,n2,1,200,"cubic-bezier(.22,1,.36,1)")}
+      r=r2;setTimeout(done,210);return}}
     /* the real dot takes over; its ring and edit badge ease in rather than snap */
+    if(window.__xoLand&&p){const g=st.orb.getBoundingClientRect(),t=p.orb.getBoundingClientRect();window.__xoLand(Math.round(Math.hypot(g.left-t.left,g.top-t.top)))}
     const lands=[...st.hidden].filter(el=>el.classList.contains("orb"));
     lands.forEach(el=>el.classList.add("landing"));
     morphClear();
@@ -2858,9 +2865,11 @@ function morphLand(st){
   const sheet=p.online&&narrow?$("dock"):null,card=p.online&&!narrow?$("roomCard"):null;
   if(!p.online){const pl=p.orb.closest(".player");if(pl)pl.getAnimations().forEach(a=>a.finish())}
   if(card){card.getAnimations().forEach(a=>a.cancel());card.style.animation="none";card.querySelectorAll(".seat-col").forEach(e=>e.getAnimations().forEach(a=>a.finish()))}
-  let r=p.orb.getBoundingClientRect(),nr=p.name?p.name.getBoundingClientRect():null;
-  if(sheet){/* the sheet is still rising: aim for where it will rest */
-    const ty=new DOMMatrix(getComputedStyle(sheet).transform).m42;r=new DOMRect(r.left,r.top-ty,r.width,r.height);if(nr)nr=new DOMRect(nr.left,nr.top-ty,nr.width,nr.height)}
+  /* where your dot will rest: on a phone the sheet may still be rising, so take its slide off */
+  const where=()=>{if(!p.orb.isConnected)return null;let a=p.orb.getBoundingClientRect();
+    if(sheet){const ty=new DOMMatrix(getComputedStyle(sheet).transform).m42;a=new DOMRect(a.left,a.top-ty,a.width,a.height)}return a};
+  let r=where(),nr=p.name?p.name.getBoundingClientRect():null;
+  if(sheet&&nr){const ty=new DOMMatrix(getComputedStyle(sheet).transform).m42;nr=new DOMRect(nr.left,nr.top-ty,nr.width,nr.height)}
   [p.orb,p.name].forEach(el=>{if(el&&!st.hidden.includes(el)){el.style.visibility="hidden";st.hidden.push(el)}});
   if(p.orb.classList)p.orb.classList.add("landing");
   /* on a phone the dot rides the same spring as the sheet, so both settle together */
@@ -2944,8 +2953,9 @@ function mmOn(m){
     return;
   }
   if(m.t==="offer"&&typeof m.room==="string"&&cleanCode(m.room).length===5){
-    const r=cleanCode(m.room);mmPublish({t:"accept",to:m.from,room:r});
-    setTimeout(()=>mmPublish({t:"accept",to:m.from,room:r}),300);
+    /* say yes twice through this search's own connections, which stay open a moment after it ends */
+    const r=cleanCode(m.room),st=mm;mmPublish({t:"accept",to:m.from,room:r});
+    setTimeout(()=>{const keep=mm;mm=st;mmPublish({t:"accept",to:m.from,room:r});mm=keep},150);
     mmFound(peer,r,false);return;
   }
   if(m.t==="accept"&&mm.pending&&m.from===mm.pending.to&&m.room===mm.pending.room)mmFound(mm.pending.peer,mm.pending.room,true);
@@ -2963,10 +2973,12 @@ function mmFound(peer,r,host){
       seat.animate([{transform:"none"},{transform:"translateX(-10px) scale(1.06)",offset:.4},{transform:"none"}],{duration:620,easing:"cubic-bezier(.34,1.3,.6,1)"});
     },260);
   }
+  /* connect at once while "Match found" stays on screen; the board comes once
+     you are connected and the found moment has had about a second */
   setTimeout(()=>{
-    mmStop();viaMatch=peer;begin(r,host,null);
+    mmStop();viaMatch={...peer,at:Date.now()-180};begin(r,host,null);
     if(!host){clearTimeout(mmGuardT);mmGuardT=setTimeout(()=>{if(room===r&&!partner&&!rejected){leave();toast("They slipped away. Still looking");findMatch()}},9000)}
-  },still?300:1300);
+  },180);
 }
 $("findMatch").addEventListener("click",findMatch);
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
