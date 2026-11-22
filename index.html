@@ -1717,21 +1717,34 @@ async function copyPicture(withText){
    the app itself). No app takes a picture through a link, so the picture is
    copied first: paste it in to add it. The big Share button is the one that
    hands the picture over directly, through the phone's own share menu. */
+/* Android can ask an installed app to open its own "share" screen with the
+   text already in it (an intent link). LinkedIn's web share page is not one
+   of the links Android hands to the app, so on Android LinkedIn, Messenger
+   and X are opened this way, falling back to their web page if the app is
+   not there. WhatsApp's wa.me link already opens the app. iPhones have no
+   such link: there the page itself navigates to the app's address, which is
+   the case iOS hands to an installed app. */
+const ANDROID_PKG={li:"com.linkedin.android",ms:"com.facebook.orca",x:"com.twitter.android"};
+function androidSend(pkg,text,fallback){
+  return"intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT="+encodeURIComponent(text)+
+    ";package="+pkg+";S.browser_fallback_url="+encodeURIComponent(fallback)+";end";
+}
 function shareTo(app){
-  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u),phone=matchMedia("(pointer:coarse)").matches;
-  const url={wa:"https://wa.me/?text="+tu,
-    ms:phone?"fb-messenger://share/?link="+encodeURIComponent(u):"https://www.messenger.com/",
+  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u),phone=matchMedia("(pointer:coarse)").matches,android=/Android/i.test(navigator.userAgent);
+  const web={wa:"https://wa.me/?text="+tu,ms:phone?"https://www.messenger.com/":"https://www.messenger.com/",
     li:phone?"https://www.linkedin.com/sharing/share-offsite/?url="+encodeURIComponent(u):"https://www.linkedin.com/feed/?shareActive=true&text="+tu,
     x:"https://twitter.com/intent/tweet?text="+encodeURIComponent(t)+"&url="+encodeURIComponent(u)}[app];
   /* start the copy inside the tap (a pending picture is allowed), then go */
   let copied=null;
   try{if(navigator.clipboard&&window.ClipboardItem){const item={"image/png":shareBlob()};if(app==="ms"&&!phone)item["text/plain"]=new Blob([t+" "+u],{type:"text/plain"});
     copied=navigator.clipboard.write([new ClipboardItem(item)]).then(()=>true,()=>false)}}catch(e){copied=null}
-  if(url.startsWith("fb-messenger:")){
-    location.href=url;
-    /* no Messenger app: fall back to sharing the link on the web */
-    setTimeout(()=>{if(!document.hidden)window.open("https://www.messenger.com/","_blank","noopener")},1400);
-  }else window.open(url,"_blank","noopener");
+  /* (a test can watch where each button goes through window.__xoNav) */
+  const go=window.__xoNav?v=>window.__xoNav("same tab: "+v):v=>{location.href=v};
+  const tab=window.__xoNav?v=>window.__xoNav("new tab: "+v):v=>window.open(v,"_blank","noopener");
+  if(android&&ANDROID_PKG[app])go(androidSend(ANDROID_PKG[app],t+" "+u,web));
+  else if(phone&&app==="ms"){go("fb-messenger://share/?link="+encodeURIComponent(u));setTimeout(()=>{if(!document.hidden)tab(web)},1400)}
+  else if(phone&&app!=="wa")go(web);
+  else tab(web);
   if(copied)copied.then(ok=>{if(ok&&!document.hidden)shToast(app==="ms"&&!phone?"Picture and message copied. Paste them into a chat":"Picture copied. Paste it in to add it")});
 }
 $("shNative").addEventListener("click",nativeShare);
