@@ -132,7 +132,9 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .tabs button{padding:0 18px 0 14px}
 
 /* ---------- stage ---------- */
-.stage{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"pl status pr" "pl board pr" "pl actions pr" "pl stands pr";align-content:center;row-gap:22px;padding:8px 24px 28px;min-height:0}
+/* the middle column is exactly the board: a wider button row or status never
+   widens it, so the players beside it never move between modes */
+.stage{position:relative;display:grid;grid-template-columns:minmax(0,1fr) var(--bs) minmax(0,1fr);grid-template-areas:"pl status pr" "pl board pr" "pl actions pr" "pl stands pr";align-content:center;row-gap:22px;padding:8px 24px 28px;min-height:0}
 .status{grid-area:status;justify-self:center;display:flex;align-items:center;gap:10px;height:36px;padding:0 16px 0 12px;border-radius:999px;background:var(--chip);font-weight:500;font-size:14px;white-space:nowrap;max-width:100%;overflow:hidden}
 .status .dot{width:8px;height:8px;border-radius:99px;flex:none;background:var(--dot,var(--x));box-shadow:0 0 0 4px color-mix(in srgb,var(--dot,var(--x)) 22%,transparent);transition:background-color .3s ease,box-shadow .3s ease}
 .status.busy .dot{animation:breathe 1.1s ease-in-out infinite alternate}
@@ -195,7 +197,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .player.thinking .dots{display:flex}
 
 /* ---------- actions ---------- */
-.actions{grid-area:actions;justify-self:center;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.actions{grid-area:actions;justify-self:center;width:max-content;max-width:100vw;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
 .btn{white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border:0;border-radius:999px;background:var(--chip);color:var(--ink);font-weight:500;font-size:14px;letter-spacing:-.01em;transition:background-color .16s ease,color .16s ease,scale .16s var(--out),opacity .2s}
 /* a disabled button never reacts: no hover, no press, no sticky tap highlight on phones */
 @media (hover:hover){.btn:not(:disabled):hover{background:var(--chip-2)}}
@@ -1095,7 +1097,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.22·2150</p>
+  <p class="build-tag">Version 2026.11.22·2224</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
