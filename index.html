@@ -490,8 +490,17 @@ button.mark{border:0;background:none;padding:0}
 .cap:hover .hl,.cap:focus-visible .hl{opacity:1;transform:translate(var(--hx),var(--hy)) scale(1)}
 .cap:focus-visible .hl{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 40%,transparent)}
 .cap h3,.cap p{position:relative;transform:translate(calc(var(--hx) * .4),calc(var(--hy) * .4));transition:transform .5s cubic-bezier(.34,1.25,.5,1)}
-.cap .go{width:11px;height:11px;margin-left:4px;vertical-align:1px;opacity:0;transform:translate(-3px,3px);transition:opacity .2s var(--out),transform .35s var(--out);color:var(--mute)}
+/* the arrow hangs outside the name, so the name stays centred over the title */
+.cap .go{position:absolute;left:calc(100% + 5px);top:50%;width:11px;height:11px;margin-top:-5px;opacity:0;transform:translate(-3px,3px);transition:opacity .2s var(--out),transform .35s var(--out);color:var(--mute)}
 .cap:hover .go,.cap:focus-visible .go{opacity:1;transform:none}
+/* touch screens have no hover: no box, the original spacing, and the arrow always shown as a quiet link cue */
+@media (hover:none){
+  .cap{margin-top:12px;padding:0;border-radius:0}
+  .cap .hl{display:none}
+  .cap h3,.cap p{transform:none;transition:none}
+  .cap .go{opacity:.75;transform:none;transition:none}
+  .cap:active{opacity:.6}
+}
 .cap:active .hl{transform:translate(var(--hx),var(--hy)) scale(.97)}
 .creator h3{margin:0 0 2px;font-size:17px;font-weight:600;letter-spacing:-.01em;text-align:center}
 .creator p{margin:0;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:center}
