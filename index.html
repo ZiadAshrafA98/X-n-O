@@ -1787,10 +1787,14 @@ function shareTap(k,e){
   let copied=null;
   try{if(navigator.clipboard&&window.ClipboardItem){const item={"image/png":shareBlob()};if(!phone&&(k==="ms"||k==="ig"))item["text/plain"]=new Blob([shareText()+" "+SHARE_URL],{type:"text/plain"});
     copied=navigator.clipboard.write([new ClipboardItem(item)]).then(()=>true,()=>false)}}catch(x){copied=null}
-  /* LinkedIn and Instagram accept no prefilled post or message from a link (it only opens the app), so on a phone
-     that can, these two go through the share menu: picking LinkedIn there opens its composer, Instagram its send list,
-     with the picture and message already in */
-  if((k==="li"||k==="ig")&&shareFiles){e.preventDefault();if(window.__xoNav)window.__xoNav("share menu with picture");else nativeShare();return}
+  /* LinkedIn and Instagram take no prefilled post or message from a link: the
+     button opens the app, with the picture already copied. On a phone, a short
+     note says so first, then the app opens (still within the tap). */
+  if((k==="li"||k==="ig")&&phone){e.preventDefault();
+    shToast(k==="li"?"Picture copied. Paste it into your post":"Picture copied. Paste it into a message");
+    const href=a.href,nt=a.target;setTimeout(()=>{if(window.__xoNav)window.__xoNav("app after note: "+href);else if(nt)window.open(href,"_blank","noopener");else location.href=href},900);
+    if(a.dataset.fallback){const fb=a.dataset.fallback;setTimeout(()=>{if(!document.hidden){if(window.__xoNav)window.__xoNav("fallback: "+fb);else window.open(fb,"_blank","noopener")}},2600)}
+    return}
   if(window.__xoNav){e.preventDefault();window.__xoNav((a.target?"new tab: ":"same tab: ")+a.href)}
   /* an app link with nowhere to go does nothing: then open the web page */
   if(a.dataset.fallback){const fb=a.dataset.fallback;setTimeout(()=>{if(!document.hidden){if(window.__xoNav)window.__xoNav("fallback: "+fb);else window.open(fb,"_blank","noopener")}},1500)}
