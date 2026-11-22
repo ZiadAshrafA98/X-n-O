@@ -2095,7 +2095,7 @@ function renderAud(){
   while(wrap.children.length<want){const o=document.createElement("span");o.className="orb aud";wrap.appendChild(o);setTimeout(()=>dropIn(o),60)}
 }
 function renderNet(){
-  if(mode!=="online"){app.dataset.net="idle";$("chip").hidden=true;$("emo").hidden=true;emoClose();renderStands(false);return}
+  if(mode!=="online"){app.dataset.net="idle";$("chip").hidden=true;$("emo").hidden=true;emoClose();renderStands(false);resetCards();return}
   if(role==="aud"){
     netShown=connOpen?"live":"lost";app.dataset.net=netShown;
     const chip=$("chip");if(chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
@@ -2165,6 +2165,19 @@ function renderNet(){
 function paintChips(){
   const a=role==="aud"?[hostId,guestId]:[myId,partner];
   $("chipMe").style.background=role==="aud"?avBg(a[0]):myAvBg();$("chipFriend").style.background=avBg(a[1]);
+}
+/* Away from Online the cards wait, unseen, in their fresh "Play a friend"
+   state, so coming back never shows a room you already left (which would
+   also move your seat while your avatar flies to it). */
+function resetCards(){
+  if(room||mm)return;
+  const set=(id,show)=>{const el=$(id);if(el._out){el._out.cancel();el._out=null}el._want=show;el.hidden=!show};
+  ["rcPill","codeRow","rcPeople","inviteBtn","leaveRoom","qrWrap"].forEach(id=>set(id,false));
+  ["createRoom","findMatch","joinBtn"].forEach(id=>set(id,true));
+  const rc=$("roomCard"),jc=$("joinCard");rc._vp=false;jc._busy=false;jc._want=true;jc.hidden=false;
+  $("rcTitle").textContent="Play a friend";$("seatName").textContent="Friend";
+  const seat=$("seat");seat.dataset.state="empty";seat.style.background="";
+  qrOpen=false;$("qrBtn").setAttribute("aria-expanded","false");netShown="idle";
 }
 /* Parts of the room card come and go as the room changes. Leaving parts fade
    and lift away first; then the card eases to its new height in one move and
