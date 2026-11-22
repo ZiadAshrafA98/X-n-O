@@ -616,7 +616,28 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-row .orb{width:40px;height:40px}
 .lb-rank{font:600 14px var(--mono);color:var(--faint);text-align:center}
 .lb-row.top .lb-rank{color:var(--ink)}
-.lb-row.t1 .lb-rank{color:#e8b43a}.lb-row.t2 .lb-rank{color:#b8bcc6}.lb-row.t3 .lb-rank{color:#c98a5a}
+/* the podium: third is special, second more so, first most of all */
+.lb-av{position:relative;display:block;width:40px;height:40px}
+.lb-row{position:relative;overflow:hidden;isolation:isolate}
+.lb-row.top .lb-rank{width:28px;height:28px;margin:0 auto;border-radius:99px;display:grid;place-items:center;font:700 13px var(--sans);color:#2a1d05;box-shadow:inset 0 -2px 0 rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.6),0 2px 6px rgba(0,0,0,.25)}
+.lb-row.t1 .lb-rank{background:radial-gradient(circle at 35% 30%,#fff1b8,#f2c14e 45%,#b9851c)}
+.lb-row.t2 .lb-rank{background:radial-gradient(circle at 35% 30%,#ffffff,#cfd4dc 45%,#8d939e);color:#22262e}
+.lb-row.t3 .lb-rank{background:radial-gradient(circle at 35% 30%,#ffd9b8,#d0915e 45%,#8f5527);color:#2b1608}
+.lb-row.t1{padding-top:12px;padding-bottom:12px;background:linear-gradient(100deg,rgba(242,193,78,.24),rgba(242,193,78,.07) 55%,rgba(242,193,78,.02));box-shadow:inset 0 0 0 1px rgba(242,193,78,.5)}
+.lb-row.t2{background:linear-gradient(100deg,rgba(207,212,220,.16),rgba(207,212,220,.04) 60%,transparent);box-shadow:inset 0 0 0 1px rgba(207,212,220,.32)}
+.lb-row.t3{background:linear-gradient(100deg,rgba(208,145,94,.12),transparent 65%);box-shadow:inset 0 0 0 1px rgba(208,145,94,.22)}
+.lb-row.t1 .orb{box-shadow:0 0 0 2px var(--slab),0 0 0 4px #f2c14e,0 4px 16px rgba(242,193,78,.35)}
+.lb-row.t2 .orb{box-shadow:0 0 0 2px var(--slab),0 0 0 3.5px #cfd4dc}
+.lb-row.t3 .orb{box-shadow:0 0 0 2px var(--slab),0 0 0 3px #d0915e}
+.lb-row.t1 .lb-name{font-weight:600}
+.lb-row.t1 .lb-stat b{color:#f2c14e}
+.crown{position:absolute;left:50%;top:-11px;width:22px;height:17px;transform:translateX(-30%) rotate(14deg);filter:drop-shadow(0 2px 3px rgba(0,0,0,.35));animation:crownin .7s cubic-bezier(.34,1.6,.5,1) .25s both}
+@keyframes crownin{from{transform:translate(-30%,-10px) rotate(-20deg) scale(.4);opacity:0}to{transform:translateX(-30%) rotate(14deg);opacity:1}}
+/* a slow light sweep across first place */
+.lb-row.t1::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(105deg,transparent 35%,rgba(255,236,170,.22) 50%,transparent 65%);transform:translateX(-120%);animation:sweep 4.5s ease-in-out 1s infinite}
+@keyframes sweep{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+:root[data-theme="light"] .lb-row.t1 .lb-stat b{color:#a87510}
+@media (prefers-reduced-motion:reduce){.lb-row.t1::after,.crown{animation:none}}
 .lb-name{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lb-name small{margin-left:8px;padding:2px 7px;border-radius:99px;background:var(--chip-2);font-size:11px;color:var(--mute);vertical-align:2px}
 .lb-stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
@@ -819,7 +840,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
   .dlg .sheet-foot{display:block;position:sticky;bottom:calc(-1 * max(24px,env(safe-area-inset-bottom)));z-index:3;margin:14px -12px calc(-1 * max(24px,env(safe-area-inset-bottom)));padding:12px 12px max(24px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,var(--slab) 14px)}
   .sheet-foot .btn{width:100%;height:52px;font-size:15px}
   .lb-row{grid-template-columns:24px 36px 1fr 54px 50px;gap:8px;padding:8px 6px}
-  .lb-row .orb{width:36px;height:36px}
+  .lb-row .orb,.lb-av{width:36px;height:36px}
   .lb-foot{flex-direction:column;align-items:stretch;text-align:center}
   .confirm{padding:10px 16px max(24px,env(safe-area-inset-bottom));border-radius:30px 30px 0 0}
   .confirm .cf-who{margin-top:8px}
@@ -1771,7 +1792,7 @@ function lbRender(){
     .sort((a,b)=>(b.best-a.best)||((a.fast||99)-(b.fast||99))).slice(0,50);
   if(!rows.length){ul.innerHTML=`<li class="lb-empty">No records on ${LEVEL_NAME[lbLevel]} yet. Win a game against the computer to be first.</li>`;return}
   ul.innerHTML=rows.map((r,i)=>`<li class="lb-row${r.id===lbId?" me":""}${i<3?" top t"+(i+1):""}" style="--i:${i}">
-    <span class="lb-rank">${i+1}</span><span class="orb" style="background:${r.av?`url('${avUri(r.av)}') center/cover`:orbHue(r.id)}"></span>
+    <span class="lb-rank"${i<3?` aria-label="${["First","Second","Third"][i]} place"`:""}>${i+1}</span><span class="lb-av"><span class="orb" style="background:${r.av?`url('${avUri(r.av)}') center/cover`:orbHue(r.id)}"></span>${i===0?'<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15 1 4l6 5 5-8 5 8 6-5-1 11Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 14.5h18" stroke="#fff3c4" stroke-width="1.2" opacity=".7"/><circle cx="12" cy="1.6" r="1.4" fill="#fff3c4"/></svg>':""}</span>
     <span class="lb-name">${esc(r.n)}${r.id===lbId?'<small>You</small>':""}</span>
     <span class="lb-stat"><b>${r.best}</b><small>in a row</small></span><span class="lb-stat"><b>${r.fast||"–"}</b><small>fastest</small></span></li>`).join("");
 }
