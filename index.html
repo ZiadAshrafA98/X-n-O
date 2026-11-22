@@ -607,8 +607,32 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .res-row{display:flex;gap:8px}.res-row .btn{flex:1}
 #resShare.nudge{background:var(--chip-2);animation:nudge 1.6s ease-in-out .6s 3}
 @keyframes nudge{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ink) 30%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
+/* leaderboard */
+.lbd{width:min(520px,calc(100vw - 48px));padding:16px 18px 18px}
+.lb-sub{margin:-6px 12px 14px;font-size:13px;line-height:1.45;color:var(--mute)}
+.lbd .seg{margin:0 4px 12px}
+.lb-list{list-style:none;margin:0;padding:0 2px;display:flex;flex-direction:column;gap:4px;max-height:min(46dvh,420px);overflow:auto}
+.lb-row{display:grid;grid-template-columns:28px 40px 1fr 64px 60px;align-items:center;gap:10px;padding:8px 10px;border-radius:16px;animation:rise .45s var(--spring-soft) both;animation-delay:calc(var(--i,0) * 35ms)}
+.lb-row .orb{width:40px;height:40px}
+.lb-rank{font:600 14px var(--mono);color:var(--faint);text-align:center}
+.lb-row.top .lb-rank{color:var(--ink)}
+.lb-row.t1 .lb-rank{color:#e8b43a}.lb-row.t2 .lb-rank{color:#b8bcc6}.lb-row.t3 .lb-rank{color:#c98a5a}
+.lb-name{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-name small{margin-left:8px;padding:2px 7px;border-radius:99px;background:var(--chip-2);font-size:11px;color:var(--mute);vertical-align:2px}
+.lb-stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}
+.lb-stat b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.lb-stat small{font-size:10.5px;color:var(--faint)}
+.lb-row.me{background:var(--chip)}
+.lb-row.skel span{height:14px;border-radius:8px;background:var(--chip);animation:breathe 1s ease-in-out infinite alternate}
+.lb-row.skel .orb{height:40px;border-radius:99px}
+.lb-row.skel span:last-child{grid-column:3/6}
+.lb-empty{padding:28px 16px;text-align:center;font-size:14px;line-height:1.5;color:var(--mute)}
+.lb-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:12px 8px 0;border-top:1px solid var(--hair);font-size:12px;color:var(--faint)}
+.lb-foot .btn{flex:none;height:40px}
+.sh-act .ic.ms{background:linear-gradient(135deg,#00b2ff,#a033ff);color:#fff}
+.sh-act .ic.li{background:#0a66c2;color:#fff}
 /* the share sheet: a card to look at, its colours, then where to send it */
-.sharedlg{width:min(460px,calc(100vw - 48px));padding:16px 18px 20px}
+.sharedlg{width:min(540px,calc(100vw - 48px));padding:16px 18px 20px}
 .sh-card{display:flex;justify-content:center;padding:4px 0 14px}
 .sh-card canvas{width:min(260px,58vw);height:auto;aspect-ratio:4/5;border-radius:22px;box-shadow:0 18px 44px rgba(0,0,0,.35)}
 .sh-themes{display:flex;justify-content:center;gap:12px;padding:0 0 16px}
@@ -619,7 +643,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .sh-themes [data-t=ember]{background:linear-gradient(135deg,#ff8a66,#c2410c)}
 .sh-themes [data-t=ocean]{background:linear-gradient(135deg,#6aaeff,#1d4ed8)}
 .sh-themes [data-t=paper]{background:linear-gradient(135deg,#f6f3ec,#e0d9c9)}
-.sh-actions{display:flex;justify-content:safe center;gap:4px;padding-top:14px;border-top:1px solid var(--hair);overflow-x:auto;scrollbar-width:none}
+.sh-actions{display:flex;justify-content:safe center;gap:2px;margin:0 -18px;padding-left:12px;padding-right:12px;padding-top:14px;border-top:1px solid var(--hair);overflow-x:auto;scrollbar-width:none}
 .sh-act{flex:none;width:66px;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;color:var(--ink-2);font:500 11px var(--sans);padding:0;white-space:nowrap}
 .sh-act .ic{width:50px;height:50px;border-radius:99px;display:grid;place-items:center;background:var(--chip);color:var(--ink);transition:background-color .15s,scale .2s var(--out)}
 .sh-act .ic svg{width:21px;height:21px}
@@ -794,6 +818,9 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
   .dlg-head{padding:2px 6px 14px 12px;min-height:30px}
   .dlg .sheet-foot{display:block;position:sticky;bottom:calc(-1 * max(24px,env(safe-area-inset-bottom)));z-index:3;margin:14px -12px calc(-1 * max(24px,env(safe-area-inset-bottom)));padding:12px 12px max(24px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,var(--slab) 14px)}
   .sheet-foot .btn{width:100%;height:52px;font-size:15px}
+  .lb-row{grid-template-columns:24px 36px 1fr 54px 50px;gap:8px;padding:8px 6px}
+  .lb-row .orb{width:36px;height:36px}
+  .lb-foot{flex-direction:column;align-items:stretch;text-align:center}
   .confirm{padding:10px 16px max(24px,env(safe-area-inset-bottom));border-radius:30px 30px 0 0}
   .confirm .cf-who{margin-top:8px}
   /* on a phone the safe choice sits at the bottom, under your thumb */
@@ -838,6 +865,11 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .sp-logo.out path,.sp-logo.out circle{opacity:1}
 .sp-logo.out path,.sp-logo.out circle{stroke-dashoffset:0}
 .sp-tag{margin:-10px 0 0;font-size:13px;color:var(--mute)}
+
+/* small phones: "Can you win?" folds to its trophy so the header stays on one line */
+@media (max-width:379px){.win-pill{width:44px;padding:0;justify-content:center}.win-pill .wp-lbl{display:none}}
+/* small phones against the computer: the row holds a share button too, so New round keeps just its icon */
+@media (max-width:379px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
 
 /* ---------- keyframes ---------- */
 /* strokes stay invisible until they start: a round cap on a zero-length line still shows as a dot */
@@ -895,8 +927,9 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
       </div>
     </div>
     <div class="icons">
+      <button class="ibtn" id="btnBoard" type="button" aria-label="Leaderboard" title="Leaderboard" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21V10h6v11M3 21v-7h6M15 21v-5h6v5M2 21h20"/><path d="m12 3 .9 1.9 2.1.3-1.5 1.5.4 2.1L12 7.8l-1.9 1 .4-2.1L9 5.2l2.1-.3Z"/></svg></button>
       <button class="ibtn" id="btnRules" type="button" aria-label="How to play" title="How to play" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M9.3 9.2a2.8 2.8 0 0 1 5.4 1c0 1.9-2.7 2.4-2.7 4.1"/><path d="M12 17.6h.01"/></svg></button>
-      <button class="win-pill" id="btnInsight" type="button" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h2.5a1.5 1.5 0 0 1 0 3H17M7 5H4.5a1.5 1.5 0 0 0 0 3H7"/></svg>Can you win?</button>
+      <button class="win-pill" id="btnInsight" type="button" aria-label="Can you win?" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h2.5a1.5 1.5 0 0 1 0 3H17M7 5H4.5a1.5 1.5 0 0 0 0 3H7"/></svg><span class="wp-lbl">Can you win?</span></button>
       <button class="ibtn" id="btnTheme" type="button" aria-label="Switch light or dark theme"><svg viewBox="0 0 24 24" aria-hidden="true"><mask id="tiMask"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle class="ti-cut" cx="17.5" cy="6.5" r="7" fill="#000"/></mask><circle class="ti-body" cx="12" cy="12" r="9" fill="currentColor" mask="url(#tiMask)"/><g class="ti-rays" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 1.5v2.2M12 20.3v2.2M1.5 12h2.2M20.3 12h2.2M4.6 4.6l1.5 1.5M17.9 17.9l1.5 1.5M4.6 19.4l1.5-1.5M17.9 6.1l1.5-1.5"/></g></svg></button>
     </div>
   </header>
@@ -938,7 +971,8 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
           <div class="pick-item rec-row"><span class="rec-stat"><b id="recStreak">0</b>streak</span><span class="rec-stat"><b id="recBest">0</b>best</span><span class="rec-stat"><b id="recWins">0</b>wins</span><button class="sq" id="recShare" type="button" aria-label="Share your record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button></div>
         </div>
       </div>
-      <button class="btn primary big" id="newBtn" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>New round</button>
+      <button class="btn primary big" id="newBtn" type="button" aria-label="New round" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="nb-lbl">New round</span></button>
+      <button class="btn round" id="shareBtn" type="button" aria-label="Share your record" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button>
       <button class="btn round" id="undoBtn" type="button" aria-label="Undo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <div class="emo" id="emo" hidden>
         <button class="btn round" id="emoBtn" type="button" aria-label="Send a reaction" aria-haspopup="true" aria-expanded="false" aria-controls="emoTray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
@@ -1080,10 +1114,21 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
     <button class="sh-act main" id="shNative" type="button" hidden><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></span>Share</button>
     <button class="sh-act" id="shCopyImg" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h2"/></svg></span>Copy picture</button>
     <button class="sh-act" id="shSave" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></span>Save</button>
-    <button class="sh-act" id="shWa" type="button"><span class="ic wa"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2a9.8 9.8 0 0 0-8.4 14.8L2.2 21.8l4.9-1.3A9.8 9.8 0 1 0 12 2.2Zm0 17.8a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.4 1 2.5.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2l-.4-.4Z"/></svg></span>WhatsApp</button>
-    <button class="sh-act" id="shX" type="button"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3l-6.6 7.6L22 21h-6.1l-4.8-6.2L5.6 21h-3l7.1-8.1L2.3 3h6.3l4.3 5.7L17.8 3Zm-1 16.2h1.7L7.3 4.7H5.5l11.3 14.5Z"/></svg></span>Post</button>
+    <button class="sh-act" id="sh_wa" type="button"><span class="ic wa"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2a9.8 9.8 0 0 0-8.4 14.8L2.2 21.8l4.9-1.3A9.8 9.8 0 1 0 12 2.2Zm0 17.8a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.4 1 2.5.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2l-.4-.4Z"/></svg></span>WhatsApp</button>
+    <button class="sh-act" id="sh_ms" type="button"><span class="ic ms"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.6 2.5 2.5 6.4 2.5 11.6c0 2.8 1.2 5.2 3.2 6.9v3.3l3-1.7c1 .3 2.1.4 3.3.4 5.4 0 9.5-3.9 9.5-9S17.4 2.5 12 2.5Zm1 12.1-2.4-2.6-4.7 2.6 5.2-5.5 2.5 2.6 4.6-2.6-5.2 5.5Z"/></svg></span>Messenger</button>
+    <button class="sh-act" id="sh_li" type="button"><span class="ic li"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.3 8.5h3v10h-3v-10Zm1.5-4.8a1.7 1.7 0 1 1 0 3.5 1.7 1.7 0 0 1 0-3.5ZM10.2 8.5h2.9v1.4c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7v5.5h-3v-4.9c0-1.2 0-2.6-1.6-2.6s-1.9 1.3-1.9 2.5v5h-3v-10Z"/></svg></span>LinkedIn</button>
+    <button class="sh-act" id="sh_x" type="button"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3l-6.6 7.6L22 21h-6.1l-4.8-6.2L5.6 21h-3l7.1-8.1L2.3 3h6.3l4.3 5.7L17.8 3Zm-1 16.2h1.7L7.3 4.7H5.5l11.3 14.5Z"/></svg></span>Post</button>
     <button class="sh-act" id="shLink" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span>Copy link</button>
   </div>
+</section>
+
+<section class="dlg modal lbd" id="dlgBoard" role="dialog" aria-modal="true" aria-labelledby="lbTitle" tabindex="-1" hidden>
+  <span class="grab" aria-hidden="true"></span>
+  <div class="dlg-head"><h2 id="lbTitle">Leaderboard</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <p class="lb-sub">Longest winning streaks against the computer. Every game on the board is replayed to check it was really won.</p>
+  <div class="seg sm full" id="lbLevels" role="group" aria-label="Level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div>
+  <ol class="lb-list" id="lbList" aria-live="polite"></ol>
+  <div class="lb-foot"><span>Your best is added on its own. Undo or hints keep a game off it.</span><button class="btn" id="lbPlay" type="button">Play the computer</button></div>
 </section>
 
 <section class="dlg modal about" id="dlgAbout" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" tabindex="-1" hidden>
@@ -1486,11 +1531,12 @@ function recSave(){store.set("xo.rec",recs)}
 /* called as each round starts: settle the one before it */
 function recNewRound(){
   if(recRound&&recRound.moved&&!recRound.done&&recRound.clean)recResult(recRound,false);
-  recRound=mode==="ai"?{level:opt.level,clean:true,why:"",moved:false,done:false,mine:0}:null;
+  recRound=mode==="ai"?{level:opt.level,clean:true,why:"",moved:false,done:false,mine:0,s:turn,r:rule,m:[]}:null;
   recLast=null;
 }
-function recMove(who){
+function recMove(who,c){
   if(!recRound||mode!=="ai")return;
+  if(!recRound.m.length)recRound.s=who;recRound.m.push(c);recRound.r=rule;
   /* picking a level before anyone has moved is fine; changing it mid-game is not */
   if(!recRound.moved&&recRound.mine===0&&opt.level!==recRound.level)recRound.level=opt.level;
   if(opt.hints==="1"){recRound.clean=false;recRound.why="hints were on"}
@@ -1506,14 +1552,19 @@ function recWin(winner){
 }
 function recResult(rd,won){
   const r={...recOf(rd.level)},prevBest=r.best,prevFast=r.fast;
-  if(won){r.w++;r.cur++;r.best=Math.max(r.best,r.cur);r.fast=r.fast?Math.min(r.fast,rd.mine):rd.mine}
-  else{r.l++;r.cur=0}
-  recs[rd.level]=r;recSave();recRender();
+  /* each counted win keeps its moves, so anyone can replay it to check it */
+  const game={p:opt.youAre,s:rd.s,r:rd.r,m:rd.m.slice()};
+  if(won){r.w++;r.cur++;r.sg=(r.sg||[]).concat([game]).slice(-60);
+    if(r.cur>r.best){r.best=r.cur;r.bg=r.sg.slice(-r.best)}
+    if(!r.fast||rd.mine<r.fast){r.fast=rd.mine;r.fg=game}}
+  else{r.l++;r.cur=0;r.sg=[]}
+  recs[rd.level]=r;recSave();recRender();if(won)lbPublishSoon();
   return{counted:true,won,level:rd.level,rec:r,newBest:won&&r.cur>prevBest,newFast:won&&(!prevFast||rd.mine<prevFast),mine:rd.mine};
 }
 /* the record row in the Computer picker */
 function recRender(){
   const r=recOf(opt.level);
+  $("shareBtn").hidden=mode!=="ai"||!r.w;
   $("recLvl").textContent=LEVEL_NAME[opt.level]||"";
   $("recStreak").textContent=r.cur;$("recBest").textContent=r.best;$("recWins").textContent=r.w;
   $("recShare").disabled=!r.w;
@@ -1551,37 +1602,49 @@ function shareText(){
 }
 function roundRect(g,x,y,w,h,r){g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath()}
 function loadImg(src){return new Promise(res=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>res(null);i.src=src})}
+/* The card is the game itself: a big board with your avatar on the centre
+   square, your three marks slashed through by the winning line, the oldest
+   one fading the way it does in play, and your number underneath. A faint
+   wallpaper of marks sits behind it all. */
 async function drawShareCard(cv){
   const T=SHARE_THEMES.find(t=>t.id===shareTheme)||SHARE_THEMES[0],g=cv.getContext("2d"),W=1080,H=1350,r=recOf(shareLevel),lv=LEVEL_NAME[shareLevel];
   try{await document.fonts.load("600 80px Inter");await document.fonts.load("500 30px 'Roboto Mono'")}catch(e){}
+  const xc=T.id==="night"?"#ff7a5c":T.id==="paper"?"#e0533d":T.ink,oc=T.id==="night"?"#5aa2ff":T.id==="paper"?"#2f6fdb":T.ink;
   const bg=g.createLinearGradient(0,0,W,H);bg.addColorStop(0,T.bg[0]);bg.addColorStop(1,T.bg[1]);g.fillStyle=bg;g.fillRect(0,0,W,H);
-  if(T.glow){for(const [x,y,c] of [[900,240,"rgba(255,122,92,.20)"],[160,1150,"rgba(90,162,255,.18)"]]){const rg=g.createRadialGradient(x,y,0,x,y,520);rg.addColorStop(0,c);rg.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=rg;g.fillRect(0,0,W,H)}}
-  /* the logo mark, top left */
-  g.save();g.translate(84,92);g.scale(3.2,3.2);g.strokeStyle=T.ink;g.lineWidth=2;g.lineCap="round";
-  g.beginPath();g.moveTo(3,5.5);g.lineTo(11,14.5);g.moveTo(11,5.5);g.lineTo(3,14.5);g.stroke();g.beginPath();g.arc(20.5,10,4.6,0,Math.PI*2);g.stroke();g.restore();
-  g.fillStyle=T.mute;g.font="500 30px 'Roboto Mono', monospace";g.textAlign="right";g.fillText("VS THE COMPUTER",W-84,140);
-  /* you */
-  const cx=W/2,ay=370,ar=115;
-  g.save();g.beginPath();g.arc(cx,ay,ar,0,Math.PI*2);g.closePath();g.clip();
-  const img=myAv?await loadImg(avUri(myAv)):null;
-  if(img)g.drawImage(img,cx-ar,ay-ar,ar*2,ar*2);
-  else{const og=g.createRadialGradient(cx-40,ay-40,10,cx,ay,ar);og.addColorStop(0,"#ffc2a8");og.addColorStop(.45,"#ff7a5c");og.addColorStop(1,"#c2410c");g.fillStyle=og;g.fillRect(cx-ar,ay-ar,ar*2,ar*2)}
-  g.restore();g.lineWidth=8;g.strokeStyle=T.ink;g.globalAlpha=.9;g.beginPath();g.arc(cx,ay,ar+14,0,Math.PI*2);g.stroke();g.globalAlpha=1;
-  g.textAlign="center";g.fillStyle=T.ink;g.font="600 52px Inter, sans-serif";g.fillText(myName,cx,ay+ar+90);
-  /* the record */
-  const big=r.best>1?String(r.best):r.fast?String(r.fast):String(r.w);
-  const label=r.best>1?"wins in a row":r.fast?"moves to win":"wins";
-  g.font="600 290px Inter, sans-serif";g.fillText(big,cx,ay+ar+380);
-  g.font="600 54px Inter, sans-serif";g.fillText(label,cx,ay+ar+456);
-  g.fillStyle=T.mute;g.font="500 38px Inter, sans-serif";g.fillText(`against the ${lv} computer`,cx,ay+ar+512);
-  /* a little board: three marks in a row, the oldest fading, like the game */
-  const bs=42,gap=8,bx=cx-(bs*3+gap*2)/2,by=1066;
-  for(let i=0;i<9;i++){const x=bx+(i%3)*(bs+gap),y=by+Math.floor(i/3)*(bs+gap);g.fillStyle=T.tile;roundRect(g,x,y,bs,bs,12);g.fill()}
-  const mark=(i,a)=>{const x=bx+(i%3)*(bs+gap)+bs/2,y=by+Math.floor(i/3)*(bs+gap)+bs/2;g.globalAlpha=a;g.strokeStyle=T.id==="paper"?"#e0533d":T.id==="night"?"#ff7a5c":T.ink;g.lineWidth=6;g.lineCap="round";g.beginPath();g.moveTo(x-11,y-11);g.lineTo(x+11,y+11);g.moveTo(x+11,y-11);g.lineTo(x-11,y+11);g.stroke();g.globalAlpha=1};
-  mark(2,1);mark(4,1);mark(6,1);mark(0,.28);
-  /* one line under the board: the dare, then where to play */
-  g.textAlign="center";g.fillStyle=T.ink;g.font="600 36px Inter, sans-serif";g.fillText("Can you beat it?",cx,by+212);
-  g.fillStyle=T.mute;g.font="500 26px 'Roboto Mono', monospace";g.fillText(SHARE_URL.replace(/^https?:\/\//,"").replace(/\/$/,""),cx,by+256);
+  if(T.glow){for(const [x,y,c] of [[940,180,"rgba(255,122,92,.22)"],[120,1240,"rgba(90,162,255,.2)"]]){const rg=g.createRadialGradient(x,y,0,x,y,560);rg.addColorStop(0,c);rg.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=rg;g.fillRect(0,0,W,H)}}
+  const X=(x,y,s,c,a,w)=>{g.save();g.globalAlpha=a;g.strokeStyle=c;g.lineWidth=w;g.lineCap="round";g.beginPath();g.moveTo(x-s,y-s);g.lineTo(x+s,y+s);g.moveTo(x+s,y-s);g.lineTo(x-s,y+s);g.stroke();g.restore()};
+  const O=(x,y,s,c,a,w)=>{g.save();g.globalAlpha=a;g.strokeStyle=c;g.lineWidth=w;g.beginPath();g.arc(x,y,s,0,Math.PI*2);g.stroke();g.restore()};
+  /* wallpaper of tiny marks, tilted */
+  g.save();g.translate(W/2,H/2);g.rotate(-.21);for(let i=-9;i<=9;i++)for(let j=-11;j<=11;j++){const x=i*96,y=j*96;(i+j)%2?X(x,y,13,T.ink,.05,5):O(x,y,13,T.ink,.05,5)}g.restore();
+  /* top: logo, level */
+  g.save();g.translate(80,86);g.scale(3,3);g.strokeStyle=T.ink;g.lineWidth=2;g.lineCap="round";g.beginPath();g.moveTo(3,5.5);g.lineTo(11,14.5);g.moveTo(11,5.5);g.lineTo(3,14.5);g.stroke();g.beginPath();g.arc(20.5,10,4.6,0,Math.PI*2);g.stroke();g.restore();
+  g.font="500 28px 'Roboto Mono', monospace";const lt=lv.toUpperCase()+" COMPUTER",lw=g.measureText(lt).width+48;
+  g.fillStyle=T.tile;roundRect(g,W-80-lw,92,lw,56,28);g.fill();g.fillStyle=T.ink;g.textAlign="center";g.fillText(lt,W-80-lw/2,130);
+  /* the board */
+  const ts=210,gp=18,bw=ts*3+gp*2,bx=(W-bw)/2,by=210,C=i=>[bx+(i%3)*(ts+gp)+ts/2,by+Math.floor(i/3)*(ts+gp)+ts/2];
+  for(let i=0;i<9;i++){const [x,y]=C(i);g.fillStyle=T.tile;roundRect(g,x-ts/2,y-ts/2,ts,ts,48);g.fill()}
+  const wl=[6,4,2];
+  [2,6].forEach(i=>{const [x,y]=C(i);X(x,y,52,xc,1,26)});
+  {const [x,y]=C(0);X(x,y,52,xc,.18,26);g.save();g.setLineDash([14,16]);g.strokeStyle=T.ink;g.globalAlpha=.25;g.lineWidth=4;roundRect(g,x-ts/2+14,y-ts/2+14,ts-28,ts-28,36);g.stroke();g.restore()}
+  [1,5].forEach((i,k)=>{const [x,y]=C(i);O(x,y,48,oc,k?.9:.55,24)});
+  /* you, on the centre square */
+  {const [x,y]=C(4),ar=86;g.save();g.beginPath();g.arc(x,y,ar,0,Math.PI*2);g.clip();
+    const img=myAv?await loadImg(avUri(myAv)):null;
+    if(img)g.drawImage(img,x-ar,y-ar,ar*2,ar*2);else{const og=g.createRadialGradient(x-30,y-30,8,x,y,ar);og.addColorStop(0,"#ffc2a8");og.addColorStop(.45,"#ff7a5c");og.addColorStop(1,"#c2410c");g.fillStyle=og;g.fillRect(x-ar,y-ar,ar*2,ar*2)}
+    g.restore();g.lineWidth=7;g.strokeStyle=xc;g.beginPath();g.arc(x,y,ar+9,0,Math.PI*2);g.stroke()}
+  /* the winning line, drawn over everything */
+  {const [x1,y1]=C(wl[0]),[x2,y2]=C(wl[2]),ex=(x2-x1)*.08,ey=(y2-y1)*.08;
+    g.save();g.lineCap="round";g.strokeStyle=xc;g.globalAlpha=.25;g.lineWidth=34;g.beginPath();g.moveTo(x1-ex,y1-ey);g.lineTo(x2+ex,y2+ey);g.stroke();
+    g.globalAlpha=1;g.lineWidth=12;g.strokeStyle=T.ink;g.beginPath();g.moveTo(x1-ex,y1-ey);g.lineTo(x2+ex,y2+ey);g.stroke();g.restore()}
+  /* the number */
+  const streak=r.best>1,n=streak?r.best:r.fast||r.w,unit=streak?"in a row":r.fast?(r.fast===1?"move to win":"moves to win"):"wins";
+  g.textAlign="center";g.fillStyle=T.ink;
+  g.font="600 170px Inter, sans-serif";const nw=g.measureText(String(n)).width;g.font="600 64px Inter, sans-serif";const uw=g.measureText(unit).width;
+  const tx=W/2-(nw+24+uw)/2;g.textAlign="left";g.font="600 170px Inter, sans-serif";g.fillText(String(n),tx,1086);g.font="600 64px Inter, sans-serif";g.fillText(unit,tx+nw+24,1086);
+  g.textAlign="center";g.fillStyle=T.mute;g.font="500 40px Inter, sans-serif";g.fillText(`${myName} vs the ${lv.toLowerCase()} computer`,W/2,1150);
+  /* the dare and where to play */
+  g.fillStyle=T.ink;g.font="600 38px Inter, sans-serif";g.fillText("Can you beat it?",W/2,1250);
+  g.fillStyle=T.mute;g.font="500 26px 'Roboto Mono', monospace";g.fillText(SHARE_URL.replace(/^https?:\/\//,"").replace(/\/$/,""),W/2,1292);
 }
 async function shareBlob(){const cv=$("shareCanvas");return new Promise(r=>cv.toBlob(r,"image/png"))}
 async function openShare(level,btn){
@@ -1591,26 +1654,130 @@ async function openShare(level,btn){
   await drawShareCard($("shareCanvas"));
   /* a phone that can hand a picture to other apps gets one big Share button */
   let canFiles=false;try{const f=new File([new Blob(["x"],{type:"image/png"})],"a.png",{type:"image/png"});canFiles=!!(navigator.canShare&&navigator.canShare({files:[f]}))}catch(e){}
-  $("shNative").hidden=!canFiles;$("shCopyImg").hidden=canFiles||!(navigator.clipboard&&window.ClipboardItem);
+  shareFiles=canFiles;$("shNative").hidden=!canFiles;$("shCopyImg").hidden=canFiles||!(navigator.clipboard&&window.ClipboardItem);
 }
 function shToast(t){toast(t)}
 $("shThemes").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;shareTheme=b.dataset.t;store.set("xo.shareTheme",shareTheme);
   $("shThemes").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
   const cv=$("shareCanvas");if(!still)cv.animate([{transform:"scale(.97)",opacity:.6},{transform:"none",opacity:1}],{duration:320,easing:"cubic-bezier(.34,1.3,.6,1)"});
   await drawShareCard(cv)});
-$("shNative").addEventListener("click",async()=>{
+/* Getting the picture into an app. A phone can hand a picture to any app
+   through its own share menu, so every app button opens that menu with the
+   picture and message attached. On a computer no chat or social site
+   accepts a picture from another page, so each button copies the picture
+   (and message) first, then opens that app ready to paste. */
+let shareFiles=false;
+async function nativeShare(){
   const blob=await shareBlob(),file=new File([blob],"x-n-o-record.png",{type:"image/png"});
   try{await navigator.share({files:[file],title:"X n O",text:shareText()+" "+SHARE_URL})}catch(e){}
-});
-$("shCopyImg").addEventListener("click",async()=>{try{await navigator.clipboard.write([new ClipboardItem({"image/png":await shareBlob()})]);shToast("Picture copied")}catch(e){shToast("Copy failed")}});
+}
+async function copyPicture(withText){
+  try{const blob=await shareBlob();const item={"image/png":blob};if(withText)item["text/plain"]=new Blob([shareText()+" "+SHARE_URL],{type:"text/plain"});
+    await navigator.clipboard.write([new ClipboardItem(item)]);return true}catch(e){return false}
+}
+async function shareTo(app){
+  if(shareFiles){nativeShare();return}
+  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u);
+  const url={wa:"https://api.whatsapp.com/send?text="+tu,ms:"https://www.messenger.com/",
+    li:"https://www.linkedin.com/feed/?shareActive=true&text="+tu,x:"https://twitter.com/intent/tweet?text="+encodeURIComponent(t)+"&url="+encodeURIComponent(u)}[app];
+  const w=window.open("about:blank","_blank");
+  const ok=await copyPicture(app==="ms");
+  if(w){w.opener=null;w.location.href=url}
+  shToast(ok?(app==="ms"?"Picture and message copied. Paste them into a chat":"Picture copied. Paste it in to add it"):"Opened without the picture");
+}
+$("shNative").addEventListener("click",nativeShare);
+$("shCopyImg").addEventListener("click",async()=>shToast(await copyPicture(false)?"Picture copied":"Copy failed"));
 $("shSave").addEventListener("click",async()=>{const url=URL.createObjectURL(await shareBlob()),a=document.createElement("a");a.href=url;a.download="x-n-o-record.png";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);shToast("Picture saved")});
 $("shLink").addEventListener("click",async()=>{shToast(await copyText(shareText()+" "+SHARE_URL)?"Message and link copied":"Copy failed")});
-$("shWa").addEventListener("click",()=>window.open("https://wa.me/?text="+encodeURIComponent(shareText()+" "+SHARE_URL),"_blank","noopener"));
-$("shX").addEventListener("click",()=>window.open("https://twitter.com/intent/tweet?text="+encodeURIComponent(shareText())+"&url="+encodeURIComponent(SHARE_URL),"_blank","noopener"));
+["wa","ms","li","x"].forEach(k=>$("sh_"+k).addEventListener("click",()=>shareTo(k)));
+$("shareBtn").addEventListener("click",e=>openShare(opt.level,e.currentTarget));
 $("resShare").addEventListener("click",e=>openShare(recLast&&recLast.level,e.currentTarget));
 $("recShare").addEventListener("click",e=>{pickClose(false);openShare(opt.level,$("pickPill"))});
 /* test hook (only with ?test in the address): the solver's best move for whoever is to play */
 if(new URLSearchParams(location.search).has("test"))window.__xoBest=()=>pickMove(marks[turn],marks[other(turn)],rule,"perfect");
+
+/* ---------- Leaderboard ---------- */
+/* No server of our own: every player's best record is kept as a "retained"
+   message on the same public relays online play uses, one per player. The
+   board asks the relays for all of them. Each record carries the moves of
+   its winning games, and the board replays every one: moves must be legal,
+   the game must end in the player's win, and on Perfect each of the
+   computer's moves must be one the perfect computer would make. A record
+   that fails is simply left off. The relays are free public services and
+   may forget things, so this is best-effort. */
+let lbId=store.get("xo.lbid",null);if(!lbId){lbId="p"+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-3);store.set("xo.lbid",lbId)}
+let lbTimer=0,lbLevel=null,lbCache=null;
+function lbClients(){if(typeof mqtt==="undefined")return[];return BROKERS.map(url=>{const c=mqtt.connect(url,{clientId:"xnolb_"+Math.random().toString(36).slice(2,10),clean:true,connectTimeout:8000,reconnectPeriod:0,keepalive:30});c.on("error",()=>{});return c})}
+function lbEntry(){
+  const L={};for(const lv of ["easy","medium","perfect"]){const r=recOf(lv);if(r.w)L[lv]={best:r.best,fast:r.fast,w:r.w,bg:(r.bg||[]).slice(-60),fg:r.fg||null}}
+  return Object.keys(L).length?{v:1,id:lbId,n:myName,av:myAv,t:Date.now(),L}:null;
+}
+function lbPublishSoon(){clearTimeout(lbTimer);lbTimer=setTimeout(lbPublish,1500)}
+function lbPublish(){
+  const e=lbEntry();if(!e)return;const payload=JSON.stringify(e);
+  const cs=lbClients();cs.forEach(c=>c.on("connect",()=>c.publish(TOPIC+"lb/"+lbId,payload,{qos:1,retain:true},()=>setTimeout(()=>c.end(true),300))));
+  setTimeout(()=>cs.forEach(c=>{try{c.end(true)}catch(e){}}),9000);
+}
+/* replay one game; returns how many moves the player made if it really was their win, else 0 */
+function perfectOK(me,op,r,c){
+  const ms=evalMoves(me,op,r),pick=ms.find(m=>m.c===c);if(!pick)return false;
+  const W=ms.filter(m=>m.v==="W"),D=ms.filter(m=>m.v==="D");
+  if(W.length)return pick.v==="W"&&pick.d===Math.min(...W.map(m=>m.d));
+  if(D.length)return pick.v==="D";
+  return pick.d===Math.max(...ms.map(m=>m.d));
+}
+function replayWin(g,level){
+  if(!g||!Array.isArray(g.m)||g.m.length>80||!["X","O"].includes(g.p)||!["X","O"].includes(g.s)||!["A","B"].includes(g.r))return 0;
+  const mk={X:[],O:[]};let t=g.s,mine=0;
+  for(let i=0;i<g.m.length;i++){
+    const c=g.m[i],me=mk[t],op=mk[other(t)];
+    if(!Number.isInteger(c)||!legal(me,op,g.r).includes(c))return 0;
+    if(t!==g.p&&level==="perfect"&&!perfectOK(me,op,g.r,c))return 0;
+    mk[t]=place(me,c);if(t===g.p)mine++;
+    if(winLine(mk[t]))return t===g.p&&i===g.m.length-1?mine:0;
+    t=other(t);
+  }
+  return 0;
+}
+function lbVerify(e,level){
+  const s=e&&e.L&&e.L[level];if(!s)return null;
+  const best=Array.isArray(s.bg)?s.bg.slice(0,60).filter(g=>replayWin(g,level)>0).length:0;
+  const fast=s.fg?replayWin(s.fg,level):0;
+  if(!best&&!fast)return null;
+  return{id:String(e.id).slice(0,24),n:cleanName(e.n||"")||"Player",av:cleanAv(e.av),best:Math.min(best,s.best|0||best),fast:fast||null};
+}
+function lbFetch(){
+  return new Promise(res=>{
+    const got=new Map(),cs=lbClients();if(!cs.length){res(null);return}
+    cs.forEach(c=>{c.on("connect",()=>c.subscribe(TOPIC+"lb/+",{qos:0}));
+      c.on("message",(t,b)=>{let e;try{e=JSON.parse(b.toString())}catch(x){return}if(!e||e.v!==1||typeof e.id!=="string")return;
+        const old=got.get(e.id);if(!old||(e.t|0)>(old.t|0))got.set(e.id,e)})});
+    setTimeout(()=>{cs.forEach(c=>{try{c.end(true)}catch(x){}});res([...got.values()])},2600);
+  });
+}
+async function openBoard(btn){
+  lbLevel=lbLevel||opt.level||"perfect";setSeg($("lbLevels"),lbLevel,false);
+  openDialog("dlgBoard",btn);
+  if(lbEntry())lbPublishSoon();
+  $("lbList").innerHTML=Array.from({length:5},()=>'<li class="lb-row skel"><span></span><span class="orb"></span><span></span></li>').join("");
+  lbCache=await lbFetch();lbRender();
+}
+function lbRender(){
+  const ul=$("lbList");
+  if(lbCache===null){ul.innerHTML='<li class="lb-empty">Can’t reach the leaderboard right now. Check your connection and try again.</li>';return}
+  /* include you from this device, so you see yourself even before the relays answer */
+  const all=new Map();lbCache.forEach(e=>all.set(e.id,e));const mine=lbEntry();if(mine)all.set(lbId,mine);
+  const rows=[...all.values()].map(e=>lbVerify(e,lbLevel)).filter(Boolean)
+    .sort((a,b)=>(b.best-a.best)||((a.fast||99)-(b.fast||99))).slice(0,50);
+  if(!rows.length){ul.innerHTML=`<li class="lb-empty">No records on ${LEVEL_NAME[lbLevel]} yet. Win a game against the computer to be first.</li>`;return}
+  ul.innerHTML=rows.map((r,i)=>`<li class="lb-row${r.id===lbId?" me":""}${i<3?" top t"+(i+1):""}" style="--i:${i}">
+    <span class="lb-rank">${i+1}</span><span class="orb" style="background:${r.av?`url('${avUri(r.av)}') center/cover`:orbHue(r.id)}"></span>
+    <span class="lb-name">${esc(r.n)}${r.id===lbId?'<small>You</small>':""}</span>
+    <span class="lb-stat"><b>${r.best}</b><small>in a row</small></span><span class="lb-stat"><b>${r.fast||"–"}</b><small>fastest</small></span></li>`).join("");
+}
+$("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;lbLevel=b.dataset.v;setSeg($("lbLevels"),lbLevel,true);if(lbCache!==undefined)lbRender()});
+$("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
+$("lbPlay").addEventListener("click",()=>{closeDialog();if(mode!=="ai")goMode("ai")});
 /* ---------- Options (segmented controls) ---------- */
 const defaults={level:"medium",youAre:"X",first:"me",rule:"A",hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
@@ -1736,7 +1903,7 @@ function applyMove(c){
   history.push({X:marks.X.slice(),O:marks.O.slice(),turn});
   marks[turn]=place(marks[turn],c);
   const wl=winLine(marks[turn]);
-  recMove(turn);
+  recMove(turn,c);
   if(wl){over=true;winCells=wl;score[turn]++;store.set("xo.score",score);recWin(turn)}
   else turn=other(turn);
   render();return true;
@@ -1872,7 +2039,7 @@ function renderNow(){
   /* buttons still sliding into place carry the same state */
   flyers.forEach((f,k)=>{if("disabled" in f.g)f.g.disabled=k.disabled});
   syncWave();
-  if(mode==="ai")recRender();
+  recRender();
 }
 
 /* a round has started once someone (you, against the computer) has moved */
