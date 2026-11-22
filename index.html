@@ -484,7 +484,16 @@ button.mark{border:0;background:none;padding:0}
 .head-shadow{width:58%;height:14px;margin-top:-4px;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.4),transparent);animation:shadowbob 4.6s ease-in-out infinite}
 .creator+.creator .head-shadow{animation-delay:-2.3s}
 :root[data-theme="light"] .head-shadow{background:radial-gradient(closest-side,rgba(0,0,0,.18),transparent)}
-.creator h3{margin:12px 0 2px;font-size:17px;font-weight:600;letter-spacing:-.01em;text-align:center}
+/* the name and title are a link; the highlight is subtle and magnetic */
+.cap{--hx:0px;--hy:0px;position:relative;display:flex;flex-direction:column;align-items:center;margin-top:6px;padding:9px 18px 11px;border-radius:16px;color:inherit;text-decoration:none;outline:none;-webkit-tap-highlight-color:transparent}
+.cap .hl{position:absolute;inset:0;border-radius:inherit;background:var(--chip);box-shadow:inset 0 0 0 1px var(--hair);opacity:0;transform:translate(var(--hx),var(--hy)) scale(.84,.7);transition:opacity .22s var(--out),transform .5s cubic-bezier(.34,1.25,.5,1);pointer-events:none}
+.cap:hover .hl,.cap:focus-visible .hl{opacity:1;transform:translate(var(--hx),var(--hy)) scale(1)}
+.cap:focus-visible .hl{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--ink) 40%,transparent)}
+.cap h3,.cap p{position:relative;transform:translate(calc(var(--hx) * .4),calc(var(--hy) * .4));transition:transform .5s cubic-bezier(.34,1.25,.5,1)}
+.cap .go{width:11px;height:11px;margin-left:4px;vertical-align:1px;opacity:0;transform:translate(-3px,3px);transition:opacity .2s var(--out),transform .35s var(--out);color:var(--mute)}
+.cap:hover .go,.cap:focus-visible .go{opacity:1;transform:none}
+.cap:active .hl{transform:translate(var(--hx),var(--hy)) scale(.97)}
+.creator h3{margin:0 0 2px;font-size:17px;font-weight:600;letter-spacing:-.01em;text-align:center}
 .creator p{margin:0;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--faint);text-align:center}
 .about-foot{margin:18px 0 4px;text-align:center;font-size:12px;color:var(--faint)}
 @keyframes bob{0%,100%{translate:0 0}50%{translate:0 -9px}}
@@ -3398,15 +3407,15 @@ function avatarSVG(p){
   </svg>`;
 }
 const CREATORS=[
-  {id:"z",name:"Ziad Ashraf",title:"Product Designer",label:"Ziad drawn as a comic hero style head with short wavy side-parted hair, round glasses and a short full beard",
+  {id:"z",name:"Ziad Ashraf",title:"Product Designer",url:"https://ziad.work/",label:"Ziad drawn as a comic hero style head with short wavy side-parted hair, round glasses and a short full beard",
    skin:"#8f5f40",lo:"#5d3a25",deep:"#3e2618",hair:"#16100c",frame:"#c9c2b6",round:1,wavy:1},
-  {id:"a",name:"Adham Salah",title:"Software Engineer",label:"Adham drawn as a comic hero style head with big curly hair, black rectangular glasses, a goatee and a wide smile",
+  {id:"a",name:"Adham Salah",title:"Software Engineer",url:"https://www.linkedin.com/in/adham-basheir/",label:"Adham drawn as a comic hero style head with big curly hair, black rectangular glasses, a goatee and a wide smile",
    skin:"#c48b63",lo:"#92603f",deep:"#6a4128",hair:"#15100d",frame:"#231b1e",accent:"#111",goatee:1,long:1,smile:1,curly:1}
 ];
 let aboutBuilt=false;
 function buildAbout(){
   if(!aboutBuilt){aboutBuilt=true;
-    $("creators").innerHTML=CREATORS.map(c=>`<figure class="creator" style="margin:0"><div class="head3d"><div class="rig">${avatarSVG(c)}</div></div><span class="head-shadow" aria-hidden="true"></span><figcaption><h3>${c.name}</h3><p>${c.title}</p></figcaption></figure>`).join("");
+    $("creators").innerHTML=CREATORS.map(c=>`<figure class="creator" style="margin:0"><div class="head3d"><div class="rig">${avatarSVG(c)}</div></div><span class="head-shadow" aria-hidden="true"></span><figcaption><a class="cap" href="${c.url}" target="_blank" rel="noopener noreferrer" aria-label="${c.name}, ${c.title} (opens in a new tab)"><span class="hl" aria-hidden="true"></span><h3>${c.name}<svg class="go" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.5 8.5 8.5 3.5M4.5 3.5h4v4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></h3><p>${c.title}</p></a></figcaption></figure>`).join("");
   }
   lookHeads();lookStep();
   /* each head flies up from below the window, overshoots a little, settles
@@ -3489,6 +3498,16 @@ cr.addEventListener("touchmove",tLook,{passive:true});
 /* lift your finger and they ease straight back to looking ahead */
 const tEnd=e=>{if(e.touches&&e.touches.length)return;look.touch=false;lookAhead()};
 cr.addEventListener("touchend",tEnd);cr.addEventListener("touchcancel",tEnd);
+/* the names are links: a soft box grows behind the one you point at and
+   leans a few pixels toward the pointer, the text following at less than
+   half that, like it is lightly held by a magnet */
+$("creators").addEventListener("pointermove",e=>{
+  if(e.pointerType!=="mouse")return;const cap=e.target.closest(".cap");
+  document.querySelectorAll(".cap").forEach(c=>{if(c!==cap){c.style.setProperty("--hx","0px");c.style.setProperty("--hy","0px")}});
+  if(!cap)return;const r=cap.getBoundingClientRect(),dx=(e.clientX-(r.left+r.width/2))/(r.width/2),dy=(e.clientY-(r.top+r.height/2))/(r.height/2);
+  cap.style.setProperty("--hx",(Math.max(-1,Math.min(1,dx))*6).toFixed(1)+"px");cap.style.setProperty("--hy",(Math.max(-1,Math.min(1,dy))*3.5).toFixed(1)+"px");
+});
+$("creators").addEventListener("pointerleave",()=>document.querySelectorAll(".cap").forEach(c=>{c.style.setProperty("--hx","0px");c.style.setProperty("--hy","0px")}));
 $("madeBy").addEventListener("click",()=>openDialog("dlgAbout",$("logo")));
 
 const logo=$("logo");
