@@ -608,11 +608,12 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 #resShare.nudge{background:var(--chip-2);animation:nudge 1.6s ease-in-out .6s 3}
 @keyframes nudge{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ink) 30%,transparent)}50%{box-shadow:0 0 0 6px transparent}}
 /* leaderboard */
-.lbd{width:min(520px,calc(100vw - 48px));padding:16px 18px 18px}
+.lbd{width:min(520px,calc(100vw - 48px));padding:16px 18px 18px;overflow-x:hidden}
 .lb-sub{margin:-6px 12px 14px;font-size:13px;line-height:1.45;color:var(--mute)}
-.lbd .seg{margin:0 4px 12px}
-.lb-list{list-style:none;margin:0;padding:0 2px;display:flex;flex-direction:column;gap:4px;max-height:min(46dvh,420px);overflow:auto}
-.lb-row{display:grid;grid-template-columns:28px 40px 1fr 64px 60px;align-items:center;gap:10px;padding:8px 10px;border-radius:16px;animation:rise .45s var(--spring-soft) both;animation-delay:calc(var(--i,0) * 35ms)}
+.lbd .seg{margin:0 0 12px}
+/* the list keeps one height whatever it holds, so the sheet never resizes */
+.lb-list{list-style:none;margin:0;padding:2px;display:flex;flex-direction:column;gap:6px;height:clamp(220px,40dvh,400px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+.lb-row{flex:none;min-width:0;display:grid;grid-template-columns:28px 40px minmax(0,1fr) 60px 56px;align-items:center;gap:12px;padding:10px 14px;border-radius:16px;animation:rise .45s var(--spring-soft) both;animation-delay:calc(var(--i,0) * 35ms)}
 .lb-row .orb{width:40px;height:40px}
 .lb-rank{font:600 14px var(--mono);color:var(--faint);text-align:center}
 .lb-row.top .lb-rank{color:var(--ink)}
@@ -644,12 +645,13 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-stat b{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .lb-stat small{font-size:10.5px;color:var(--faint)}
 .lb-row.me{background:var(--chip)}
-.lb-row.skel span{height:14px;border-radius:8px;background:var(--chip);animation:breathe 1s ease-in-out infinite alternate}
-.lb-row.skel .orb{height:40px;border-radius:99px}
-.lb-row.skel span:last-child{grid-column:3/6}
-.lb-empty{padding:28px 16px;text-align:center;font-size:14px;line-height:1.5;color:var(--mute)}
-.lb-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:12px 8px 0;border-top:1px solid var(--hair);font-size:12px;color:var(--faint)}
-.lb-foot .btn{flex:none;height:40px}
+/* loading and empty states fill the same space, centred */
+.lb-empty,.lb-wait{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:16px;text-align:center;font-size:14px;line-height:1.5;color:var(--mute)}
+.lb-wait i{display:inline-flex;gap:5px}
+.lb-wait i b{width:6px;height:6px;border-radius:9px;background:var(--mute);animation:bounce 1s ease-in-out infinite}
+.lb-wait i b:nth-child(2){animation-delay:.15s}.lb-wait i b:nth-child(3){animation-delay:.3s}
+.lb-empty .btn{height:44px}
+.lb-foot{margin:12px 0 0;padding:12px 6px 0;border-top:1px solid var(--hair);font-size:12px;line-height:1.45;color:var(--faint);text-align:center}
 .sh-act .ic.ms{background:linear-gradient(135deg,#00b2ff,#a033ff);color:#fff}
 .sh-act .ic.li{background:#0a66c2;color:#fff}
 /* the share sheet: a card to look at, its colours, then where to send it */
@@ -839,9 +841,9 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
   .dlg-head{padding:2px 6px 14px 12px;min-height:30px}
   .dlg .sheet-foot{display:block;position:sticky;bottom:calc(-1 * max(24px,env(safe-area-inset-bottom)));z-index:3;margin:14px -12px calc(-1 * max(24px,env(safe-area-inset-bottom)));padding:12px 12px max(24px,env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,var(--slab) 14px)}
   .sheet-foot .btn{width:100%;height:52px;font-size:15px}
-  .lb-row{grid-template-columns:24px 36px 1fr 54px 50px;gap:8px;padding:8px 6px}
+  .lb-row{grid-template-columns:28px 36px minmax(0,1fr) 52px 48px;gap:10px;padding:10px 12px}
   .lb-row .orb,.lb-av{width:36px;height:36px}
-  .lb-foot{flex-direction:column;align-items:stretch;text-align:center}
+  .lb-sub{margin:-6px 4px 12px}
   .confirm{padding:10px 16px max(24px,env(safe-area-inset-bottom));border-radius:30px 30px 0 0}
   .confirm .cf-who{margin-top:8px}
   /* on a phone the safe choice sits at the bottom, under your thumb */
@@ -889,6 +891,21 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 
 /* small phones: "Can you win?" folds to its trophy so the header stays on one line */
 @media (max-width:379px){.win-pill{width:44px;padding:0;justify-content:center}.win-pill .wp-lbl{display:none}}
+.rb-lbl{display:none}
+/* Phones of normal height (600 px and up), Same device and Computer: New round, Undo and
+   the picker keep the first row; Settings and Share get a row of their own,
+   as labelled pills, so nothing in the row is ever squeezed. The board
+   gives up the room for it. */
+@media (max-width:1079px) and (min-height:600px){
+  .app:is([data-mode="ai"],[data-mode="local"]){--bs:min(calc(100vw - 32px),calc(100dvh - 376px),520px)}
+  .app:is([data-mode="ai"],[data-mode="local"]) .actions{flex-wrap:wrap;row-gap:10px}
+  .app:is([data-mode="ai"],[data-mode="local"]) .actions::after{content:"";order:2;flex:0 0 100%;height:0}
+  .app:is([data-mode="ai"],[data-mode="local"]) .actions :is(#shareBtn,#btnSettings){order:3;flex:0 0 auto;width:auto;height:46px;padding:0 20px 0 16px;gap:8px}
+  .app:is([data-mode="ai"],[data-mode="local"]) .actions .rb-lbl{display:inline}
+  .app:is([data-mode="ai"],[data-mode="local"]) .actions .round:not(#shareBtn):not(#btnSettings){flex:none}
+}
+/* short phones keep one row: every round button holds its circle, and against the computer New round keeps just its icon */
+@media (max-width:1079px) and (max-height:599px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
 /* small phones against the computer: the row holds a share button too, so New round keeps just its icon */
 @media (max-width:379px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
 
@@ -993,7 +1010,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
         </div>
       </div>
       <button class="btn primary big" id="newBtn" type="button" aria-label="New round" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="nb-lbl">New round</span></button>
-      <button class="btn round" id="shareBtn" type="button" aria-label="Share your record" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button>
+      <button class="btn round" id="shareBtn" type="button" aria-label="Share your record" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span class="rb-lbl">Share</span></button>
       <button class="btn round" id="undoBtn" type="button" aria-label="Undo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <div class="emo" id="emo" hidden>
         <button class="btn round" id="emoBtn" type="button" aria-label="Send a reaction" aria-haspopup="true" aria-expanded="false" aria-controls="emoTray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
@@ -1001,7 +1018,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
           <button type="button" role="menuitem" data-e="laugh" aria-label="Laugh">😂</button><button type="button" role="menuitem" data-e="angry" aria-label="Angry">😠</button><button type="button" role="menuitem" data-e="sad" aria-label="Sad">😢</button><button type="button" role="menuitem" data-e="wow" aria-label="Astonished">😮</button><button type="button" role="menuitem" data-e="down" aria-label="Thumbs down">👎</button>
         </div>
       </div>
-      <button class="btn round" id="btnSettings" type="button" aria-label="Game settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/></svg></button>
+      <button class="btn round" id="btnSettings" type="button" aria-label="Game settings" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/></svg><span class="rb-lbl">Settings</span></button>
       <div class="chip" id="chip" hidden>
         <button class="chip-open" id="chipOpen" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Room: people, invite and QR">
           <span class="orbs"><span class="orb" id="chipMe"></span><span class="orb friend" id="chipFriend"></span></span>
@@ -1146,10 +1163,10 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 <section class="dlg modal lbd" id="dlgBoard" role="dialog" aria-modal="true" aria-labelledby="lbTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="lbTitle">Leaderboard</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <p class="lb-sub">Longest winning streaks against the computer. Every game on the board is replayed to check it was really won.</p>
+  <p class="lb-sub">Longest winning streaks against the computer. Every game here is replayed to check it was really won.</p>
   <div class="seg sm full" id="lbLevels" role="group" aria-label="Level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div>
   <ol class="lb-list" id="lbList" aria-live="polite"></ol>
-  <div class="lb-foot"><span>Your best is added on its own. Undo or hints keep a game off it.</span><button class="btn" id="lbPlay" type="button">Play the computer</button></div>
+  <p class="lb-foot">Your best is added on its own. Games with Undo or hints don’t count.</p>
 </section>
 
 <section class="dlg modal about" id="dlgAbout" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" tabindex="-1" hidden>
@@ -1696,15 +1713,26 @@ async function copyPicture(withText){
   try{const blob=await shareBlob();const item={"image/png":blob};if(withText)item["text/plain"]=new Blob([shareText()+" "+SHARE_URL],{type:"text/plain"});
     await navigator.clipboard.write([new ClipboardItem(item)]);return true}catch(e){return false}
 }
-async function shareTo(app){
-  if(shareFiles){nativeShare();return}
-  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u);
-  const url={wa:"https://api.whatsapp.com/send?text="+tu,ms:"https://www.messenger.com/",
-    li:"https://www.linkedin.com/feed/?shareActive=true&text="+tu,x:"https://twitter.com/intent/tweet?text="+encodeURIComponent(t)+"&url="+encodeURIComponent(u)}[app];
-  const w=window.open("about:blank","_blank");
-  const ok=await copyPicture(app==="ms");
-  if(w){w.opener=null;w.location.href=url}
-  shToast(ok?(app==="ms"?"Picture and message copied. Paste them into a chat":"Picture copied. Paste it in to add it"):"Opened without the picture");
+/* Each app button opens that app with the message filled in (on a phone,
+   the app itself). No app takes a picture through a link, so the picture is
+   copied first: paste it in to add it. The big Share button is the one that
+   hands the picture over directly, through the phone's own share menu. */
+function shareTo(app){
+  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u),phone=matchMedia("(pointer:coarse)").matches;
+  const url={wa:"https://wa.me/?text="+tu,
+    ms:phone?"fb-messenger://share/?link="+encodeURIComponent(u):"https://www.messenger.com/",
+    li:phone?"https://www.linkedin.com/sharing/share-offsite/?url="+encodeURIComponent(u):"https://www.linkedin.com/feed/?shareActive=true&text="+tu,
+    x:"https://twitter.com/intent/tweet?text="+encodeURIComponent(t)+"&url="+encodeURIComponent(u)}[app];
+  /* start the copy inside the tap (a pending picture is allowed), then go */
+  let copied=null;
+  try{if(navigator.clipboard&&window.ClipboardItem){const item={"image/png":shareBlob()};if(app==="ms"&&!phone)item["text/plain"]=new Blob([t+" "+u],{type:"text/plain"});
+    copied=navigator.clipboard.write([new ClipboardItem(item)]).then(()=>true,()=>false)}}catch(e){copied=null}
+  if(url.startsWith("fb-messenger:")){
+    location.href=url;
+    /* no Messenger app: fall back to sharing the link on the web */
+    setTimeout(()=>{if(!document.hidden)window.open("https://www.messenger.com/","_blank","noopener")},1400);
+  }else window.open(url,"_blank","noopener");
+  if(copied)copied.then(ok=>{if(ok&&!document.hidden)shToast(app==="ms"&&!phone?"Picture and message copied. Paste them into a chat":"Picture copied. Paste it in to add it")});
 }
 $("shNative").addEventListener("click",nativeShare);
 $("shCopyImg").addEventListener("click",async()=>shToast(await copyPicture(false)?"Picture copied":"Copy failed"));
@@ -1780,7 +1808,7 @@ async function openBoard(btn){
   lbLevel=lbLevel||opt.level||"perfect";setSeg($("lbLevels"),lbLevel,false);
   openDialog("dlgBoard",btn);
   if(lbEntry())lbPublishSoon();
-  $("lbList").innerHTML=Array.from({length:5},()=>'<li class="lb-row skel"><span></span><span class="orb"></span><span></span></li>').join("");
+  $("lbList").innerHTML='<li class="lb-wait"><i aria-hidden="true"><b></b><b></b><b></b></i>Loading the board</li>';
   lbCache=await lbFetch();lbRender();
 }
 function lbRender(){
@@ -1790,7 +1818,7 @@ function lbRender(){
   const all=new Map();lbCache.forEach(e=>all.set(e.id,e));const mine=lbEntry();if(mine)all.set(lbId,mine);
   const rows=[...all.values()].map(e=>lbVerify(e,lbLevel)).filter(Boolean)
     .sort((a,b)=>(b.best-a.best)||((a.fast||99)-(b.fast||99))).slice(0,50);
-  if(!rows.length){ul.innerHTML=`<li class="lb-empty">No records on ${LEVEL_NAME[lbLevel]} yet. Win a game against the computer to be first.</li>`;return}
+  if(!rows.length){ul.innerHTML=`<li class="lb-empty">No records on ${LEVEL_NAME[lbLevel]} yet.<br>Win a game against the computer to be first.<button class="btn" type="button" data-play>Play the computer</button></li>`;return}
   ul.innerHTML=rows.map((r,i)=>`<li class="lb-row${r.id===lbId?" me":""}${i<3?" top t"+(i+1):""}" style="--i:${i}">
     <span class="lb-rank"${i<3?` aria-label="${["First","Second","Third"][i]} place"`:""}>${i+1}</span><span class="lb-av"><span class="orb" style="background:${r.av?`url('${avUri(r.av)}') center/cover`:orbHue(r.id)}"></span>${i===0?'<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15 1 4l6 5 5-8 5 8 6-5-1 11Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 14.5h18" stroke="#fff3c4" stroke-width="1.2" opacity=".7"/><circle cx="12" cy="1.6" r="1.4" fill="#fff3c4"/></svg>':""}</span>
     <span class="lb-name">${esc(r.n)}${r.id===lbId?'<small>You</small>':""}</span>
@@ -1798,7 +1826,7 @@ function lbRender(){
 }
 $("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;lbLevel=b.dataset.v;setSeg($("lbLevels"),lbLevel,true);if(lbCache!==undefined)lbRender()});
 $("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
-$("lbPlay").addEventListener("click",()=>{closeDialog();if(mode!=="ai")goMode("ai")});
+$("lbList").addEventListener("click",e=>{if(e.target.closest("[data-play]")){closeDialog();if(mode!=="ai")goMode("ai")}});
 /* ---------- Options (segmented controls) ---------- */
 const defaults={level:"medium",youAre:"X",first:"me",rule:"A",hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
@@ -1849,6 +1877,10 @@ const dropIn=el=>springAnim(el,{k:260,c:12,prop:v=>`translateY(${((1-v)*-18).toF
 let flipping=false;const flyers=new Map();
 function ghostOf(k,r,z){
   const g=k.cloneNode(true);g.removeAttribute("id");g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));
+  /* the copy flies outside the row, so carry over whether its labels show,
+     and clip it to its animating width: a label slides open as it widens */
+  const src=k.querySelectorAll(".rb-lbl,.nb-lbl"),dst=g.querySelectorAll(".rb-lbl,.nb-lbl");src.forEach((n,i)=>{dst[i].style.display=getComputedStyle(n).display});
+  g.style.overflow="hidden";g.style.gap=getComputedStyle(k).gap;g.style.padding=getComputedStyle(k).padding;g.style.justifyContent=getComputedStyle(k).justifyContent;
   g.hidden=false;g.setAttribute("aria-hidden","true");g.removeAttribute("data-open");g.removeAttribute("data-sink");
   Object.assign(g.style,{position:"fixed",left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",margin:"0",pointerEvents:"none",zIndex:String(z),display:"flex",boxSizing:"border-box",flex:"none",visibility:"visible"});
   app.appendChild(g);return g;
@@ -1872,10 +1904,11 @@ function flipActions(change){
       an.onfinish=an.oncancel=()=>{g.remove();if(flyers.get(k)&&flyers.get(k).g===g){flyers.delete(k);k.style.visibility=""}};
     }
     /* fade to the button's own resting opacity, so a disabled one never looks live on the way in */
-    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:getComputedStyle(k).opacity,transform:"none",filter:"blur(0)"}],{duration:560,delay:90,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:getComputedStyle(k).opacity,transform:"none",filter:"blur(0)"}],{duration:520,delay:220,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
     else if(a&&!b){
       const g=ghostOf(k,a,1);
-      g.animate([{opacity:getComputedStyle(g).opacity,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(16px) scale(.9)",filter:"blur(4px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
+      /* leaving buttons get out of the way quickly, before anything slides over them */
+      g.animate([{opacity:getComputedStyle(g).opacity,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(10px) scale(.86)",filter:"blur(4px)"}],{duration:170,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
     }
   });
 }
@@ -2152,7 +2185,9 @@ function goMode(m){
   /* into or out of Online: your avatar and name travel with you */
   const mv=(m==="online")!==(mode==="online")?morphStart():null;
   /* the new mode opens on a fresh board: nothing to undo or restart yet */
-  flipActions(()=>{$("undoBtn").disabled=true;$("newBtn").disabled=true;app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;$("emo").hidden=true;emoClose();app.dataset.net="idle";app.dataset.role="player"}});
+  /* everything in the row is settled in this one step (the Share button
+     included), so the row rearranges once, smoothly, never twice */
+  flipActions(()=>{$("undoBtn").disabled=true;$("newBtn").disabled=true;$("shareBtn").hidden=m!=="ai"||!recOf(opt.level).w;app.dataset.mode=m;if(m!=="online"){$("chip").hidden=true;$("emo").hidden=true;emoClose();app.dataset.net="idle";app.dataset.role="player"}});
   cancelAnimationFrame(modeSwitch);
   modeSwitch=requestAnimationFrame(()=>requestAnimationFrame(()=>{if(mode==="online"&&m!=="online")leave();setMode(m);if(mv)requestAnimationFrame(()=>morphLand(mv))}));
 }
