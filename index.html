@@ -601,8 +601,41 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .emo-tray button:active{transform:scale(.9)!important}
 #emoBtn[aria-expanded="true"]{background:var(--primary);color:var(--primary-ink)}
 #emoBtn.cool{opacity:.5}
-.emote-fly{position:fixed;z-index:70;left:0;top:0;pointer-events:none;font-size:60px;line-height:1;will-change:transform,opacity}
-.emote-fly.bit{font-size:24px}
+.emote-fly{position:fixed;z-index:70;left:0;top:0;width:84px;height:84px;pointer-events:none;line-height:0;will-change:transform,opacity;filter:drop-shadow(0 10px 18px rgba(0,0,0,.28))}
+.emote-fly.bit{width:30px;height:30px;filter:none}
+.emote-fly svg,.emo-tray button svg{display:block;width:100%;height:100%;overflow:visible}
+.emo-tray button svg{width:40px;height:40px}
+/* each reaction acts out its feeling while it flies */
+.emote-fly .f,.emote-fly .fx{transform-box:fill-box;transform-origin:50% 60%}
+.emote-fly:not(.e-angry) .steam,.emo-tray .steam{opacity:0}
+.e-laugh .f{animation:e-rock .3s ease-in-out .22s 5 alternate}
+.e-laugh .tl{transform-origin:100% 50%;animation:e-squirtL .62s cubic-bezier(.2,.8,.3,1) .26s 2}
+.e-laugh .tr{transform-origin:0 50%;animation:e-squirtR .62s cubic-bezier(.2,.8,.3,1) .26s 2}
+.e-angry .f{animation:e-shake .06s linear .18s 16 alternate}
+.e-angry .vein{transform-origin:50% 50%;animation:e-pulse .26s ease-in-out .2s 5 alternate}
+.e-angry .steam{opacity:0;animation:e-steam .9s ease-out .28s 2}
+.e-angry .s2{animation-delay:.5s}
+.e-sad .f{transform-origin:50% 100%;animation:e-droop 1.3s cubic-bezier(.4,0,.3,1) .15s both}
+.e-sad .tear{transform-origin:50% 0;animation:e-tear 1s cubic-bezier(.5,0,.8,.6) .4s 2 both}
+.e-wow .f{transform-origin:50% 100%;animation:e-jolt .62s cubic-bezier(.34,1.6,.5,1) .12s both}
+.e-wow .brows{transform-box:fill-box;animation:e-brow .55s cubic-bezier(.34,1.8,.5,1) .16s both}
+.e-wow .shock{transform-origin:50% 50%;animation:e-shock .6s ease-out .22s 2 both}
+.e-down .f{transform-origin:50% 100%;animation:e-slam .52s cubic-bezier(.55,0,.4,1.45) .08s both}
+.e-down .dust{transform-origin:50% 100%;animation:e-dust .5s ease-out .42s both}
+@keyframes e-rock{from{transform:rotate(-10deg) translateY(1px)}to{transform:rotate(10deg) translateY(-3px)}}
+@keyframes e-squirtL{0%{transform:scale(.3);opacity:0}25%{opacity:1}100%{transform:translate(-16px,8px) scale(1.15);opacity:0}}
+@keyframes e-squirtR{0%{transform:scale(.3);opacity:0}25%{opacity:1}100%{transform:translate(16px,8px) scale(1.15);opacity:0}}
+@keyframes e-shake{from{transform:translateX(-3px) rotate(-1.5deg)}to{transform:translateX(3px) rotate(1.5deg)}}
+@keyframes e-pulse{from{transform:scale(.75)}to{transform:scale(1.3)}}
+@keyframes e-steam{0%{transform:translateY(8px) scale(.4);opacity:0}30%{opacity:1}100%{transform:translateY(-20px) scale(1.25);opacity:0}}
+@keyframes e-droop{0%{transform:none}45%{transform:translateY(5px) scale(1.03,.92) rotate(-5deg)}100%{transform:translateY(3px) scale(1.01,.96) rotate(-4deg)}}
+@keyframes e-tear{0%{transform:translateY(-4px) scale(.3);opacity:0}25%{transform:none;opacity:1}100%{transform:translateY(28px) scale(.75);opacity:0}}
+@keyframes e-jolt{0%{transform:scale(.8)}40%{transform:scale(1.16) translateY(-6px)}70%{transform:scale(.97)}100%{transform:none}}
+@keyframes e-brow{0%{transform:translateY(8px)}100%{transform:none}}
+@keyframes e-shock{0%{opacity:0;transform:scale(.55)}30%{opacity:1}100%{opacity:0;transform:scale(1.3)}}
+@keyframes e-slam{0%{transform:translateY(-26px) rotate(-10deg)}62%{transform:translateY(4px) scale(1.06,.9)}100%{transform:none}}
+@keyframes e-dust{0%{opacity:0;transform:scale(.4)}35%{opacity:1}100%{opacity:0;transform:scale(1.35)}}
+@media (prefers-reduced-motion:reduce){.emote-fly .f,.emote-fly .fx{animation:none!important}}
 
 /* ---------- QR code: show it, or scan one ---------- */
 .qr-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
@@ -883,6 +916,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
   <div class="group stag"><span class="group-label" id="gl-rule">Oldest mark leaves</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule"><span class="thumb"></span><button type="button" data-v="A">After you place</button><button type="button" data-v="B">Before</button></div></div>
   <div class="group stag" data-hide="online"><span class="group-label" id="gl-hints">Solver hints</span><div class="seg sm full" data-opt="hints" role="group" aria-labelledby="gl-hints"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-age">Mark order numbers</span><div class="seg sm full" data-opt="age" role="group" aria-labelledby="gl-age"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
+  <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
 </section>
@@ -1201,8 +1235,104 @@ const AV_KEYS=Object.keys(AVATARS),avURI={};
 function avSVG(k){return`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${AVATARS[k].art()}</svg>`}
 function avUri(k){if(!AVATARS[k])return"";if(!avURI[k])avURI[k]="data:image/svg+xml,"+encodeURIComponent(avSVG(k)).replace(/'/g,"%27");return avURI[k]}
 function cleanAv(k){return typeof k==="string"&&AVATARS[k]?k:""}
+/* ---------- Reactions: art and sound ---------- */
+/* Drawn like the "Made by" heads and the avatars: ink outline, three flat
+   tones of shade, a cool rim light and warm highlights. Each reaction has
+   named parts (.f the whole face, .fx its extras) that CSS animates when it
+   flies, so every one acts out its own feeling. */
+const EY=["#ffcf4a","#f2a62a","#c9791a"],EHI="#fff3bf";
+const EFACE="M50 12C71 12 88 29 88 50C88 71 71 88 50 88C29 88 12 71 12 50C12 29 29 12 50 12Z";
+const eHeavy="M84 38C90 54 85 72 70 82";
+const EMO_ART={
+  laugh:()=>
+    `<g class="f">${cel(EFACE,EY,[12,76],
+      `<path d="M24 36Q34 22 50 20" fill="none" stroke="${EHI}" stroke-width="4" stroke-linecap="round" opacity=".8"/><ellipse cx="25" cy="60" rx="7" ry="4" fill="#ff7a8a" opacity=".45"/><ellipse cx="75" cy="60" rx="7" ry="4" fill="#e8566a" opacity=".4"/>`,eHeavy)}
+    <path d="M27 46Q35 36 43 46M57 46Q65 36 73 46" fill="none" stroke="${AINK}" stroke-width="3.6" stroke-linecap="round"/>
+    <path d="M28 58H72C72 75 62 84 50 84C38 84 28 75 28 58Z" fill="#4a1414" stroke="${AINK}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M30.5 58.5H69.5L68.5 64Q50 66.5 31.5 64Z" fill="#fbf6ee"/>
+    <path d="M38 77Q50 68 62 77Q57 82.5 50 82.5Q43 82.5 38 77Z" fill="#ff6b6b"/>
+    </g>
+    <g class="fx tl"><path d="M15 44Q7 51 10 58Q15 62 19 56Q20 50 15 44Z" fill="#7fd3ff" stroke="${AINK}" stroke-width="1.8"/><path d="M13 52Q12 55 14 57" stroke="#fff" stroke-width="1.4" fill="none" stroke-linecap="round"/></g>
+    <g class="fx tr"><path d="M85 44Q93 51 90 58Q85 62 81 56Q80 50 85 44Z" fill="#7fd3ff" stroke="${AINK}" stroke-width="1.8"/></g>`,
+  angry:()=>{const R=["#ff8a4c","#e2552e","#b33a1f"];return`<g class="f">${cel(EFACE,R,[12,76],
+      `<path d="M24 36Q34 22 50 20" fill="none" stroke="#ffd2ab" stroke-width="4" stroke-linecap="round" opacity=".7"/><path d="M0 0H100V30Q50 38 0 30Z" fill="#c0261b" opacity=".35"/>`,eHeavy)}
+    <path d="M22 35L44 44L43 49L21 40Z" fill="${AINK}"/><path d="M78 35L56 44L57 49L79 40Z" fill="${AINK}"/>
+    <ellipse cx="35" cy="53" rx="5.5" ry="4.2" fill="#fbf6ee" stroke="${AINK}" stroke-width="1.6"/><circle cx="36" cy="53.5" r="2.4" fill="${AINK}"/>
+    <ellipse cx="65" cy="53" rx="5.5" ry="4.2" fill="#f0e6da" stroke="${AINK}" stroke-width="1.6"/><circle cx="64" cy="53.5" r="2.4" fill="${AINK}"/>
+    <path d="M31 66H69Q71 66 71 68V75Q71 77 69 77H31Q29 77 29 75V68Q29 66 31 66Z" fill="#fbf6ee" stroke="${AINK}" stroke-width="2.2"/>
+    <path d="M29 71.5H71M37 66V77M43.5 66V77M50 66V77M56.5 66V77M63 66V77" stroke="${AINK}" stroke-width="1.3"/>
+    </g>
+    <g class="fx vein"><path d="M69 15Q73 20 69 24M83 15Q79 20 83 24M71 13Q76 17 81 13M71 26Q76 22 81 26" fill="none" stroke="#d81e1e" stroke-width="3.2" stroke-linecap="round"/></g>
+    <g class="fx steam"><path d="M8 26a6 6 0 0 1 9 -6a7 7 0 0 1 12 1a5 5 0 0 1 -1 10h-17a5 5 0 0 1 -3 -5z" fill="#f4f4f6" stroke="${AINK}" stroke-width="1.8"/></g>
+    <g class="fx steam s2"><path d="M74 6a5 5 0 0 1 8 -5a6 6 0 0 1 10 1a4 4 0 0 1 -1 8h-14a4 4 0 0 1 -3 -4z" fill="#f4f4f6" stroke="${AINK}" stroke-width="1.8"/></g>`},
+  sad:()=>`<g class="f">${cel(EFACE,["#ffd25e","#ecaa33","#c37f22"],[12,76],
+      `<path d="M0 0H100V36Q50 46 0 36Z" fill="#6b8cff" opacity=".3"/><path d="M26 30Q36 20 50 20" fill="none" stroke="${EHI}" stroke-width="3.6" stroke-linecap="round" opacity=".7"/>`,eHeavy)}
+    <path d="M25 42L42 35M75 42L58 35" stroke="${AINK}" stroke-width="3.2" stroke-linecap="round"/>
+    <ellipse cx="35" cy="53" rx="6" ry="7" fill="${AINK}"/><circle cx="37" cy="50" r="2.4" fill="#fff"/><circle cx="33" cy="56" r="1.2" fill="#fff" opacity=".8"/>
+    <ellipse cx="65" cy="53" rx="6" ry="7" fill="${AINK}"/><circle cx="67" cy="50" r="2.4" fill="#fff"/><circle cx="63" cy="56" r="1.2" fill="#fff" opacity=".8"/>
+    <path d="M37 75Q43 66 50 70Q57 66 63 75" fill="none" stroke="${AINK}" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <g class="fx tear"><path d="M31 61Q26 69 30 73Q35 75 37 70Q37 66 31 61Z" fill="#7fd3ff" stroke="${AINK}" stroke-width="1.7"/><path d="M30 68Q29.5 70 31 71.5" stroke="#fff" stroke-width="1.3" fill="none" stroke-linecap="round"/></g>`,
+  wow:()=>`<g class="fx shock"><path d="M9 22l8 5M91 22l-8 5M50 2v8M6 70l9 -3M94 70l-9 -3" stroke="${AINK}" stroke-width="3" stroke-linecap="round"/></g>
+    <g class="f">${cel(EFACE,EY,[12,76],`<path d="M24 36Q34 22 50 20" fill="none" stroke="${EHI}" stroke-width="4" stroke-linecap="round" opacity=".8"/>`,eHeavy)}
+    <g class="brows"><path d="M25 30Q33 23 42 28M58 28Q67 23 75 30" fill="none" stroke="${AINK}" stroke-width="3.2" stroke-linecap="round"/></g>
+    <circle cx="35" cy="45" r="8.5" fill="#fbf6ee" stroke="${AINK}" stroke-width="2.2"/><circle cx="35" cy="46" r="2.8" fill="${AINK}"/>
+    <circle cx="65" cy="45" r="8.5" fill="#f0e6da" stroke="${AINK}" stroke-width="2.2"/><circle cx="65" cy="46" r="2.8" fill="${AINK}"/>
+    <ellipse cx="50" cy="70" rx="8.5" ry="10.5" fill="#4a1414" stroke="${AINK}" stroke-width="2.4"/><path d="M44 76Q50 71 56 76Q54 80 50 80Q46 80 44 76Z" fill="#ff6b6b"/>
+    </g>`,
+  down:()=>{const B=["#5aa2ff","#3b7fe0","#2459b0"];
+    const fist="M24 26Q24 20 30 20H72Q80 20 80 28V50Q80 59 71 60H34Q24 60 24 51Z",thumb="M33 57L33 84Q33 93 42 93Q51 93 51 84L51 57Z";
+    return`<g class="fx dust"><path d="M22 94l-9 2M62 94l9 2M27 99h-8M57 99h8" stroke="${AINK}" stroke-width="2.6" stroke-linecap="round"/></g>
+    <g class="f">${cel("M30 2H74V22H30Z",B,[30,44])}
+    ${cel(thumb,EY,[33,18],`<path d="M37 84Q37 89.5 42 89.5Q47 89.5 47 84V79H37Z" fill="#ffe8a8"/>`)}
+    <path d="M37 84Q37 89.5 42 89.5Q47 89.5 47 84V79H37Z" fill="none" stroke="${AINK}" stroke-width="1.4"/>
+    ${cel(fist,EY,[24,56],`<path d="M30 26Q42 22 56 23" fill="none" stroke="${EHI}" stroke-width="3.2" stroke-linecap="round" opacity=".8"/>`,"M80 28V50Q80 59 71 60")}
+    <path d="M24 33H64M24 42H64M25 51H62M64 22V58" fill="none" stroke="${AINK}" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M66 28Q72 30 72 36M66 40Q72 42 72 48" fill="none" stroke="${EY[2]}" stroke-width="1.6" stroke-linecap="round"/>
+    </g>`}
+};
+let emoN=0;
+function emoteSVG(k){return`<svg viewBox="0 0 100 100" class="emo-art" aria-hidden="true" data-n="${emoN++}">${EMO_ART[k]()}</svg>`}
+
+/* ---------- Reaction sounds ---------- */
+/* Made on the spot with Web Audio: no files to load, each under 0.7 s and
+   kept quiet. The sender hears it as they send, everyone else as it lands.
+   Off in Settings, and never while the tab is hidden. */
+const SFX={ctx:null,out:null};
+function sfxCtx(){
+  if(!SFX.ctx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;
+    SFX.ctx=new C();const comp=SFX.ctx.createDynamicsCompressor();SFX.out=SFX.ctx.createGain();SFX.out.gain.value=.16;SFX.out.connect(comp);comp.connect(SFX.ctx.destination)}
+  if(SFX.ctx.state==="suspended")SFX.ctx.resume().catch(()=>{});
+  return SFX.ctx;
+}
+/* browsers only allow sound after a tap, so wake the audio on the first one */
+addEventListener("pointerdown",()=>sfxCtx(),{once:true,capture:true});
+function voice(c,o){
+  /* one note: oscillator through an optional low-pass, with a quick attack and a smooth release */
+  const t=c.currentTime+(o.at||0),osc=c.createOscillator(),g=c.createGain();
+  osc.type=o.type||"sine";osc.frequency.setValueAtTime(o.f0,t);
+  if(o.f1)osc.frequency.exponentialRampToValueAtTime(o.f1,t+o.dur*(o.glide||1));
+  let node=osc;
+  if(o.lp){const f=c.createBiquadFilter();f.type="lowpass";f.frequency.value=o.lp;osc.connect(f);node=f}
+  if(o.vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=o.vib;lg.gain.value=o.vibDepth||8;l.connect(lg);lg.connect(osc.frequency);l.start(t);l.stop(t+o.dur+.05)}
+  if(o.trem){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=o.trem;lg.gain.value=.45;l.connect(lg);lg.connect(g.gain);l.start(t);l.stop(t+o.dur+.05)}
+  const v=o.vol||1;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+(o.att||.012));g.gain.setValueAtTime(v,t+o.dur*.6);g.gain.exponentialRampToValueAtTime(.0008,t+o.dur);
+  node.connect(g);g.connect(SFX.out);osc.start(t);osc.stop(t+o.dur+.05);
+}
+const SOUNDS={
+  laugh:c=>[0,.11,.22,.33].forEach((at,i)=>voice(c,{type:"triangle",f0:700-i*45,f1:520-i*40,dur:.09,at,vib:30,vibDepth:20,lp:2600,vol:.9})),
+  angry:c=>{voice(c,{type:"sawtooth",f0:150,f1:95,dur:.42,lp:760,trem:22,vol:.75});voice(c,{type:"square",f0:75,f1:60,dur:.42,lp:400,vol:.45})},
+  sad:c=>{voice(c,{type:"triangle",f0:470,f1:392,dur:.26,lp:1500,vib:6,vibDepth:6});voice(c,{type:"triangle",f0:392,f1:262,dur:.46,at:.26,lp:1300,vib:5,vibDepth:9})},
+  wow:c=>{voice(c,{type:"sine",f0:360,f1:880,dur:.34,glide:.85,vol:.9});voice(c,{type:"sine",f0:720,f1:1760,dur:.3,vol:.18});voice(c,{type:"sine",f0:880,f1:760,dur:.16,at:.32,vol:.5})},
+  down:c=>{voice(c,{type:"square",f0:233,f1:220,dur:.13,lp:900,vol:.6});voice(c,{type:"square",f0:156,f1:110,dur:.34,at:.14,lp:700,vol:.7})}
+};
+function playSfx(k){
+  if(opt.sfx==="0"||document.hidden||!SOUNDS[k])return;
+  const c=sfxCtx();if(!c||!SFX.out)return;
+  try{SOUNDS[k](c)}catch(e){}
+}
 /* ---------- Options (segmented controls) ---------- */
-const defaults={level:"medium",youAre:"X",first:"me",rule:"A",hints:"0",age:"1",alt:"1"};
+const defaults={level:"medium",youAre:"X",first:"me",rule:"A",hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
 if(!opt){ // carry over settings from the previous version of the site
   opt={...defaults,rule:store.get("xo.rule","A"),hints:store.get("xo.hints",false)?"1":"0",
@@ -2356,8 +2486,13 @@ emo.addEventListener("keydown",e=>{
     if(i<0)return;e.preventDefault();bs[(i+(e.key==="ArrowRight"?1:bs.length-1))%bs.length].focus()}
 });
 document.addEventListener("pointerdown",e=>{if(e.isTrusted&&emo.hasAttribute("data-open")&&!emo.contains(e.target))emoClose()});
+/* the tray shows the drawn reactions */
+emoTray.querySelectorAll("button[data-e]").forEach(b=>{if(EMO_ART[b.dataset.e])b.innerHTML=emoteSVG(b.dataset.e)});
+/* turning sounds on plays one, so you know what you will hear */
+document.querySelector('.seg[data-opt="sfx"]').addEventListener("click",()=>setTimeout(()=>{if(opt.sfx==="1")playSfx("wow")},30));
 function sendEmote(k){
   if(!EMO[k]||!connOpen||Date.now()<emoCool)return;
+  playSfx(k);
   /* audience reactions rise from the audience seats */
   emoCool=Date.now()+1200;emoBtn.classList.add("cool");setTimeout(()=>emoBtn.classList.remove("cool"),1200);
   publish(role==="aud"?{t:"emote",e:k,a:1}:{t:"emote",e:k});emoClose(true);
@@ -2366,7 +2501,7 @@ function sendEmote(k){
 function receiveEmote(k,from,isAud){
   const now=Date.now();emoIn=emoIn.filter(t=>now-t<3000);if(emoIn.length>=6)return;emoIn.push(now);
   const side=isAud?null:(role==="aud"?sideOf(from):other(me));
-  flyEmote(k,side,true,isAud?from:null);
+  flyEmote(k,side,true,isAud?from:null);playSfx(k);
   try{navigator.vibrate&&navigator.vibrate(30)}catch(e){}
   $("srLive").textContent=(isAud?"Someone watching":role==="aud"?(names[side]||"A player"):"Your friend")+" reacted: "+EMO[k][1];
 }
@@ -2379,7 +2514,7 @@ function flyEmote(k,side,big,fromId){
   else if(!side){const a=$("aud");const tgt=a&&!a.hidden&&a.offsetParent?a:$("chip");if(tgt&&!tgt.hidden&&tgt.offsetParent)r=tgt.getBoundingClientRect()}
   if(!r){const b=boardWrap.getBoundingClientRect();r={left:b.left+b.width/2-1,top:b.top+b.height/2-1,width:2,height:2}}
   const x=r.left+r.width/2,y=r.top+r.height/2;
-  const el=document.createElement("span");el.className="emote-fly";el.textContent=EMO[k][0];el.setAttribute("aria-hidden","true");
+  const el=document.createElement("span");el.className="emote-fly e-"+k;el.innerHTML=emoteSVG(k);el.setAttribute("aria-hidden","true");
   document.body.appendChild(el);
   const s0=big?1:.8,T=(dx,dy,sc)=>`translate(${x+dx}px,${y+dy}px) translate(-50%,-50%) scale(${sc})`;
   if(still){el.animate([{opacity:1,transform:T(0,-40,s0)},{opacity:0,transform:T(0,-40,s0)}],{duration:1400}).onfinish=()=>el.remove();return}
@@ -2393,7 +2528,7 @@ function flyEmote(k,side,big,fromId){
   ],{duration:2000,easing:"cubic-bezier(.22,1,.36,1)"}).onfinish=()=>el.remove();
   if(!big)return;
   for(let i=0;i<5;i++){
-    const bit=document.createElement("span");bit.className="emote-fly bit";bit.textContent=EMO[k][0];bit.setAttribute("aria-hidden","true");document.body.appendChild(bit);
+    const bit=document.createElement("span");bit.className="emote-fly bit";bit.innerHTML=emoteSVG(k);bit.setAttribute("aria-hidden","true");document.body.appendChild(bit);
     const a=-Math.PI/2+(i-2)*.55+(Math.random()-.5)*.3,d=70+Math.random()*40;
     bit.animate([{opacity:0,transform:T(0,-20,.3)},{opacity:1,transform:T(Math.cos(a)*d*.6,Math.sin(a)*d*.6-20,1),offset:.35},{opacity:0,transform:T(Math.cos(a)*d,Math.sin(a)*d-40,.6)}],
       {duration:1100+i*60,delay:120,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"}).onfinish=()=>bit.remove();
