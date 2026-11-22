@@ -1095,7 +1095,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.22·2025</p>
+  <p class="build-tag">Version 2026.11.22·2150</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2139,14 +2139,14 @@ function renderPlayers(){
   for(const s of ["X","O"]){
     const el=$("p"+s),orb=$("p"+s+"orb"),k=kindOf(s);
     /* who sits here changed (Player O becomes the Computer, a new avatar):
-       the old face fades off the new one instead of swapping in a frame */
+       the old face fades off the new one in place instead of swapping in a frame */
     const look=k+"|"+sideAvBg(s);
     if(orb._look!==undefined&&orb._look!==look&&!still&&orb.offsetParent){
       const c=getComputedStyle(orb),old=document.createElement("span");
       Object.assign(old.style,{position:"absolute",inset:"0",borderRadius:"inherit",backgroundImage:c.backgroundImage,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition,backgroundColor:c.backgroundColor,pointerEvents:"none"});
       orb.appendChild(old);
-      old.animate([{opacity:1,transform:"none"},{opacity:0,transform:"scale(.86)"}],{duration:380,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"}).onfinish=()=>old.remove();
-      orb.animate([{transform:"scale(.9)"},{transform:"scale(1.04)",offset:.6},{transform:"none"}],{duration:520,easing:"cubic-bezier(.34,1.3,.6,1)"});
+      /* a pure crossfade in place: nothing grows, shrinks or moves */
+      old.animate([{opacity:1},{opacity:0}],{duration:420,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"}).onfinish=()=>old.remove();
     }
     orb._look=look;
     orb.className="orb"+(k?" "+k:"");
