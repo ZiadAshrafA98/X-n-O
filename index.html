@@ -654,6 +654,11 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-foot{margin:12px 0 0;padding:12px 6px 0;border-top:1px solid var(--hair);font-size:12px;line-height:1.45;color:var(--faint);text-align:center}
 .sh-act .ic.ms{background:linear-gradient(135deg,#00b2ff,#a033ff);color:#fff}
 .sh-act .ic.li{background:#0a66c2;color:#fff}
+.sh-act .ic.ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285aeb 90%);color:#fff}
+.sh-act .ic.fb{background:#1877f2;color:#fff}
+a.sh-act{text-decoration:none}
+/* apps first; copy, save and link at the end */
+#shCopyImg,#shSave,#shLink{order:2}
 /* the share sheet: a card to look at, its colours, then where to send it */
 .sharedlg{width:min(540px,calc(100vw - 48px));padding:16px 18px 20px}
 .sh-card{display:flex;justify-content:center;padding:4px 0 14px}
@@ -1152,10 +1157,12 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
     <button class="sh-act main" id="shNative" type="button" hidden><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></span>Share</button>
     <button class="sh-act" id="shCopyImg" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="3"/><path d="M16 8V6a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3v7a3 3 0 0 0 3 3h2"/></svg></span>Copy picture</button>
     <button class="sh-act" id="shSave" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 20h14"/></svg></span>Save</button>
-    <button class="sh-act" id="sh_wa" type="button"><span class="ic wa"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2a9.8 9.8 0 0 0-8.4 14.8L2.2 21.8l4.9-1.3A9.8 9.8 0 1 0 12 2.2Zm0 17.8a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.4 1 2.5.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2l-.4-.4Z"/></svg></span>WhatsApp</button>
-    <button class="sh-act" id="sh_ms" type="button"><span class="ic ms"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.6 2.5 2.5 6.4 2.5 11.6c0 2.8 1.2 5.2 3.2 6.9v3.3l3-1.7c1 .3 2.1.4 3.3.4 5.4 0 9.5-3.9 9.5-9S17.4 2.5 12 2.5Zm1 12.1-2.4-2.6-4.7 2.6 5.2-5.5 2.5 2.6 4.6-2.6-5.2 5.5Z"/></svg></span>Messenger</button>
-    <button class="sh-act" id="sh_li" type="button"><span class="ic li"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.3 8.5h3v10h-3v-10Zm1.5-4.8a1.7 1.7 0 1 1 0 3.5 1.7 1.7 0 0 1 0-3.5ZM10.2 8.5h2.9v1.4c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7v5.5h-3v-4.9c0-1.2 0-2.6-1.6-2.6s-1.9 1.3-1.9 2.5v5h-3v-10Z"/></svg></span>LinkedIn</button>
-    <button class="sh-act" id="sh_x" type="button"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3l-6.6 7.6L22 21h-6.1l-4.8-6.2L5.6 21h-3l7.1-8.1L2.3 3h6.3l4.3 5.7L17.8 3Zm-1 16.2h1.7L7.3 4.7H5.5l11.3 14.5Z"/></svg></span>Post</button>
+    <a class="sh-act" id="sh_wa" href="#" rel="noopener"><span class="ic wa"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.2a9.8 9.8 0 0 0-8.4 14.8L2.2 21.8l4.9-1.3A9.8 9.8 0 1 0 12 2.2Zm0 17.8a8 8 0 0 1-4.1-1.1l-.3-.2-2.9.8.8-2.8-.2-.3A8 8 0 1 1 12 20Zm4.4-6c-.2-.1-1.4-.7-1.7-.8-.2-.1-.4-.1-.5.1l-.8.9c-.1.2-.3.2-.5.1a6.6 6.6 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.5-.4h-.5a.9.9 0 0 0-.6.3 2.7 2.7 0 0 0-.9 2c0 1.2.9 2.4 1 2.5.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.4-.6 1.6-1.2.2-.6.2-1.1.1-1.2l-.4-.4Z"/></svg></span>WhatsApp</a>
+    <a class="sh-act" id="sh_ms" href="#" rel="noopener"><span class="ic ms"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2.5C6.6 2.5 2.5 6.4 2.5 11.6c0 2.8 1.2 5.2 3.2 6.9v3.3l3-1.7c1 .3 2.1.4 3.3.4 5.4 0 9.5-3.9 9.5-9S17.4 2.5 12 2.5Zm1 12.1-2.4-2.6-4.7 2.6 5.2-5.5 2.5 2.6 4.6-2.6-5.2 5.5Z"/></svg></span>Messenger</a>
+    <a class="sh-act" id="sh_li" href="#" rel="noopener"><span class="ic li"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5.3 8.5h3v10h-3v-10Zm1.5-4.8a1.7 1.7 0 1 1 0 3.5 1.7 1.7 0 0 1 0-3.5ZM10.2 8.5h2.9v1.4c.4-.8 1.4-1.6 2.9-1.6 3.1 0 3.7 2 3.7 4.7v5.5h-3v-4.9c0-1.2 0-2.6-1.6-2.6s-1.9 1.3-1.9 2.5v5h-3v-10Z"/></svg></span>LinkedIn</a>
+    <a class="sh-act" id="sh_ig" href="#" rel="noopener"><span class="ic ig"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 7.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 7.7a3 3 0 1 1 0-6 3 3 0 0 1 0 6Zm6-7.9a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0ZM21.1 8.2c-.1-1.5-.4-2.8-1.5-3.8-1-1.1-2.3-1.4-3.8-1.5-1.5-.1-6-.1-7.5 0-1.5.1-2.8.4-3.8 1.5-1.1 1-1.4 2.3-1.5 3.8-.1 1.5-.1 6 0 7.5.1 1.5.4 2.8 1.5 3.8 1 1.1 2.3 1.4 3.8 1.5 1.5.1 6 .1 7.5 0 1.5-.1 2.8-.4 3.8-1.5 1.1-1 1.4-2.3 1.5-3.8.1-1.5.1-6 0-7.5Zm-2 9.4a3 3 0 0 1-1.7 1.7c-1.2.5-4 .4-5.4.4s-4.2.1-5.4-.4a3 3 0 0 1-1.7-1.7c-.5-1.2-.4-4-.4-5.4s-.1-4.2.4-5.4a3 3 0 0 1 1.7-1.7c1.2-.5 4-.4 5.4-.4s4.2-.1 5.4.4a3 3 0 0 1 1.7 1.7c.5 1.2.4 4 .4 5.4s.1 4.2-.4 5.4Z"/></svg></span>Instagram</a>
+    <a class="sh-act" id="sh_fb" href="#" rel="noopener"><span class="ic fb"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-7.6h2.6l.4-3h-3V8.5c0-.9.3-1.5 1.5-1.5h1.6V4.3c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.8v3h2.6V21h3.1Z"/></svg></span>Facebook</a>
+    <a class="sh-act" id="sh_x" href="#" rel="noopener"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.8 3h3l-6.6 7.6L22 21h-6.1l-4.8-6.2L5.6 21h-3l7.1-8.1L2.3 3h6.3l4.3 5.7L17.8 3Zm-1 16.2h1.7L7.3 4.7H5.5l11.3 14.5Z"/></svg></span>Post</a>
     <button class="sh-act" id="shLink" type="button"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg></span>Copy link</button>
   </div>
 </section>
@@ -1692,7 +1699,7 @@ async function openShare(level,btn){
   await drawShareCard($("shareCanvas"));
   /* a phone that can hand a picture to other apps gets one big Share button */
   let canFiles=false;try{const f=new File([new Blob(["x"],{type:"image/png"})],"a.png",{type:"image/png"});canFiles=!!(navigator.canShare&&navigator.canShare({files:[f]}))}catch(e){}
-  shareFiles=canFiles;$("shNative").hidden=!canFiles;$("shCopyImg").hidden=canFiles||!(navigator.clipboard&&window.ClipboardItem);
+  setShareLinks();shareFiles=canFiles;$("shNative").hidden=!canFiles;$("shCopyImg").hidden=canFiles||!(navigator.clipboard&&window.ClipboardItem);
 }
 function shToast(t){toast(t)}
 $("shThemes").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;shareTheme=b.dataset.t;store.set("xo.shareTheme",shareTheme);
@@ -1717,41 +1724,57 @@ async function copyPicture(withText){
    the app itself). No app takes a picture through a link, so the picture is
    copied first: paste it in to add it. The big Share button is the one that
    hands the picture over directly, through the phone's own share menu. */
-/* Android can ask an installed app to open its own "share" screen with the
-   text already in it (an intent link). LinkedIn's web share page is not one
-   of the links Android hands to the app, so on Android LinkedIn, Messenger
-   and X are opened this way, falling back to their web page if the app is
-   not there. WhatsApp's wa.me link already opens the app. iPhones have no
-   such link: there the page itself navigates to the app's address, which is
-   the case iOS hands to an installed app. */
-const ANDROID_PKG={li:"com.linkedin.android",ms:"com.facebook.orca",x:"com.twitter.android"};
-function androidSend(pkg,text,fallback){
-  return"intent:#Intent;action=android.intent.action.SEND;type=text/plain;S.android.intent.extra.TEXT="+encodeURIComponent(text)+
-    ";package="+pkg+";S.browser_fallback_url="+encodeURIComponent(fallback)+";end";
+/* Where each app button goes. They are real links (with their address set
+   as the sheet opens), because a tapped link is the case phones reliably
+   hand to an installed app; a redirect from script often is not.
+   - WhatsApp: wa.me opens the app on both phones, message filled in.
+   - Messenger: its own fb-messenger: link opens the app with the game link.
+   - X: its post link opens the app with the message.
+   - LinkedIn, Facebook, Instagram: on Android, an intent link asks the
+     installed app to open its own web address (LinkedIn's post composer,
+     Facebook's share page, Instagram's messages), with the web page as the
+     fallback; on iPhone the plain address, which iOS gives to the app.
+   No app takes a picture through a link, so each tap also copies the card
+   picture to paste in. The big Share button hands the picture over directly. */
+function viewIntent(url,pkg){const u=new URL(url);return"intent://"+u.host+u.pathname+u.search+"#Intent;scheme=https;package="+pkg+";S.browser_fallback_url="+encodeURIComponent(url)+";end"}
+function shareHrefs(){
+  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u),eu=encodeURIComponent(u);
+  const phone=matchMedia("(pointer:coarse)").matches,android=/Android/i.test(navigator.userAgent),ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+  const li="https://www.linkedin.com/feed/?shareActive=true&text="+tu,fb="https://www.facebook.com/sharer/sharer.php?u="+eu,ig="https://www.instagram.com/direct/inbox/";
+  const out={
+    wa:{href:"https://wa.me/?text="+tu,newTab:!phone},
+    ms:phone?{href:"fb-messenger://share/?link="+eu,newTab:false,fallback:"https://www.messenger.com/"}:{href:"https://www.messenger.com/",newTab:true},
+    x:{href:"https://twitter.com/intent/tweet?text="+encodeURIComponent(t)+"&url="+eu,newTab:!phone},
+    li:{href:android?viewIntent(li,"com.linkedin.android"):li,newTab:!phone},
+    fb:{href:android?viewIntent(fb,"com.facebook.katana"):fb,newTab:!phone},
+    ig:{href:android?viewIntent(ig,"com.instagram.android"):ios?"instagram://direct-inbox":ig,newTab:!phone,fallback:ios?ig:null}
+  };
+  return out;
 }
-function shareTo(app){
-  const t=shareText(),u=SHARE_URL,tu=encodeURIComponent(t+" "+u),phone=matchMedia("(pointer:coarse)").matches,android=/Android/i.test(navigator.userAgent);
-  const web={wa:"https://wa.me/?text="+tu,ms:phone?"https://www.messenger.com/":"https://www.messenger.com/",
-    li:phone?"https://www.linkedin.com/sharing/share-offsite/?url="+encodeURIComponent(u):"https://www.linkedin.com/feed/?shareActive=true&text="+tu,
-    x:"https://twitter.com/intent/tweet?text="+encodeURIComponent(t)+"&url="+encodeURIComponent(u)}[app];
-  /* start the copy inside the tap (a pending picture is allowed), then go */
+const SHARE_APPS=["wa","ms","ig","fb","li","x"];
+function setShareLinks(){
+  const L=shareHrefs();
+  /* plain web addresses open in a new tab (the game stays open behind, and
+     Android and iOS still hand them to an installed app); app links
+     (intent:, fb-messenger:, instagram:) need the tab itself */
+  SHARE_APPS.forEach(k=>{const a=$("sh_"+k),l=L[k];a.href=l.href;if(/^https:/.test(l.href))a.target="_blank";else a.removeAttribute("target");a.dataset.fallback=l.fallback||""});
+}
+function shareTap(k,e){
+  const a=e.currentTarget,phone=matchMedia("(pointer:coarse)").matches;
+  /* copy the picture inside the tap (a pending picture is allowed); the link itself does the rest */
   let copied=null;
-  try{if(navigator.clipboard&&window.ClipboardItem){const item={"image/png":shareBlob()};if(app==="ms"&&!phone)item["text/plain"]=new Blob([t+" "+u],{type:"text/plain"});
-    copied=navigator.clipboard.write([new ClipboardItem(item)]).then(()=>true,()=>false)}}catch(e){copied=null}
-  /* (a test can watch where each button goes through window.__xoNav) */
-  const go=window.__xoNav?v=>window.__xoNav("same tab: "+v):v=>{location.href=v};
-  const tab=window.__xoNav?v=>window.__xoNav("new tab: "+v):v=>window.open(v,"_blank","noopener");
-  if(android&&ANDROID_PKG[app])go(androidSend(ANDROID_PKG[app],t+" "+u,web));
-  else if(phone&&app==="ms"){go("fb-messenger://share/?link="+encodeURIComponent(u));setTimeout(()=>{if(!document.hidden)tab(web)},1400)}
-  else if(phone&&app!=="wa")go(web);
-  else tab(web);
-  if(copied)copied.then(ok=>{if(ok&&!document.hidden)shToast(app==="ms"&&!phone?"Picture and message copied. Paste them into a chat":"Picture copied. Paste it in to add it")});
+  try{if(navigator.clipboard&&window.ClipboardItem){const item={"image/png":shareBlob()};if(!phone&&(k==="ms"||k==="ig"))item["text/plain"]=new Blob([shareText()+" "+SHARE_URL],{type:"text/plain"});
+    copied=navigator.clipboard.write([new ClipboardItem(item)]).then(()=>true,()=>false)}}catch(x){copied=null}
+  if(window.__xoNav){e.preventDefault();window.__xoNav((a.target?"new tab: ":"same tab: ")+a.href)}
+  /* an app link with nowhere to go does nothing: then open the web page */
+  if(a.dataset.fallback){const fb=a.dataset.fallback;setTimeout(()=>{if(!document.hidden){if(window.__xoNav)window.__xoNav("fallback: "+fb);else window.open(fb,"_blank","noopener")}},1500)}
+  if(copied)copied.then(ok=>{if(ok&&!document.hidden)shToast(!phone&&(k==="ms"||k==="ig")?"Picture and message copied. Paste them into a chat":"Picture copied. Paste it in to add it")});
 }
 $("shNative").addEventListener("click",nativeShare);
 $("shCopyImg").addEventListener("click",async()=>shToast(await copyPicture(false)?"Picture copied":"Copy failed"));
 $("shSave").addEventListener("click",async()=>{const url=URL.createObjectURL(await shareBlob()),a=document.createElement("a");a.href=url;a.download="x-n-o-record.png";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);shToast("Picture saved")});
 $("shLink").addEventListener("click",async()=>{shToast(await copyText(shareText()+" "+SHARE_URL)?"Message and link copied":"Copy failed")});
-["wa","ms","li","x"].forEach(k=>$("sh_"+k).addEventListener("click",()=>shareTo(k)));
+SHARE_APPS.forEach(k=>$("sh_"+k).addEventListener("click",e=>shareTap(k,e)));
 $("shareBtn").addEventListener("click",e=>openShare(opt.level,e.currentTarget));
 $("resShare").addEventListener("click",e=>openShare(recLast&&recLast.level,e.currentTarget));
 $("recShare").addEventListener("click",e=>{pickClose(false);openShare(opt.level,$("pickPill"))});
