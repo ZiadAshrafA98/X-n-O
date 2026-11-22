@@ -297,6 +297,8 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .group+.group{border-top:1px solid var(--hair)}
 .group-label{font-size:12px;color:var(--faint)}
 .dlg .foot{padding:8px 10px 4px}
+/* which build this is, so a phone holding an older copy is easy to spot */
+.build-tag{margin:6px 0 0;text-align:center;font:500 11px var(--mono);letter-spacing:.04em;color:var(--faint);opacity:.7}
 
 .rules-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .rule{margin:0;padding:24px 16px 20px;border-radius:26px;background:var(--tile);display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:18px;min-height:240px}
@@ -1093,6 +1095,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
+  <p class="build-tag">Version 2026.11.22·2025</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
