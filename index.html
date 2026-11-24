@@ -393,7 +393,11 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .mcard small{transition:color .35s var(--out)}
 .mcard[aria-pressed="true"] small{color:var(--ink)}
 /* the mark spins once when picked */
-.mcard .mg{display:inline-block;transform-style:preserve-3d;backface-visibility:visible}
+/* each mark is solid: six slightly darker copies stacked behind its face give it an edge when it turns */
+.mcard{perspective:320px}
+.mcard .mg{position:relative;display:inline-block;transform-style:preserve-3d}
+.mcard .mg-f{position:relative;display:block;transform:translateZ(0)}
+.mcard .mg-d{position:absolute;left:0;top:0;transform:translateZ(calc(var(--z) * -1.15px));color:color-mix(in srgb,currentColor calc(78% - var(--z) * 5%),#000)}
 
 /* ---------- online lobby: room ready, coin toss, pick a mark ---------- */
 .lobby{grid-area:board;justify-self:center;align-self:center;z-index:3;width:var(--bs);height:var(--bs);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;border-radius:36px;background:color-mix(in srgb,var(--slab) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--float);animation:cardin .6s var(--spring-soft) both}
@@ -1038,7 +1042,7 @@ a.sh-act{text-decoration:none}
         <button class="pick-pill" id="pickPill" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="pickPanel" aria-label="Your mark, who starts and level"><span class="pick-glyph" id="pickGlyph"><span>X</span></span><span class="pick-txt" id="pickTxt">You're X</span><svg class="pick-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
         <div class="pick-panel" id="pickPanel" role="dialog" aria-label="Play the computer">
           <div class="pick-item pick-label">You play</div>
-          <div class="pick-item mcards" id="mcards"><span class="mthumb" id="mthumb" aria-hidden="true"></span><button class="mcard X" type="button" data-v="X" aria-pressed="true"><span class="mg">X</span><small>Crosses</small></button><button class="mcard O" type="button" data-v="O" aria-pressed="false"><span class="mg">O</span><small>Noughts</small></button></div>
+          <div class="pick-item mcards" id="mcards"><span class="mthumb" id="mthumb" aria-hidden="true"></span><button class="mcard X" type="button" data-v="X" aria-pressed="true"><span class="mg"><span class="mg-d" style="--z:1" aria-hidden="true">X</span><span class="mg-d" style="--z:2" aria-hidden="true">X</span><span class="mg-d" style="--z:3" aria-hidden="true">X</span><span class="mg-d" style="--z:4" aria-hidden="true">X</span><span class="mg-d" style="--z:5" aria-hidden="true">X</span><span class="mg-d" style="--z:6" aria-hidden="true">X</span><span class="mg-f">X</span></span><small>Crosses</small></button><button class="mcard O" type="button" data-v="O" aria-pressed="false"><span class="mg"><span class="mg-d" style="--z:1" aria-hidden="true">O</span><span class="mg-d" style="--z:2" aria-hidden="true">O</span><span class="mg-d" style="--z:3" aria-hidden="true">O</span><span class="mg-d" style="--z:4" aria-hidden="true">O</span><span class="mg-d" style="--z:5" aria-hidden="true">O</span><span class="mg-d" style="--z:6" aria-hidden="true">O</span><span class="mg-f">O</span></span><small>Noughts</small></button></div>
           <div class="pick-item pick-label" id="pl-first">Who starts</div>
           <div class="pick-item"><div class="seg sm full" data-opt="first" role="group" aria-labelledby="pl-first"><span class="thumb"></span><button type="button" data-v="me">You</button><button type="button" data-v="ai">Computer</button></div></div>
           <div class="pick-item pick-label" id="pl-level">Level</div>
@@ -1117,7 +1121,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·0025</p>
+  <p class="build-tag">Version 2026.11.24·0032</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2362,7 +2366,7 @@ pickPill.addEventListener("click",pickOpen);
 pick.querySelectorAll(".mcard").forEach(c=>c.addEventListener("click",()=>{
   const changed=opt.youAre!==c.dataset.v;
   /* the picked mark gives one quick, light turn around its own axis */
-  if(changed&&!still)c.querySelector(".mg").animate([{transform:"perspective(300px) rotateY(0)"},{transform:"perspective(300px) rotateY(180deg) scale(1.08)",offset:.5},{transform:"perspective(300px) rotateY(360deg)"}],{duration:460,easing:"cubic-bezier(.4,0,.2,1)"});
+  if(changed&&!still)c.querySelector(".mg").animate([{transform:"rotateY(0)"},{transform:"rotateY(180deg) scale(1.08)",offset:.5},{transform:"rotateY(360deg)"}],{duration:520,easing:"cubic-bezier(.4,0,.2,1)"});
   onOpt("youAre",c.dataset.v);renderPick()}));
 /* anywhere but the panel puts it away; a press by a person, not by a script */
 document.addEventListener("pointerdown",e=>{if(e.isTrusted&&pick.hasAttribute("data-open")&&!pick.contains(e.target))pickClose(false)});
