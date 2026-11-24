@@ -833,8 +833,10 @@ button.seatc{touch-action:none}
 .pulse[data-live="true"] .pl-txt{color:var(--ink-2)}
 .pl-txt{display:inline-flex;align-items:baseline;white-space:pre;transition:color .4s var(--out)}
 .pl-txt .mt{position:relative;display:inline-block;overflow:visible;font-variant-numeric:tabular-nums}
-.pl-txt .mt-out{position:absolute;left:0;top:0;white-space:pre}
-.pl-txt .mt-in{display:inline-block;white-space:pre}
+.pl-txt .mt-out{position:absolute;left:0;top:0;display:inline-block;white-space:pre;transform-origin:left center}
+.pl-txt .mt-in{display:inline-block;white-space:pre;transform-origin:left center}
+/* a phrase morphing never smears over the words beside it */
+#plA2.morphing{overflow-x:clip;overflow-y:visible;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent)}
 @keyframes ping{0%{transform:scale(.5);opacity:.8}100%{transform:scale(1.6);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pl-dot::after{animation:none}}
 /* ---------- the stand-in rows ---------- */
@@ -1328,7 +1330,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·2323</p>
+  <p class="build-tag">Version 2026.11.24·2334</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -4273,7 +4275,8 @@ function findMatch(){
   clearTimeout(mmGuardT);
   mm={phase:"search",id:rid(),seq:0,seen:new Set(),t0:Date.now(),pending:null,peer:null};
   mm.clients=BROKERS.map(url=>{
-    const c=mqtt.connect(url,{clientId:"xnomm_"+mm.id+"_"+Math.random().toString(36).slice(2,6),clean:true,connectTimeout:8000,reconnectPeriod:3000,keepalive:30});
+    const c=mqtt.connect(url,{clientId:"xnomm_"+mm.id+"_"+Math.random().toString(36).slice(2,6),clean:true,connectTimeout:8000,reconnectPeriod:3000,keepalive:20,
+      will:{topic:MM_TOPIC,payload:JSON.stringify({v:1,t:"stop",from:mm.id,p:pulseId,mid:mm.id+":stop"}),qos:0,retain:false}});
     c.on("connect",()=>c.subscribe(MM_TOPIC,{qos:0},()=>mmSeek()));
     c.on("message",(t,b)=>{let m;try{m=JSON.parse(b.toString())}catch(e){return}mmOn(m)});
     c.on("error",()=>{});return c;
@@ -4283,7 +4286,7 @@ function findMatch(){
 }
 function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv,p:pulseId})}
 function mmStop(){
-  if(!mm)return;clearInterval(mm.seekT);clearInterval(mm.tickT);
+  if(!mm)return;mmPublish({t:"stop",p:pulseId});clearInterval(mm.seekT);clearInterval(mm.tickT);
   const old=mm.clients;mm=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),400);
 }
 function cancelMatch(){mmStop();clearTimeout(mmGuardT);render()}
@@ -4337,7 +4340,12 @@ $("findMatch").addEventListener("click",findMatch);
    random id. On arrival it asks "who's here?" and the others answer within a
    second, so the line under the buttons fills in at once:
    the faces of the people searching now, how many, and how many are online. */
-const PULSE_TOPIC=TOPIC+"pulse",PULSE_EVERY=15000,PULSE_KEEP=40000,SEEK_KEEP=5000;
+/* Leaving is said out loud, so the numbers drop at once: a page says "bye"
+   when it leaves the Online tab, is hidden away or closes, and the relay says
+   it on the page's behalf if the page vanishes without a word. A search says
+   "stop" when it is cancelled, matched or closed. "here" every 10 s is only
+   the fallback for anyone lost without either. */
+const PULSE_TOPIC=TOPIC+"pulse",PULSE_EVERY=10000,PULSE_KEEP=25000,SEEK_KEEP=3500;
 var pulse=null;const pulseId=rid();
 function pulseSay(t){if(!pulse)return;const p=JSON.stringify({v:1,t,id:pulseId});for(const c of pulse.clients){try{if(c.connected)c.publish(PULSE_TOPIC,p,{qos:0})}catch(e){}}}
 function pulseStart(){
@@ -4345,11 +4353,15 @@ function pulseStart(){
   pulse={clients:[],here:new Map(),seek:new Map(),t0:Date.now()};
   /* two relays are plenty to listen with */
   pulse.clients=BROKERS.slice(0,2).map(url=>{
-    const c=mqtt.connect(url,{clientId:"xnop_"+pulseId+"_"+Math.random().toString(36).slice(2,6),clean:true,connectTimeout:8000,reconnectPeriod:5000,keepalive:30});
+    const c=mqtt.connect(url,{clientId:"xnop_"+pulseId+"_"+Math.random().toString(36).slice(2,6),clean:true,connectTimeout:8000,reconnectPeriod:5000,keepalive:20,
+      will:{topic:PULSE_TOPIC,payload:JSON.stringify({v:1,t:"bye",id:pulseId}),qos:0,retain:false}});
     c.on("connect",()=>c.subscribe([PULSE_TOPIC,MM_TOPIC],{qos:0},()=>{pulseSay("who");pulseSay("here")}));
     c.on("message",(t,b)=>{let m;try{m=JSON.parse(b.toString())}catch(e){return}if(!pulse||!m||m.v!==1)return;
       const now=Date.now();
-      if(t===PULSE_TOPIC&&typeof m.id==="string"&&m.id!==pulseId){pulse.here.set(m.id,now);if(m.t==="who")setTimeout(()=>pulseSay("here"),Math.random()*900)}
+      if(t===PULSE_TOPIC&&typeof m.id==="string"&&m.id!==pulseId){
+        if(m.t==="bye"){pulse.here.delete(m.id);pulse.seek.delete(m.id)}
+        else{pulse.here.set(m.id,now);if(m.t==="who")setTimeout(()=>pulseSay("here"),Math.random()*900)}}
+      else if(t===MM_TOPIC&&m.t==="stop"){const k=typeof m.p==="string"?m.p:m.from;pulse.seek.delete(k);for(const [kk,v] of pulse.seek)if(v.mm===m.from)pulse.seek.delete(kk)}
       /* a search is keyed by the searcher's presence id, so someone searching is one person, not two */
       else if(t===MM_TOPIC&&m.t==="seek"&&typeof m.from==="string"&&!(mm&&m.from===mm.id)){const k=typeof m.p==="string"?m.p:m.from;if(k!==pulseId){pulse.seek.set(k,{at:now,mm:m.from,n:cleanName(m.n||"")||"Player",av:cleanAv(m.av)});pulse.here.set(k,now)}}
       /* two searchers who just matched stop counting as searching at once */
@@ -4361,7 +4373,7 @@ function pulseStart(){
   pulse.showT=setInterval(pulseShow,1000);
   pulseShow();
 }
-function pulseStop(){if(!pulse)return;clearInterval(pulse.sayT);clearInterval(pulse.showT);const old=pulse.clients;pulse=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),200)}
+function pulseStop(bye){if(!pulse)return;if(bye)pulseSay("bye");clearInterval(pulse.sayT);clearInterval(pulse.showT);const old=pulse.clients;pulse=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),200)}
 var pulseKey="";
 function pulseShow(){
   const el=$("mmPulse");if(!el)return;
@@ -4371,12 +4383,13 @@ function pulseShow(){
   for(const [k,v] of pulse.seek)if(now-v.at>SEEK_KEEP)pulse.seek.delete(k);
   const seekers=[...pulse.seek.values()];
   const ids=new Set(pulse.here.keys());
-  const online=ids.size+1,looking=seekers.length,warm=now-pulse.t0>2200||ids.size>0;
+  /* you are not counted: the numbers are everyone else */
+  const others=ids.size,looking=seekers.length,warm=now-pulse.t0>2200||others>0;
   el.hidden=false;el.dataset.live=String(looking>0);
   /* the line is five small parts, and only the parts that change move: a
      count rolls up when it rises and down when it falls, a phrase crossfades,
      and the line eases to its new width around them */
-  const parts=!warm?["","Checking who’s around","","",""]:[looking?String(looking):"",looking?" looking for a match":"Nobody searching yet"," · ",String(online)," online"];
+  const parts=!warm?["","Checking who’s around","","",""]:!others?["","Nobody else is online","","",""]:[looking?String(looking):"",looking?" looking for a match":"Nobody searching yet"," · ",String(others)," online"];
   const key=parts.join("|")+"|"+seekers.slice(0,3).map(s=>s.av+s.n).join(",");if(key===pulseKey)return;pulseKey=key;
   ["plA","plA2","plSep","plB","plB2"].forEach((id,i)=>morphText($(id),parts[i]));
   /* up to three faces of the people searching, overlapping like a little queue */
@@ -4384,26 +4397,41 @@ function pulseShow(){
   f.innerHTML=want.map((s,i)=>`<span class="orb" title="${esc(s.n)}" style="--k:${i};background:${s.av?`url('${avUri(s.av)}') center/cover`:orbHue(s.n)}"></span>`).join("");
   f.hidden=!want.length;
 }
-/* Swap a bit of text in place: the old words slide out one way while the new
-   slide in from the other, and the span eases between their widths, so the
-   words beside it glide rather than jump. Numbers roll with their value. */
+/* Swap a bit of text in place, and the span eases between the two widths so
+   the words beside it glide rather than jump. A number rolls with its value,
+   up when it rises and down when it falls. Words morph where they stand: the
+   old letters smear sideways and spread apart as they fade, the new ones
+   gather out of the same smear, both on the same spot, quickly. */
 function morphText(el,txt){
   if(!el)return;const cur=el.dataset.t??el.textContent;if(cur===txt)return;el.dataset.t=txt;
   if(still||!el.offsetParent){el.textContent=txt;return}
-  const a=parseFloat(cur),b=parseFloat(txt),dir=!isNaN(a)&&!isNaN(b)&&b<a?-1:1;
+  const a=parseFloat(cur),b=parseFloat(txt),num=!isNaN(a)&&!isNaN(b),dir=num&&b<a?-1:1;
   const w0=el.getBoundingClientRect().width;
   el.textContent="";
   const out=document.createElement("span");out.className="mt-out";out.textContent=cur;
   const inn=document.createElement("span");inn.className="mt-in";inn.textContent=txt;
   el.append(inn,out);
-  const w1=inn.getBoundingClientRect().width;
-  const E="cubic-bezier(.22,1,.36,1)";
-  el.animate([{width:w0+"px"},{width:w1+"px"}],{duration:420,easing:E});
-  inn.animate([{opacity:0,transform:`translateY(${dir*60}%)`,filter:"blur(2px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:420,easing:E});
-  out.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translateY(${dir*-60}%)`,filter:"blur(2px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>out.remove();
+  const w1=inn.getBoundingClientRect().width,E="cubic-bezier(.22,1,.36,1)";
+  el.animate([{width:w0+"px"},{width:w1+"px"}],{duration:num?420:380,easing:E});
+  if(num){
+    inn.animate([{opacity:0,transform:`translateY(${dir*60}%)`,filter:"blur(2px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:420,easing:E});
+    out.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translateY(${dir*-60}%)`,filter:"blur(2px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>out.remove();
+    return;
+  }
+  el.classList.add("morphing");clearTimeout(el._mt);el._mt=setTimeout(()=>el.classList.remove("morphing"),420);
+  inn.animate([{opacity:0,filter:"blur(5px)",letterSpacing:"-.08em",transform:"scaleX(1.08)"},{opacity:1,filter:"blur(0)",letterSpacing:"0em",transform:"none"}],{duration:340,delay:60,easing:E,fill:"backwards"});
+  out.animate([{opacity:1,filter:"blur(0)",letterSpacing:"0em",transform:"none"},{opacity:0,filter:"blur(6px)",letterSpacing:".12em",transform:"scaleX(1.06)"}],{duration:240,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>out.remove();
 }
 /* listen only while it can help: Online tab open, no room joined */
-function pulseSync(){if(mode==="online"&&!room)pulseStart();else pulseStop();pulseShow()}
+function pulseSync(){if(mode==="online"&&!room)pulseStart();else pulseStop(mode!=="online");pulseShow()}
+/* closing or hiding the page says goodbye through whatever is still connected; coming back says hello again */
+function sayBye(){
+  const p=JSON.stringify({v:1,t:"bye",id:pulseId});
+  for(const c of [...(pulse?pulse.clients:[]),...clients]){try{if(c.connected)c.publish(PULSE_TOPIC,p,{qos:0})}catch(e){}}
+  if(mm)mmPublish({t:"stop",p:pulseId});
+}
+addEventListener("pagehide",sayBye);
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")sayBye();else if(pulse){pulseSay("here");if(mm)mmSeek()}});
 /* players in a room count as online too: they say "here" through their own connections */
 setInterval(()=>{if(room&&connOpen&&clients.length){const p=JSON.stringify({v:1,t:"here",id:pulseId});for(const c of clients){try{if(c.connected)c.publish(PULSE_TOPIC,p,{qos:0})}catch(e){}}}},PULSE_EVERY);
 
@@ -4975,7 +5003,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·2323";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·2334";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
