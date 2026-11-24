@@ -699,6 +699,12 @@ button.mark{border:0;background:none;padding:0}
 button.seatc:hover{background:var(--chip-2);scale:1.04}
 button.seatc:active{scale:.97}
 button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+/* dragging someone between seats */
+button.seatc{touch-action:none}
+.seatc.lifted .orb{opacity:.25;scale:.9;transition:opacity .2s,scale .2s}
+.seatc.drop-can{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--friend) 55%,transparent);transition:box-shadow .2s,background-color .2s,scale .2s var(--out)}
+.seatc.drop-on{background:color-mix(in srgb,var(--friend) 18%,var(--chip));box-shadow:inset 0 0 0 2px var(--friend);scale:1.05}
+.seat-ghost{box-shadow:0 14px 30px rgba(0,0,0,.45),0 0 0 2px var(--friend);border-radius:999px}
 .seatc .orb{width:36px;height:36px}
 .seatc.big{padding:16px 8px 12px}
 .seatc.big .orb{width:52px;height:52px}
@@ -806,6 +812,18 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-wait i b{width:6px;height:6px;border-radius:9px;background:var(--mute);animation:bounce 1s ease-in-out infinite}
 .lb-wait i b:nth-child(2){animation-delay:.15s}.lb-wait i b:nth-child(3){animation-delay:.3s}
 .lb-empty .btn{height:44px;margin-top:4px}
+/* ---------- who's around, under the Online buttons ---------- */
+.pulse{display:flex;align-items:center;justify-content:center;gap:8px;min-height:28px;margin-top:2px;font-size:12.5px;color:var(--mute);animation:rise .4s var(--out) both}
+.pulse[hidden]{display:none}
+.pl-faces{display:flex;padding-left:8px}
+.pl-faces[hidden]{display:none}
+.pl-faces .orb{width:24px;height:24px;margin-left:-8px;box-shadow:0 0 0 2px var(--slab);animation:pop .45s var(--spring) both;animation-delay:calc(var(--k) * 70ms)}
+.pl-dot{position:relative;width:7px;height:7px;border-radius:99px;background:var(--faint);flex:none}
+.pulse[data-live="true"] .pl-dot{background:var(--green)}
+.pulse[data-live="true"] .pl-dot::after{content:"";position:absolute;inset:-4px;border-radius:99px;border:1.5px solid var(--green);opacity:0;animation:ping 1.8s ease-out infinite}
+.pulse[data-live="true"] .pl-txt{color:var(--ink-2)}
+@keyframes ping{0%{transform:scale(.5);opacity:.8}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pl-dot::after{animation:none}}
 /* ---------- the stand-in rows ---------- */
 .lb-skel{animation:none;background:var(--tile)}
 .lb-skel .sk{display:block;height:12px;border-radius:99px;
@@ -1263,6 +1281,7 @@ a.sh-act{text-decoration:none}
           <button class="btn primary grow" id="inviteBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="inviteLbl">Copy invite link</span></button>
           <button class="btn danger" id="leaveRoom" type="button" hidden>Leave</button>
         </div>
+        <div class="pulse" id="mmPulse" hidden aria-live="polite"><span class="pl-faces" id="plFaces"></span><span class="pl-dot" aria-hidden="true"></span><span class="pl-txt" id="plTxt">Checking who’s around</span></div>
         <p class="note" id="netNote" aria-live="polite"></p>
       </section>
 
@@ -1292,7 +1311,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1543</p>
+  <p class="build-tag">Version 2026.11.24·2242</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2565,7 +2584,7 @@ function render(){flipActions(renderNow)}
 function renderNow(){
   app.dataset.role=mode==="online"&&role==="aud"?"aud":"player";
   app.dataset.phase=mode==="online"&&room?phase:"play";
-  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();
+  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();pulseSync();
   $("undoBtn").disabled=!canUndo();
   $("newBtn").disabled=!canNew();
   /* buttons still sliding into place carry the same state */
@@ -3581,14 +3600,15 @@ function renderLobby(){
   if(key===lobbyKey)return;lobbyKey=key;
   if(role==="aud"){
     const hostWon=tossWinner==="host",oH=hostMark==="O"?" o":"",oG=hostMark==="O"?"":" o";
-    if(phase==="lobby"){L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb" style="background:${avBg(hostId)}"></span><span class="seat-name">${esc(nameOf(hostId)||"Host")}</span></div><span class="v">VS</span><div class="seat-col"><span class="orb o" style="background:${avBg(guestId)}"></span><span class="seat-name">${esc(nameOf(guestId)||"Guest")}</span></div></div><h3 class="swap">You're watching</h3><p class="swap">The players toss a coin to see who picks X or O.</p>`;return}
+    if(phase==="lobby"){L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb" style="background:${orbBg(hostId)}"></span><span class="seat-name">${esc(nameOf(hostId)||"Host")} <small>(host)</small></span></div><span class="v">VS</span><div class="seat-col"><span class="orb o" style="background:${orbBg(guestId)}"></span><span class="seat-name">${esc(nameOf(guestId)||"Guest")}</span></div></div><h3 class="swap">You're watching</h3><p class="swap">The players toss a coin to see who picks X or O.</p>`;return}
     if(!done){
-      L.innerHTML=`${coinHTML(orbBg(hostId),orbBg(guestId))}<h3 class="swap">Coin toss</h3><p class="swap">Heads the host picks, tails the guest does.</p>`;
+      L.innerHTML=`${coinHTML(orbBg(hostId),orbBg(guestId))}<h3 class="swap">Coin toss</h3><p class="swap">Whoever’s face lands up picks X or O.</p>`;
       const finish=()=>{tossDone.add(tossId);render()};if(still){finish();return}
       coinToss(hostWon,finish);
       return;
     }
-    L.innerHTML=`<span class="orb${hostWon?"":" o"}" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">${hostWon?"Host":"Guest"} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
+    /* the winner shows as themselves: their own avatar, and their name, the host marked as such */
+    L.innerHTML=`<span class="orb${hostWon?"":" o"}" style="width:56px;height:56px;background:${orbBg(hostWon?hostId:guestId)};animation:pop .55s var(--spring) both"></span><h3 class="swap">${hostWon?`${esc(nameOf(hostId)||"Host")} (host)`:esc(nameOf(guestId)||"Guest")} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
     return;
   }
   const myFace=me==="O"&&phase!=="lobby"?"o":"";
@@ -3609,12 +3629,12 @@ function renderLobby(){
     return;
   }
   if(iWon){
-    L.innerHTML=`<span class="orb" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">You won the toss</h3><p class="swap">Pick your mark. You move first.</p>
+    L.innerHTML=`<span class="orb" style="width:56px;height:56px;background:${orbBg(myId)};animation:pop .55s var(--spring) both"></span><h3 class="swap">You won the toss</h3><p class="swap">Pick your mark. You move first.</p>
       <div class="choices"><button class="choice X" type="button" data-m="X">X<small>Play X</small></button><button class="choice O" type="button" data-m="O">O<small>Play O</small></button></div>`;
     L.querySelectorAll(".choice").forEach(b=>b.onclick=()=>choose(b.dataset.m));
     setTimeout(()=>{const c=L.querySelector(".choice");c&&c.focus({preventScroll:true})},60);
   }else{
-    L.innerHTML=`<span class="orb friend" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">${esc(nameOf(partner)||"Friend")} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
+    L.innerHTML=`<span class="orb friend" style="width:56px;height:56px;background:${orbBg(partner)};animation:pop .55s var(--spring) both"></span><h3 class="swap">${esc(nameOf(partner)||"Friend")}${isHost?"":" (host)"} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
   }
 }
 
@@ -3922,7 +3942,7 @@ function renderRoomPanel(force){
   $("rpLinkLbl").textContent=canShare?"Share link":"Copy link";
   $("rpPhase").textContent=phase==="play"?"Playing":phase==="toss"?"Coin toss":"Getting ready";
   $("rpStandsN").textContent=`${people.length} / ${AUD_MAX}`;
-  $("rpHint").textContent=isHost?(people.length?"Tap a seat to change your opponent or remove someone.":"Share the link or QR. Anyone who joins after your opponent sits in the stands."):"";
+  $("rpHint").textContent=isHost?(people.length?"Tap a seat for options, or drag someone to another seat.":"Share the link or QR. Anyone who joins after your opponent sits in the stands."):"";
   if(key===panelKey&&!force)return;panelKey=key;
   $("rpCourt").innerHTML=seatHTML(hId,{big:1,tag:hId===myId?"You · host":"Host",mark:marks2[0]})+'<span class="vsx">VS</span>'+seatHTML(gId,{big:1,tag:gId===myId?"You":"",mark:marks2[1],label:"Open seat"});
   /* whole rows of seats: one more empty seat than people, rounded up to the row */
@@ -3965,7 +3985,66 @@ function openSeatMenu(btn){
   seatMenu.style.left=left+"px";seatMenu.style.top=top+"px";
   setTimeout(()=>{const f=seatMenu.querySelector("button");f&&f.focus({preventScroll:true})},still?0:60);
 }
-["rpCourt","rpStands"].forEach(x=>$(x).addEventListener("click",e=>{const b=e.target.closest("button.seatc");if(b)openSeatMenu(b)}));
+/* ---------- Host: drag people between seats ----------
+   A tap still opens the menu. Pressing and moving picks the person up: their
+   face lifts off the seat and follows the finger, and the seats they can go
+   to light up. Your opponent dropped on someone in the stands trades places
+   with them; dropped on an empty seat, they go and watch. Someone from the
+   stands dropped on the opponent's seat, taken or open, becomes your
+   opponent. Let go anywhere else and the face flies back home. */
+let seatDrag=null,seatDragged=false;
+function seatRole(el){
+  if(!el)return null;const inCourt=!!el.closest("#rpCourt"),id=el.dataset.id||null;
+  if(inCourt){const all=[...$("rpCourt").querySelectorAll(".seatc")];return all.indexOf(el)===1?{kind:"opp",id}:{kind:"host",id}}
+  return{kind:id?"aud":"empty",id};
+}
+/* what letting go here would do, or null */
+function dropAction(from,to){
+  if(!from||!to||to.kind==="host")return null;
+  if(from.kind==="opp"){if(to.kind==="aud")return()=>makeOpponent(to.id);if(to.kind==="empty")return()=>toStands(from.id);return null}
+  if(from.kind==="aud"&&to.kind==="opp")return()=>makeOpponent(from.id);
+  return null;
+}
+function seatTargets(from){return[...document.querySelectorAll("#rpCourt .seatc,#rpStands .seatc")].filter(el=>dropAction(from,seatRole(el)))}
+["rpCourt","rpStands"].forEach(x=>$(x).addEventListener("pointerdown",e=>{
+  const b=e.target.closest("button.seatc");if(!b||!isHost||e.button>0)return;
+  seatDrag={b,x:e.clientX,y:e.clientY,id:e.pointerId,live:false,from:seatRole(b)};
+}));
+addEventListener("pointermove",e=>{
+  const d=seatDrag;if(!d||e.pointerId!==d.id)return;
+  if(!d.live){
+    if(Math.hypot(e.clientX-d.x,e.clientY-d.y)<7)return;
+    const targets=seatTargets(d.from);if(!targets.length){seatDrag=null;return}
+    d.live=true;closeSeatMenu();
+    /* the face lifts off its seat */
+    const o=d.b.querySelector(".orb"),r=o.getBoundingClientRect();
+    const g=o.cloneNode(true);g.className="orb seat-ghost";Object.assign(g.style,{position:"fixed",left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",zIndex:200,pointerEvents:"none",margin:0});
+    document.body.appendChild(g);d.g=g;d.r=r;d.ox=e.clientX-r.left-r.width/2;d.oy=e.clientY-r.top-r.height/2;
+    d.b.classList.add("lifted");d.targets=targets;targets.forEach(t=>t.classList.add("drop-can"));
+    if(!still)g.animate([{transform:"scale(1)"},{transform:"scale(1.18)"}],{duration:220,easing:"cubic-bezier(.34,1.4,.6,1)",fill:"forwards"});
+    try{d.b.setPointerCapture(e.pointerId)}catch(err){}
+  }
+  e.preventDefault();
+  d.g.style.left=(e.clientX-d.ox-d.r.width/2)+"px";d.g.style.top=(e.clientY-d.oy-d.r.height/2)+"px";
+  const over=document.elementFromPoint(e.clientX,e.clientY),t=over&&over.closest(".seatc");
+  const hit=t&&d.targets.includes(t)?t:null;
+  if(hit!==d.hit){if(d.hit)d.hit.classList.remove("drop-on");if(hit)hit.classList.add("drop-on");d.hit=hit}
+},{passive:false});
+function endSeatDrag(e,cancel){
+  const d=seatDrag;if(!d||(e&&e.pointerId!==d.id))return;seatDrag=null;
+  if(!d.live)return;
+  seatDragged=true;setTimeout(()=>{seatDragged=false},0);
+  d.targets.forEach(t=>t.classList.remove("drop-can","drop-on"));
+  const act=!cancel&&d.hit?dropAction(d.from,seatRole(d.hit)):null;
+  const home=act?d.hit.querySelector(".orb").getBoundingClientRect():d.r,g=d.g;
+  const cur=g.getBoundingClientRect();
+  const fly=still?null:g.animate([{left:cur.left+"px",top:cur.top+"px",transform:"scale(1.18)"},{left:home.left+(home.width-d.r.width)/2+"px",top:home.top+(home.height-d.r.height)/2+"px",transform:`scale(${home.width/d.r.width})`}],{duration:act?260:380,easing:act?"cubic-bezier(.4,0,.2,1)":"cubic-bezier(.34,1.3,.6,1)",fill:"forwards"});
+  const done=()=>{g.remove();d.b.classList.remove("lifted");if(act)act()};
+  if(fly)fly.onfinish=done;else done();
+}
+addEventListener("pointerup",e=>endSeatDrag(e,false));
+addEventListener("pointercancel",e=>endSeatDrag(e,true));
+["rpCourt","rpStands"].forEach(x=>$(x).addEventListener("click",e=>{if(seatDragged)return;const b=e.target.closest("button.seatc");if(b)openSeatMenu(b)}));
 seatMenu.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||!menuFor)return;const id=menuFor,a=b.dataset.a;
   if(a==="remove"&&!b.classList.contains("armed")){b.classList.add("armed");b.firstChild.textContent="Tap again to remove";return}
@@ -4149,7 +4228,7 @@ function findMatch(){
   mm.seekT=setInterval(mmSeek,MM_SEEK);mm.tickT=setInterval(()=>{if(mm&&mm.phase==="search"){const p=$("rcPill"),t=mmClock();if(p.textContent!==t)p.textContent=t}},1000);
   render();
 }
-function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv})}
+function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv,p:pulseId})}
 function mmStop(){
   if(!mm)return;clearInterval(mm.seekT);clearInterval(mm.tickT);
   const old=mm.clients;mm=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),400);
@@ -4195,6 +4274,64 @@ function mmFound(peer,r,host){
   },180);
 }
 $("findMatch").addEventListener("click",findMatch);
+
+/* ---------- Who's around ----------
+   Before you look for a match you can see whether anyone else is. While the
+   Online tab is open and you are not in a room, the page listens on the
+   matchmaking channel (anyone searching says so every 1.5 s, with their name
+   and character) and on a small presence channel where every Online page,
+   and every player in a room, says "here" every 15 s with nothing but a
+   random id. On arrival it asks "who's here?" and the others answer within a
+   second, so the line under the buttons fills in at once:
+   the faces of the people searching now, how many, and how many are online. */
+const PULSE_TOPIC=TOPIC+"pulse",PULSE_EVERY=15000,PULSE_KEEP=40000,SEEK_KEEP=5000;
+var pulse=null;const pulseId=rid();
+function pulseSay(t){if(!pulse)return;const p=JSON.stringify({v:1,t,id:pulseId});for(const c of pulse.clients){try{if(c.connected)c.publish(PULSE_TOPIC,p,{qos:0})}catch(e){}}}
+function pulseStart(){
+  if(pulse||typeof mqtt==="undefined")return;
+  pulse={clients:[],here:new Map(),seek:new Map(),t0:Date.now()};
+  /* two relays are plenty to listen with */
+  pulse.clients=BROKERS.slice(0,2).map(url=>{
+    const c=mqtt.connect(url,{clientId:"xnop_"+pulseId+"_"+Math.random().toString(36).slice(2,6),clean:true,connectTimeout:8000,reconnectPeriod:5000,keepalive:30});
+    c.on("connect",()=>c.subscribe([PULSE_TOPIC,MM_TOPIC],{qos:0},()=>{pulseSay("who");pulseSay("here")}));
+    c.on("message",(t,b)=>{let m;try{m=JSON.parse(b.toString())}catch(e){return}if(!pulse||!m||m.v!==1)return;
+      const now=Date.now();
+      if(t===PULSE_TOPIC&&typeof m.id==="string"&&m.id!==pulseId){pulse.here.set(m.id,now);if(m.t==="who")setTimeout(()=>pulseSay("here"),Math.random()*900)}
+      /* a search is keyed by the searcher's presence id, so someone searching is one person, not two */
+      else if(t===MM_TOPIC&&m.t==="seek"&&typeof m.from==="string"&&!(mm&&m.from===mm.id)){const k=typeof m.p==="string"?m.p:m.from;if(k!==pulseId){pulse.seek.set(k,{at:now,mm:m.from,n:cleanName(m.n||"")||"Player",av:cleanAv(m.av)});pulse.here.set(k,now)}}
+      /* two searchers who just matched stop counting as searching at once */
+      else if(t===MM_TOPIC&&m.t==="accept")for(const [k,v] of pulse.seek)if(v.mm===m.from||v.mm===m.to)pulse.seek.delete(k);
+      pulseShow()});
+    c.on("error",()=>{});return c;
+  });
+  pulse.sayT=setInterval(()=>pulseSay("here"),PULSE_EVERY);
+  pulse.showT=setInterval(pulseShow,1000);
+  pulseShow();
+}
+function pulseStop(){if(!pulse)return;clearInterval(pulse.sayT);clearInterval(pulse.showT);const old=pulse.clients;pulse=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),200)}
+var pulseKey="";
+function pulseShow(){
+  const el=$("mmPulse");if(!el)return;
+  if(!pulse){el.hidden=true;pulseKey="";return}
+  const now=Date.now();
+  for(const [k,v] of pulse.here)if(now-v>PULSE_KEEP)pulse.here.delete(k);
+  for(const [k,v] of pulse.seek)if(now-v.at>SEEK_KEEP)pulse.seek.delete(k);
+  const seekers=[...pulse.seek.values()];
+  const ids=new Set(pulse.here.keys());
+  const online=ids.size+1,looking=seekers.length,warm=now-pulse.t0>2200||ids.size>0;
+  el.hidden=false;el.dataset.live=String(looking>0);
+  const txt=!warm?"Checking who’s around":looking?`${looking} looking for a match · ${online} online`:`Nobody searching yet · ${online} online`;
+  const key=txt+"|"+seekers.slice(0,3).map(s=>s.av+s.n).join(",");if(key===pulseKey)return;pulseKey=key;
+  const t=$("plTxt");if(t.textContent!==txt){t.textContent=txt;if(!still){t.classList.remove("swap");void t.offsetWidth;t.classList.add("swap")}}
+  /* up to three faces of the people searching, overlapping like a little queue */
+  const f=$("plFaces"),want=seekers.slice(0,3);
+  f.innerHTML=want.map((s,i)=>`<span class="orb" title="${esc(s.n)}" style="--k:${i};background:${s.av?`url('${avUri(s.av)}') center/cover`:orbHue(s.n)}"></span>`).join("");
+  f.hidden=!want.length;
+}
+/* listen only while it can help: Online tab open, no room joined */
+function pulseSync(){if(mode==="online"&&!room)pulseStart();else pulseStop();pulseShow()}
+/* players in a room count as online too: they say "here" through their own connections */
+setInterval(()=>{if(room&&connOpen&&clients.length){const p=JSON.stringify({v:1,t:"here",id:pulseId});for(const c of clients){try{if(c.connected)c.publish(PULSE_TOPIC,p,{qos:0})}catch(e){}}}},PULSE_EVERY);
 
 
 /* ---------- Leaving a live game asks first ---------- */
@@ -4754,7 +4891,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1543";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·2242";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
