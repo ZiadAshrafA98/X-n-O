@@ -163,6 +163,18 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .cell.old.O{outline-color:color-mix(in srgb,var(--o) 55%,transparent)}
 .cell.old .mk{animation:fade 1.4s ease-in-out infinite}
 .cell.win{animation:winlight .9s var(--spring) both}
+/* the move rule: your marks rise a touch to say they can be picked up; the one in hand lifts, and the cells it can go to show a dot */
+.cell.lift .mk{transition:transform .25s var(--out)}
+.cell.lift:not(:disabled):hover .mk{transform:translateY(-4%) scale(1.06)}
+.cell.sel{background:var(--tile-2);outline-color:currentColor;outline-style:solid}
+.cell.sel.X{color:color-mix(in srgb,var(--x) 70%,transparent)} .cell.sel.O{color:color-mix(in srgb,var(--o) 70%,transparent)}
+.cell.sel .mk{animation:pickup .32s var(--spring) both;color:inherit}
+.cell.sel.X .mk{color:var(--x)} .cell.sel.O .mk{color:var(--o)}
+@keyframes pickup{from{transform:none}to{transform:translateY(-6%) scale(1.12);filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}}
+.cell.dest::after{content:"";position:absolute;width:12%;aspect-ratio:1;border-radius:50%;background:var(--faint);opacity:.55;animation:destin .3s var(--out) both}
+.cell.dest:not(:disabled):hover::after{opacity:.9;scale:1.3}
+@keyframes destin{from{opacity:0;scale:.3}}
+:root[data-rule="M"] .grp-age{display:none}
 .age{position:absolute;top:10px;right:13px;font:500 11px var(--mono);color:var(--faint);transition:opacity .2s}
 .hint{position:absolute;bottom:9px;left:0;right:0;text-align:center;font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;animation:meta .3s var(--out) both}
 .hint.W{color:var(--green)} .hint.L{color:var(--red)} .hint.D{color:var(--faint)}
@@ -1135,13 +1147,13 @@ a.sh-act{text-decoration:none}
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <div class="group stag"><span class="group-label" id="gl-rule">Oldest mark leaves</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule"><span class="thumb"></span><button type="button" data-v="A">After you place</button><button type="button" data-v="B">Before</button></div></div>
+  <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule"><span class="thumb"></span><button type="button" data-v="M">Move one</button><button type="button" data-v="A">Oldest fades</button></div></div>
   <div class="group stag" data-hide="online"><span class="group-label" id="gl-hints">Solver hints</span><div class="seg sm full" data-opt="hints" role="group" aria-labelledby="gl-hints"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
-  <div class="group stag"><span class="group-label" id="gl-age">Mark order numbers</span><div class="seg sm full" data-opt="age" role="group" aria-labelledby="gl-age"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
+  <div class="group stag grp-age"><span class="group-label" id="gl-age">Mark order numbers</span><div class="seg sm full" data-opt="age" role="group" aria-labelledby="gl-age"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·0047</p>
+  <p class="build-tag">Version 2026.11.24·1238</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1167,7 +1179,7 @@ a.sh-act{text-decoration:none}
         <div class="stat stag" style="--i:3"><b id="statMoves">7</b><span>moves to force it</span></div>
         <div class="stat stag" style="--i:4"><b id="statPos" data-n="66682">66,682</b><span>positions solved</span></div>
       </div>
-      <div class="ins-rule stag" style="--i:5"><span class="group-label" id="gl-rule2">Oldest mark leaves</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule2"><span class="thumb"></span><button type="button" data-v="A">After you place</button><button type="button" data-v="B">Before</button></div></div>
+      <div class="ins-rule stag" style="--i:5"><span class="group-label" id="gl-rule2">After three marks</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule2"><span class="thumb"></span><button type="button" data-v="M">Move one</button><button type="button" data-v="A">Oldest fades</button></div></div>
     </div>
   </div>
 </section>
@@ -1263,14 +1275,27 @@ const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const app=$("app");
 
 /* ---------- Solver ---------- */
+/* Rules. "M" (the game): each player puts down three marks, then every turn
+   picks one of their own marks up and moves it to any empty cell.
+   "A" and "B" are the older fade rules: a fourth mark removes your oldest,
+   after you place (A) or before (B).
+   A move is a number: 0-8 puts a new mark on that cell, 9-89 moves the mark
+   on cell f to cell t and is written 9+f*9+t. */
+const RULES=["M","A","B"];
+const mv=(f,t)=>9+f*9+t,mvFrom=m=>m<9?-1:Math.floor((m-9)/9),mvTo=m=>m<9?m:(m-9)%9;
 function winLine(p){if(p.length<3)return null;for(const L of LINES)if(L.every(c=>p.includes(c)))return L;return null}
 function legal(me,op,rule){
-  const occ=new Set(op);
-  const mine=(rule==="B"&&me.length===3)?me.slice(1):me;
-  mine.forEach(c=>occ.add(c));
-  const r=[];for(let c=0;c<9;c++)if(!occ.has(c))r.push(c);return r;
+  const occ=new Set(op);me.forEach(c=>occ.add(c));
+  const free=[];for(let c=0;c<9;c++)if(!occ.has(c))free.push(c);
+  if(rule==="M"){if(me.length<3)return free;const r=[];for(const f of me)for(const t of free)r.push(mv(f,t));return r}
+  if(rule==="B"&&me.length===3)free.push(me[0]);
+  return free.sort((a,b)=>a-b);
 }
-function place(me,c){const n=me.concat([c]);return n.length>3?n.slice(1):n}
+/* your marks after a move; under the move rule they are kept sorted, since order means nothing there */
+function place(me,c,rule){
+  if(c>=9){const f=mvFrom(c);return me.filter(x=>x!==f).concat([mvTo(c)]).sort((a,b)=>a-b)}
+  const n=me.concat([c]);if(rule==="M")return n.sort((a,b)=>a-b);return n.length>3?n.slice(1):n;
+}
 const key=(me,op)=>me.join("")+"|"+op.join("");
 const solved={};
 function solve(rule){
@@ -1282,7 +1307,7 @@ function solve(rule){
     const [me,op]=q.pop();const k=key(me,op);
     const s={me,op,succ:[],winNow:false};states.set(k,s);list.push(k);
     for(const c of legal(me,op,rule)){
-      const nm=place(me,c);
+      const nm=place(me,c,rule);
       if(winLine(nm)){s.winNow=true;continue}
       const nk=key(op,nm);s.succ.push(nk);
       if(!states.has(nk)){states.set(nk,null);q.push([op,nm])}
@@ -1305,12 +1330,18 @@ function solve(rule){
 function evalMoves(me,op,rule){
   const {val,dist}=solve(rule);const out=[];
   for(const c of legal(me,op,rule)){
-    const nm=place(me,c);
+    const nm=place(me,c,rule);
     if(winLine(nm)){out.push({c,v:"W",d:1});continue}
     const nk=key(op,nm);const ov=val.get(nk)||"D";
     out.push({c,v:ov==="W"?"L":ov==="L"?"W":"D",d:(dist.get(nk)??99)+1});
   }
   return out;
+}
+/* the better of two evaluations, from the mover's view */
+function betterEval(a,b){
+  if(!a)return b;const r={W:2,D:1,L:0};
+  if(r[a.v]!==r[b.v])return r[a.v]>r[b.v]?a:b;
+  if(a.v==="W")return a.d<=b.d?a:b;if(a.v==="L")return a.d>=b.d?a:b;return a;
 }
 function pickMove(me,op,rule,level){
   const ms=evalMoves(me,op,rule);
@@ -1325,11 +1356,10 @@ function pickMove(me,op,rule,level){
   if(level==="perfect")return best();
   if(immediate.length)return immediate[0].c;
   // block opponent's immediate win when possible
-  const safe=ms.filter(m=>{const nm=place(me,m.c);return !legal(op,nm,rule).some(c=>winLine(place(op,c)))});
+  const safe=ms.filter(m=>{const nm=place(me,m.c,rule);return !legal(op,nm,rule).some(c=>winLine(place(op,c,rule)))});
   if(level==="medium")return Math.random()<.6?best():(safe.length?rnd(safe).c:rnd(ms).c);
   return Math.random()<.5&&safe.length?rnd(safe).c:rnd(ms).c;
 }
-
 /* ---------- Player avatars ---------- */
 /* Six comic heads drawn like the "Made by" portraits: ink outline that gets
    heavier on the shadow side, three flat tones of shade, a cool rim light,
@@ -1891,13 +1921,13 @@ function perfectOK(me,op,r,c){
   return pick.d===Math.max(...ms.map(m=>m.d));
 }
 function replayWin(g,level){
-  if(!g||!Array.isArray(g.m)||g.m.length>80||!["X","O"].includes(g.p)||!["X","O"].includes(g.s)||!["A","B"].includes(g.r))return 0;
+  if(!g||!Array.isArray(g.m)||g.m.length>80||!["X","O"].includes(g.p)||!["X","O"].includes(g.s)||!RULES.includes(g.r))return 0;
   const mk={X:[],O:[]};let t=g.s,mine=0;
   for(let i=0;i<g.m.length;i++){
     const c=g.m[i],me=mk[t],op=mk[other(t)];
     if(!Number.isInteger(c)||!legal(me,op,g.r).includes(c))return 0;
     if(t!==g.p&&level==="perfect"&&!perfectOK(me,op,g.r,c))return 0;
-    mk[t]=place(me,c);if(t===g.p)mine++;
+    mk[t]=place(me,c,g.r);if(t===g.p)mine++;
     if(winLine(mk[t]))return t===g.p&&i===g.m.length-1?mine:0;
     t=other(t);
   }
@@ -1943,18 +1973,23 @@ $("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if
 $("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
 $("lbList").addEventListener("click",e=>{if(e.target.closest("[data-play]")){closeDialog();if(mode!=="ai")goMode("ai")}});
 /* ---------- Options (segmented controls) ---------- */
-const defaults={level:"medium",youAre:"X",first:"me",rule:"A",hints:"0",age:"1",alt:"1",sfx:"1"};
+const defaults={level:"medium",youAre:"X",first:"me",rule:"M",rv:2,hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
 if(!opt){ // carry over settings from the previous version of the site
-  opt={...defaults,rule:store.get("xo.rule","A"),hints:store.get("xo.hints",false)?"1":"0",
+  opt={...defaults,hints:store.get("xo.hints",false)?"1":"0",
     age:store.get("xo.age",true)?"1":"0",alt:store.get("xo.alt",true)?"1":"0",level:store.get("xo.level","medium")};
 }
 opt={...defaults,...opt};
+/* the move rule became the game: everyone starts on it once, and can still pick a fade rule in Settings */
+if(opt.rv!==2){opt.rule="M";opt.rv=2;store.set("xo.opt",opt)}
 const saveOpt=()=>store.set("xo.opt",opt);
 
 /* ---------- Game state ---------- */
-let mode="local",rule=opt.rule==="B"?"B":"A";
+let mode="local",rule=RULES.includes(opt.rule)?opt.rule:"M";
 let marks={X:[],O:[]},turn="X",starter="X",over=false,winCells=null,history=[];
+/* under the move rule, the mark you have picked up (a cell), or -1 */
+let sel=-1;
+const moving=()=>rule==="M"&&marks[turn].length===3;
 let score=store.get("xo.score",{X:0,O:0});
 const names={X:"Player X",O:"Player O"};
 let me=null,aiSide="O",aiTimer=null;
@@ -2073,7 +2108,7 @@ function applyMove(c){
   const opp=marks[other(turn)];
   if(!legal(marks[turn],opp,rule).includes(c))return false;
   history.push({X:marks.X.slice(),O:marks.O.slice(),turn});
-  marks[turn]=place(marks[turn],c);
+  marks[turn]=place(marks[turn],c,rule);sel=-1;
   const wl=winLine(marks[turn]);
   recMove(turn,c);
   if(wl){over=true;winCells=wl;score[turn]++;store.set("xo.score",score);recWin(turn)}
@@ -2083,7 +2118,14 @@ function applyMove(c){
 function onCell(c){
   if(over)return;
   if(mode==="ai"&&turn===aiSide)return;
-  if(mode==="online"){if(!room||!connOpen||phase!=="play"||turn!==me)return;if(applyMove(c))pushState();return}
+  if(mode==="online"&&(!room||!connOpen||phase!=="play"||turn!==me))return;
+  /* with three marks down: tap one of yours to pick it up, then tap where it goes */
+  if(moving()){
+    if(marks[turn].includes(c)){sel=sel===c?-1:c;render();return}
+    if(sel<0)return;
+    c=mv(sel,c);
+  }
+  if(mode==="online"){if(applyMove(c))pushState();return}
   if(applyMove(c))maybeAI();
 }
 function maybeAI(){
@@ -2101,24 +2143,58 @@ function kindOf(s){
 }
 const ringVar={"":"--x",o:"--o",ai:"--ai",friend:"--friend"};
 
+/* A moved mark slides from its old cell to its new one, lifting a little on
+   the way, instead of vanishing in one place and dropping in the other. */
+function slideMark(from,to){
+  if(still)return;
+  const a=cells[from].getBoundingClientRect(),b=cells[to].getBoundingClientRect(),dx=a.left-b.left,dy=a.top-b.top;
+  const cell=cells[to];cell.style.zIndex="2";
+  cell._mk.animate([
+    {transform:`translate(${dx}px,${dy}px) scale(1.1)`},
+    {transform:`translate(${dx*.45}px,${dy*.45-10}px) scale(1.16)`,offset:.45},
+    {transform:"translateY(2%) scale(.96)",offset:.82},
+    {transform:"none"}
+  ],{duration:560,easing:"cubic-bezier(.45,.05,.25,1)"}).onfinish=()=>{cell.style.zIndex=""};
+}
 function renderBoard(){
-  const legalSet=new Set(over?[]:legal(marks[turn],marks[other(turn)],rule));
+  const myTurnOK=!over&&!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(turn!==me||!connOpen||phase!=="play"));
+  const mov=!over&&moving();
+  if(sel>=0&&(!mov||!myTurnOK||!marks[turn].includes(sel)))sel=-1;
+  const moves=over?[]:legal(marks[turn],marks[other(turn)],rule);
+  /* the cells you can tap now: empty ones, your own marks to pick up, or where the picked-up mark can go */
+  const tap=new Set(mov?(sel>=0?moves.filter(m=>mvFrom(m)===sel).map(mvTo).concat(marks[turn]):marks[turn]):moves);
   const showHints=opt.hints==="1"&&!over&&mode!=="online"&&!(mode==="ai"&&turn===aiSide);
-  const hints=showHints?Object.fromEntries(evalMoves(marks[turn],marks[other(turn)],rule).map(m=>[m.c,m])):{};
-  const showAge=opt.age==="1";
-  const myTurnOK=!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(turn!==me||!connOpen||phase!=="play"));
+  const hints={};
+  if(showHints)for(const e of evalMoves(marks[turn],marks[other(turn)],rule)){
+    /* moving: before you pick a mark up, each of your marks shows the best it can do; after, each place it can go */
+    const at=!mov?e.c:sel>=0?(mvFrom(e.c)===sel?mvTo(e.c):-1):mvFrom(e.c);
+    if(at>=0)hints[at]=betterEval(hints[at],e);
+  }
+  const showAge=opt.age==="1"&&rule!=="M";
+  /* a mark that moved: one cell lost it, another gained it */
+  const next=Array.from({length:9},(_,i)=>marks.X.includes(i)?"X":marks.O.includes(i)?"O":"");
+  const slid={};
+  for(const S of ["X","O"]){
+    const gone=[],came=[];
+    for(let i=0;i<9;i++){if(shown[i]===S&&next[i]!==S)gone.push(i);if(next[i]===S&&shown[i]!==S)came.push(i)}
+    if(gone.length===1&&came.length===1&&!shown[came[0]]&&!next[gone[0]])slid[came[0]]=gone[0];
+  }
+  const slides=[];
   for(let i=0;i<9;i++){
-    const b=cells[i];let side="",idx=-1;
-    for(const s of ["X","O"]){const k=marks[s].indexOf(i);if(k>=0){side=s;idx=k}}
+    const b=cells[i],side=next[i],idx=side?marks[side].indexOf(i):-1;
     if(shown[i]!==side){
-      if(shown[i])exitMark(b,shown[i]);
+      const slidAway=Object.values(slid).includes(i);
+      if(shown[i]&&!slidAway)exitMark(b,shown[i]);
       b._mk.textContent=side;b._mk.className="mk"+(side?" "+side:"");
-      if(side)landMark(b._mk);
+      if(side){if(i in slid)slides.push([slid[i],i]);else landMark(b._mk)}
       shown[i]=side;
     }
     b.classList.toggle("X",side==="X");b.classList.toggle("O",side==="O");
-    const old=!over&&!!side&&side===turn&&marks[side].length===3&&idx===0;
+    const old=rule!=="M"&&!over&&!!side&&side===turn&&marks[side].length===3&&idx===0;
     b.classList.toggle("old",old);
+    b.classList.toggle("sel",sel===i);
+    b.classList.toggle("lift",mov&&myTurnOK&&sel<0&&side===turn);
+    b.classList.toggle("dest",sel>=0&&!side&&tap.has(i));
     b._age.textContent=showAge&&side?String(idx+1):"";
     const h=hints[i];
     if(h){const t=h.v==="W"?"win "+Math.ceil(h.d/2):h.v==="L"?"lose":"draw";
@@ -2126,9 +2202,10 @@ function renderBoard(){
     else b._hint.hidden=true;
     const w=winCells?winCells.indexOf(i):-1;
     b.classList.toggle("win",w>=0);b.style.animationDelay=w>=0?(w*90)+"ms":"";
-    b.disabled=over||!legalSet.has(i)||!myTurnOK;
-    b.setAttribute("aria-label",`Cell ${i+1}: ${side||"empty"}${old?", fades next":""}`);
+    b.disabled=!myTurnOK||!tap.has(i);
+    b.setAttribute("aria-label",`Cell ${i+1}: ${side||"empty"}${old?", fades next":""}${sel===i?", picked up":""}${sel>=0&&!side&&tap.has(i)?", move here":""}`);
   }
+  slides.forEach(([f,t])=>slideMark(f,t));
 }
 
 let lastStatus="";
@@ -2140,6 +2217,7 @@ function setStatus(dot,html,busy){
 }
 function renderStatus(){
   const sideVar=s=>s==="X"?"var(--x)":"var(--o)";
+  const mvSub=rule==="M"&&marks[turn].length===3?`<span class="sub">${sel>=0?"tap where it goes":"pick a mark to move"}</span>`:"";
   if(flashMsg)return setStatus(flashDot,flashMsg);
   if(mode==="online"&&inReq)return setStatus("var(--amber)","Friend is asking",true);
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
@@ -2165,10 +2243,10 @@ function renderStatus(){
     if(s==="lost")return setStatus("var(--amber)","Friend is offline",true);
     if(phase==="lobby")return setStatus("var(--green)","Room ready");
     if(phase==="toss")return tossDone.has(tossId)?setStatus("var(--friend)",(tossWinner==="host")===isHost?"Pick your mark":"Friend is picking",true):setStatus("var(--friend)","Tossing the coin",true);
-    return turn===me?setStatus("var(--green)","Your turn"):setStatus("var(--friend)",`${esc(names[turn])}'s turn`,true);
+    return turn===me?setStatus("var(--green)","Your turn"+mvSub):setStatus("var(--friend)",`${esc(names[turn])}'s turn`,true);
   }
-  if(mode==="ai")return turn===aiSide?setStatus("var(--ai)","Computer is thinking",true):setStatus(sideVar(turn),"Your turn");
-  const sub=marks[turn].length===3?`<span class="sub">oldest ${turn} fades next</span>`:"";
+  if(mode==="ai")return turn===aiSide?setStatus("var(--ai)","Computer is thinking",true):setStatus(sideVar(turn),"Your turn"+mvSub);
+  const sub=marks[turn].length<3?"":rule==="M"?mvSub:`<span class="sub">oldest ${turn} fades next</span>`;
   setStatus(sideVar(turn),hasName(turn)?`${esc(names[turn])}'s turn${sub}`:`${turn} to move${sub}`);
 }
 
@@ -2298,7 +2376,7 @@ function setSeg(seg,val,animate){
   seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.v??b.dataset.mode)===val)));
   placeThumb(seg,animate);
 }
-function syncOptSegs(animate){document.querySelectorAll(".seg[data-opt]").forEach(s=>{const k=s.dataset.opt;setSeg(s,k==="rule"?rule:opt[k],animate)})}
+function syncOptSegs(animate){document.documentElement.dataset.rule=rule;document.querySelectorAll(".seg[data-opt]").forEach(s=>{const k=s.dataset.opt;setSeg(s,k==="rule"?rule:opt[k],animate)})}
 document.querySelectorAll(".seg[data-opt]").forEach(s=>s.addEventListener("click",e=>{const b=e.target.closest("button");if(b)onOpt(s.dataset.opt,b.dataset.v)}));
 function onOpt(k,v){
   if(k==="rule"){
@@ -2482,7 +2560,7 @@ function validCells(a){return Array.isArray(a)&&a.length<=3&&a.every(c=>Number.i
 function adopt(s,v){
   if(!s||!validCells(s.X)||!validCells(s.O))return;
   if(s.X.some(c=>s.O.includes(c)))return;
-  if(!["X","O"].includes(s.turn)||!["X","O"].includes(s.starter)||!["A","B"].includes(s.rule))return;
+  if(!["X","O"].includes(s.turn)||!["X","O"].includes(s.starter)||!RULES.includes(s.rule))return;
   marks={X:s.X.slice(),O:s.O.slice()};turn=s.turn;starter=s.starter;rule=s.rule;syncOptSegs(true);
   over=!!s.over;winCells=over?winLine(marks[turn]):null;if(over&&!winCells)over=false;
   if(s.score&&Number.isInteger(s.score.X)&&Number.isInteger(s.score.O))score={X:s.score.X,O:s.score.O};
@@ -2660,7 +2738,7 @@ function onMessage(m){
   if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
   if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e,m.from,false);return}
   if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
-    if(m.kind==="rule"&&m.data!=="A"&&m.data!=="B")return;
+    if(m.kind==="rule"&&!RULES.includes(m.data))return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
   if(m.t==="cancel"&&inReq&&m.rid===inReq.rid){inReq=null;toast("Request withdrawn","friend");render();return}
   if(m.t==="ans"&&outReq&&m.rid===outReq.rid){
@@ -3087,7 +3165,7 @@ function renderLobby(){
 }
 
 /* ---------- Requests: the other player has to say yes ---------- */
-const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the fade rule"};
+const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the rule"};
 function request(kind,data,src){
   if(!connOpen){toast("Friend is offline");return}
   if(outReq){toast("Still waiting");return}
@@ -3099,7 +3177,7 @@ function request(kind,data,src){
 function performReq(kind,data){
   if(kind==="again")newRound(over||history.length?nextStarter():starter);
   else if(kind==="reset"){score={X:0,O:0};render()}
-  else if(kind==="rule"&&(data==="A"||data==="B")){rule=data;syncOptSegs(true);newRound(starter);updateInsight()}
+  else if(kind==="rule"&&RULES.includes(data)){rule=data;syncOptSegs(true);newRound(starter);updateInsight()}
 }
 function answer(ok,src){
   const r=inReq;if(!r)return;inReq=null;
@@ -3122,7 +3200,7 @@ const ICONS={
 };
 const svg=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 function reqCopy(r,incoming){
-  const ruleTo=r.data==="B"?"oldest leaves before placing":"oldest leaves after placing";
+  const ruleTo=r.data==="M"?"move a mark after three":r.data==="B"?"oldest leaves before placing":"oldest mark fades";
   if(incoming){
     if(r.kind==="again")return over?["Rematch?","Your friend wants another round"]:["New round?","Your friend wants to restart"];
     if(r.kind==="reset")return["Reset the score?","Back to 0 : 0"];
@@ -3876,8 +3954,13 @@ document.querySelectorAll(".dlg").forEach(d=>{
 /* ---------- Rules: four rules, four small boards ---------- */
 let rulesBuilt=false;
 function buildRules(){
-  if(rulesBuilt)return;rulesBuilt=true;
-  const R=[
+  if(rulesBuilt===rule)return;rulesBuilt=rule;
+  const R=rule==="M"?[
+    {n:"01",t:"Three in a row wins",m:"XO.OX...X",k:{0:"k-win",4:"k-win",8:"k-win"}},
+    {n:"02",t:"Three marks each, never more",m:".X.X.O.OX",k:{},b:"3 / 3"},
+    {n:"03",t:"Then tap a mark to pick it up",m:"XO..X.O.X",k:{0:"k-old"}},
+    {n:"04",t:"And tap any empty cell to move it",m:"XO.XX.O.X",k:{0:"k-gone",3:"k-new"}}
+  ]:[
     {n:"01",t:"Three in a row wins",m:"XO.OX...X",k:{0:"k-win",4:"k-win",8:"k-win"}},
     {n:"02",t:"Three marks each, never more",m:".X.X.O.OX",k:{},b:"3 / 3"},
     {n:"03",t:"A fourth mark removes your oldest",m:"XOX.X..O.",k:{0:"k-gone",2:"k-new"}},
