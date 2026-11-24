@@ -820,7 +820,7 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-row.lb-in{animation:lbin .42s cubic-bezier(.22,1,.36,1) both}
 @keyframes lbin{from{opacity:0;filter:blur(6px);transform:scale(.985)}to{opacity:1;filter:none;transform:none}}
 /* ---------- the empty board ---------- */
-.lb-empty{animation:rise .5s var(--spring-soft) both;gap:8px}
+.lb-empty{animation:rise .5s var(--spring-soft) both;gap:12px}
 .lb-pod{width:150px;height:auto;margin-bottom:6px;overflow:visible}
 .lb-pod .pod-step{fill:var(--chip-2)} .lb-pod .s1{fill:color-mix(in srgb,#f2c14e 20%,var(--chip-2))}
 .lb-pod .pod-n{font:700 13px var(--sans);fill:var(--faint);text-anchor:middle}
@@ -837,7 +837,17 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-empty>span{max-width:300px}
 .lb-note{max-width:300px;font-size:12px;color:var(--faint)}
 @media (prefers-reduced-motion:reduce){.lb-skel .sk,.lb-pod *{animation:none!important}}
-.lb-foot{margin:12px 0 0;padding:12px 6px 0;border-top:1px solid var(--hair);font-size:12px;line-height:1.45;color:var(--faint);text-align:center}
+.lb-foot{margin:14px 0 0;display:flex;justify-content:center}
+/* a small note, as a pill: no line between it and the board */
+.lb-hint{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:7px 12px 7px 10px;border-radius:99px;background:var(--chip);font-size:12px;line-height:1.35;color:var(--mute);text-align:left}
+.lb-hint svg{width:15px;height:15px;flex:none;opacity:.8}
+/* the list scrolls under its own floating indicator, never a scrollbar that takes room */
+.lb-wrap{position:relative}
+.lb-list{scrollbar-width:none}
+.lb-list::-webkit-scrollbar{display:none}
+.lb-bar{position:absolute;top:4px;bottom:4px;right:-9px;width:4px;pointer-events:none;opacity:0;transition:opacity .35s var(--out)}
+.lb-bar i{position:absolute;left:0;top:0;width:4px;border-radius:99px;background:var(--faint);opacity:.55}
+.lb-bar.can.on,.lb-wrap:hover .lb-bar.can{opacity:1}
 .sh-act .ic.ms{background:linear-gradient(135deg,#00b2ff,#a033ff);color:#fff}
 .sh-act .ic.li{background:#0a66c2;color:#fff}
 .sh-act .ic.ig{background:radial-gradient(circle at 30% 107%,#fdf497 0%,#fd5949 45%,#d6249f 60%,#285aeb 90%);color:#fff}
@@ -1279,7 +1289,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1534</p>
+  <p class="build-tag">Version 2026.11.24·1540</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1368,8 +1378,8 @@ a.sh-act{text-decoration:none}
   <div class="dlg-head"><h2 id="lbTitle">Leaderboard</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <p class="lb-sub">Longest winning streaks against the computer. Every game here is replayed to check it was really won.</p>
   <div class="seg sm full" id="lbLevels" role="group" aria-label="Level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div>
-  <ol class="lb-list" id="lbList" aria-live="polite"></ol>
-  <p class="lb-foot">Your best is added on its own. Games with Undo or hints don’t count.</p>
+  <div class="lb-wrap"><ol class="lb-list" id="lbList" aria-live="polite"></ol><span class="lb-bar" id="lbBar" aria-hidden="true"><i></i></span></div>
+  <p class="lb-foot"><span class="lb-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg>Your best is added on its own. Undo or hints don’t count.</span></p>
 </section>
 
 <section class="dlg modal about" id="dlgAbout" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" tabindex="-1" hidden>
@@ -2097,7 +2107,9 @@ function lbFetch(){
    passing over them, shaped like the real ones. When the board arrives each
    real row takes the place of its stand-in, top to bottom, one after the
    other, so the board fills in rather than appearing all at once. */
-const LB_SKEL=6;
+/* as many stand-ins as the list shows without scrolling, so loading never brings a scrollbar it then takes away */
+const LB_ROW=66;
+function skelCount(){const h=$("lbList").clientHeight;return Math.max(3,Math.floor((h+6)/LB_ROW))}
 function skelRow(i){
   const w=[62,48,70,54,40,58][i%6];
   return`<li class="lb-row lb-skel" aria-hidden="true" style="--i:${i}"><span class="sk sk-rank"></span><span class="sk sk-av"></span><span class="sk sk-name" style="width:${w}%"></span><span class="sk sk-stat"></span><span class="sk sk-stat"></span></li>`;
@@ -2112,7 +2124,7 @@ function rowHTML(r,i){
    for someone, and a button that starts exactly that game. */
 function emptyHTML(){
   const lv=LEVEL_NAME[lbLevel];
-  const note=lbLevel==="perfect"&&rule==="M"?`<small class="lb-note">Perfect never loses with Move one. Pick Oldest fades in Settings to take it on.</small>`:"";
+  const note=lbLevel==="perfect"&&rule==="M"?`<small class="lb-hint">Perfect can’t lose on Move one · try Oldest fades</small>`:"";
   return`<li class="lb-empty"><svg class="lb-pod" viewBox="0 0 160 112" aria-hidden="true">
       <g class="pod-crown"><path d="M68 22 66 8l7 6 7-10 7 10 7-6-2 14Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.6" stroke-linejoin="round"/><circle cx="80" cy="3" r="1.8" fill="#fff3c4"/></g>
       <circle class="pod-seat" cx="80" cy="42" r="13"/>
@@ -2122,15 +2134,14 @@ function emptyHTML(){
       <path class="pod-spark" d="M118 26l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><path class="pod-spark k2" d="M36 34l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5Z"/>
     </svg>
     <b class="lb-et">The top spot on ${lv} is open</b>
-    <span>Win against the ${lv} computer and your name goes here first.</span>${note}
-    <button class="btn primary" type="button" data-play>Play the computer · ${lv}</button></li>`;
+    <button class="btn primary" type="button" data-play>Play the computer · ${lv}</button>${note}</li>`;
 }
 async function openBoard(btn){
   lbLevel=lbLevel||opt.level||"perfect";setSeg($("lbLevels"),lbLevel,false);
   openDialog("dlgBoard",btn);
   if(lbEntry())lbPublishSoon();
   const ul=$("lbList");ul.setAttribute("aria-busy","true");
-  ul.innerHTML=Array.from({length:LB_SKEL},(_,i)=>skelRow(i)).join("")+'<li class="sr">Loading the board</li>';
+  const n=skelCount();ul.innerHTML=Array.from({length:n},(_,i)=>skelRow(i)).join("")+'<li class="sr">Loading the board</li>';lbBar();
   /* the stand-ins stay at least a moment, so a quick answer still reads as loading and not as a flicker */
   const [data]=await Promise.all([lbFetch(),new Promise(r=>setTimeout(r,still?0:450))]);
   lbCache=data;ul.removeAttribute("aria-busy");lbRender(true);
@@ -2147,7 +2158,7 @@ function lbRender(fromSkeleton){
   const rows=lbRows();
   const skels=fromSkeleton&&!still?[...ul.querySelectorAll(".lb-skel")]:[];
   ul.querySelectorAll(".sr").forEach(n=>n.remove());
-  if(!skels.length){ul.innerHTML=rows.length?rows.map(rowHTML).join(""):emptyHTML();return}
+  if(!skels.length){ul.innerHTML=rows.length?rows.map(rowHTML).join(""):emptyHTML();ul.scrollTop=0;lbBar();return}
   if(!rows.length){
     /* nothing to fill in: the stand-ins clear away together and the invitation rises in their place */
     skels.forEach((sk,i)=>sk.animate([{opacity:1},{opacity:0,transform:"scale(.97)"}],{duration:220,delay:i*30,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
@@ -2159,7 +2170,7 @@ function lbRender(fromSkeleton){
     setTimeout(()=>{
       const sk=skels[i];
       if(sk&&sk.isConnected)sk.replaceWith(li);else{const after=ul.querySelectorAll(".lb-row:not(.lb-skel)")[i-1];after?after.after(li):ul.prepend(li)}
-    },i<LB_SKEL?i*90:LB_SKEL*90+(i-LB_SKEL)*25);
+    lbBar()},i<skels.length?i*90:skels.length*90+(i-skels.length)*25);
   });
   /* stand-ins left over once the board is shorter than them fold away */
   skels.slice(rows.length).forEach((sk,k)=>setTimeout(()=>{if(!sk.isConnected)return;
@@ -2167,6 +2178,18 @@ function lbRender(fromSkeleton){
 }
 $("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;lbLevel=b.dataset.v;setSeg($("lbLevels"),lbLevel,true);if(lbCache!==undefined)lbRender()});
 $("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
+/* ---------- The list's own scroll indicator ----------
+   The browser's scrollbar takes room from the rows when it shows up and
+   gives it back when it goes, so the rows narrow and widen. It is hidden;
+   this thin pill floats over the edge instead, sized to how much of the
+   board is in view, and shows only while the board scrolls. */
+function lbBar(){
+  const ul=$("lbList"),bar=$("lbBar");if(!ul||!bar)return;
+  const can=ul.scrollHeight>ul.clientHeight+1;bar.classList.toggle("can",can);if(!can)return;
+  const h=ul.clientHeight,th=Math.max(28,h*h/ul.scrollHeight),y=(h-th)*(ul.scrollTop/(ul.scrollHeight-h||1));
+  bar.firstChild.style.height=th+"px";bar.firstChild.style.transform=`translateY(${y}px)`;
+}
+{let hideT=0;$("lbList").addEventListener("scroll",()=>{lbBar();const b=$("lbBar");b.classList.add("on");clearTimeout(hideT);hideT=setTimeout(()=>b.classList.remove("on"),900)},{passive:true})}
 /* the invitation starts the very game it names: the computer, on the level you were looking at */
 $("lbList").addEventListener("click",e=>{if(!e.target.closest("[data-play]"))return;
   closeDialog();
@@ -4724,7 +4747,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1534";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·1540";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
