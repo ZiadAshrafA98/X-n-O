@@ -204,7 +204,6 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
    control and node card, which this page does not have. */
 .liq-sw{--fill-slab:#2c2c30;--fill-on:#505056;--liq-off:#77777e;--liq-dot:var(--ink);--liq-glow:0 1px 3px rgba(0,0,0,.45),inset 0 0 0 .5px rgba(255,255,255,.18)}
 :root[data-theme="light"] .liq-sw{--fill-slab:#e4e4e8;--fill-on:var(--ink);--liq-off:#ffffff;--liq-dot:#ffffff;--liq-glow:0 1px 3px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06)}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .liq-sw{--fill-slab:#e4e4e8;--fill-on:var(--ink);--liq-off:#ffffff;--liq-dot:#ffffff;--liq-glow:0 1px 3px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06)}}
 
 /* ── ALWAYS A PILL ──────────────────────────────────────────
    (Bencho) A switch is a pill: that is the shape the gesture is named
@@ -376,6 +375,10 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .modal{top:50%;left:50%;width:min(780px,calc(100vw - 48px));max-height:calc(100dvh - 48px);overflow:auto;padding:12px;border-radius:36px;translate:-50% -50%}
 .group{padding:10px 10px 12px;display:flex;flex-direction:column;gap:10px}
 .group+.group{border-top:1px solid var(--hair)}
+/* Settings uses space, not lines, between its parts */
+#dlgSettings .group+.group{border-top:0;margin-top:6px}
+#dlgSettings .group.tog-row{transition:grid-template-rows .46s cubic-bezier(.32,.72,0,1),padding .46s cubic-bezier(.32,.72,0,1),margin .46s cubic-bezier(.32,.72,0,1)}
+:root[data-rule="M"] #dlgSettings .group.grp-age{margin-top:0}
 .group-label{font-size:12px;color:var(--faint)}
 .dlg .foot{padding:8px 10px 4px}
 /* which build this is, so a phone holding an older copy is easy to spot */
@@ -1245,7 +1248,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1508</p>
+  <p class="build-tag">Version 2026.11.24·1523</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2677,7 +2680,7 @@ function onOpt(k,v){
   if(k==="rule"){
     if(v===rule)return;
     if(mode==="online"&&room){syncOptSegs(true);closeDialog();request("rule",v);return}
-    rule=v;opt.rule=v;saveOpt();syncOptSegs(true);newRound("X");
+    rule=v;opt.rule=v;saveOpt();syncOptSegs(true);newRound(firstMover());
     if(mode==="online"&&room)pushState();
     updateInsight();return;
   }
@@ -2705,8 +2708,10 @@ function setMode(m){
   /* away from a room you play your own rule again, whatever the last room used */
   if(m!=="online"){rule=RULES.includes(opt.rule)?opt.rule:"M";syncOptSegs(false)}
   loadScore();
-  newRound(m==="ai"?(opt.first==="ai"?aiSide:opt.youAre):"X");
+  newRound(firstMover());
 }
+/* who opens a fresh game: against the computer, whoever you picked to start; otherwise X */
+function firstMover(){return mode==="ai"?(opt.first==="ai"?aiSide:opt.youAre):"X"}
 /* The thumb moves on the press itself, before any game work, so the switch
    answers at once; the mode change runs on the next frame. */
 let modeSwitch=0;
@@ -2809,7 +2814,22 @@ let role="player",hostId=null,guestId=null,audIds=[];const aud=new Map();const A
    it with the room whenever it changes. */
 const ADJ=["Swift","Quiet","Lucky","Brave","Sunny","Clever","Bold","Calm","Witty","Mellow","Zippy","Cosmic"],ANI=["Otter","Fox","Panda","Heron","Lynx","Koala","Falcon","Gecko","Moose","Owl","Tiger","Whale"];
 function cleanName(n){return String(n||"").replace(/[\u0000-\u001f<>]/g,"").replace(/\s+/g," ").trim().slice(0,16)}
-let myName=cleanName(store.get("xo.name",""))||(ADJ[Math.random()*ADJ.length|0]+" "+ANI[Math.random()*ANI.length|0]);store.set("xo.name",myName);
+/* ---------- Who you are, until you say ----------
+   Until you edit your profile you are a different character each visit,
+   with a name to match it: a Sunny Cat, a Bold Robot. The pick holds for
+   the whole visit (reloads included) and a new visit draws again. Once you
+   change your name or your character, that is kept and the draw stops.
+   Profiles from before this rule count as yours if the name is not one the
+   site made up, or a character was picked. */
+const ANI_OF=k=>k==="hero"?"Hero":AVATARS[k].name;
+const isMadeUp=n=>{const m=/^(\w+) (\w+)$/.exec(n||"");return !n||!!(m&&ADJ.includes(m[1])&&(ANI.includes(m[2])||AV_KEYS.some(k=>ANI_OF(k)===m[2])))};
+let custom=store.get("xo.custom",null);
+if(custom===null){custom=!isMadeUp(cleanName(store.get("xo.name","")))||!!cleanAv(store.get("xo.av",""));if(custom)store.set("xo.custom",true)}
+const visit=(()=>{
+  try{const v=JSON.parse(sessionStorage.getItem("xo.visit")||"null");if(v&&cleanAv(v.av)&&cleanAv(v.o)&&cleanName(v.n))return v}catch(e){}
+  const pick=a=>a[Math.random()*a.length|0],av=pick(AV_KEYS),o=pick(AV_KEYS.filter(k=>k!==av));
+  const v={av,o,n:pick(ADJ)+" "+ANI_OF(av)};try{sessionStorage.setItem("xo.visit",JSON.stringify(v))}catch(e){}return v})();
+let myName=custom?cleanName(store.get("xo.name",""))||visit.n:visit.n;
 const pname=new Map(),banned=new Set(),devOf=new Map();
 /* a random id kept by this browser, so a removed person stays removed after a reload */
 const devId=(()=>{let d=store.get("xo.dev",null);if(typeof d!=="string"||d.length>40){d=rid()+rid();store.set("xo.dev",d)}return d})();
@@ -2818,10 +2838,9 @@ function nameOf(id){if(!id)return"";if(id===myId)return myName;return(isHost?pna
 function hueOf(id){let h=7;for(const ch of String(id))h=(h*31+ch.charCodeAt(0))%360;return h}
 function orbHue(id){const h=hueOf(id);return`radial-gradient(circle at 32% 30%,hsl(${h} 90% 86%),hsl(${h} 72% 58%) 45%,hsl(${h} 70% 32%))`}
 /* the avatar each person picked, or their colour dot */
-/* nobody starts as a plain dot: until you pick, you are the Frog, and the
-   second player on a shared device the Fox. A picked plain dot is kept. */
-const AV_DEFAULT={me:"frog",O:"fox"};
-let myAv=(()=>{const v=store.get("xo.av",null);return v===null?AV_DEFAULT.me:cleanAv(v)})();
+/* a profile saved with the old plain dot gets a character of its own, kept from now on */
+let myAv=custom?cleanAv(store.get("xo.av",""))||visit.av:visit.av;
+if(custom&&!cleanAv(store.get("xo.av","")))store.set("xo.av",myAv);
 const pav=new Map();
 function avOf(id){if(!id)return"";if(id===myId)return myAv;return cleanAv(isHost?pav.get(id):(roster.avs||{})[id])}
 /* your own avatar never depends on being in a room */
@@ -2829,7 +2848,7 @@ function myAvBg(){return myAv?`url('${avUri(myAv)}') center/cover`:""}
 function avBg(id){const k=avOf(id);return k?`url('${avUri(k)}') center/cover`:""}
 function orbBg(id){return avBg(id)||orbHue(id)}
 /* Same device: each side keeps its own name and avatar on this device */
-const localProf=(()=>{const v=store.get("xo.local",null)||{},o={};for(const s of ["X","O"]){const p=v[s]||{};o[s]={n:cleanName(p.n||""),av:p.av===undefined?(s==="O"?AV_DEFAULT.O:AV_DEFAULT.me):cleanAv(p.av)}}return o})();
+const localProf=(()=>{const v=store.get("xo.local",null)||{},o={};for(const s of ["X","O"]){const p=v[s]||{};o[s]={n:cleanName(p.n||""),av:cleanAv(p.av)||(s==="O"?visit.o:visit.av)}}return o})();
 const MARK_BG={X:"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",O:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)"};
 /* you are always the left player: X on a shared device, your mark against
    the computer or online */
@@ -3695,9 +3714,11 @@ function removePerson(id){
   pname.delete(id);pushRoom();toast(`${n} was removed`);render();
 }
 function setMyProfile(v,av){
-  const n=cleanName(v)||myName;av=cleanAv(av);
+  let n=cleanName(v)||myName;av=cleanAv(av)||myAv;
+  /* a made-up name follows a new character: Brave Cat picks the robot and becomes Brave Robot */
+  if(n===myName&&av!==myAv&&isMadeUp(n))n=n.split(" ")[0]+" "+ANI_OF(av);
   if(n===myName&&av===myAv)return;
-  myName=n;myAv=av;store.set("xo.name",n);store.set("xo.av",av);
+  myName=n;myAv=av;store.set("xo.name",n);store.set("xo.av",av);store.set("xo.custom",true);custom=true;
   if(isHost)pushRoom();else if(room&&connOpen)publish({t:"name",n,av});
   if(mode==="ai")names[opt.youAre]=myName;
   if(mode==="local")names.X=myName;
@@ -3724,7 +3745,7 @@ function buildProfile(){
   const cur=profCur();
   $("profTitle").textContent=profFor==="me"?"Your profile":"Player "+profFor;
   $("profName").value=cur.n;
-  $("avGrid").innerHTML=[...AV_KEYS,""].map((k,i)=>{const nm=k?AVATARS[k].name:"Plain colour";
+  $("avGrid").innerHTML=AV_KEYS.map((k,i)=>{const nm=AVATARS[k].name;
     return`<button class="av-opt stag" type="button" role="radio" data-av="${k}" aria-checked="${k===cur.av}" tabindex="${k===cur.av?0:-1}" aria-label="${nm}" style="--i:${i+2};background:${k?`url('${avUri(k)}') center/cover`:profDot()}"><span class="av-tip">${nm}</span></button>`}).join("");
   paintProf();
 }
@@ -3733,7 +3754,7 @@ function openProfile(target,btn){profFor=target||"me";openDialog("dlgProfile",bt
 function pickAv(b){
   if(!b)return;
   $("avGrid").querySelectorAll(".av-opt").forEach(x=>{const on=x===b;x.setAttribute("aria-checked",String(on));x.tabIndex=on?0:-1});
-  saveProf($("profName").value,b.dataset.av);paintProf();
+  saveProf($("profName").value,b.dataset.av);paintProf();{const f=$("profName"),n=profCur().n;if(f.value!==n)f.value=n}
   if(!still){
     $("profOrb").animate([{transform:"scale(.55) rotate(-8deg)"},{transform:"scale(1.12) rotate(3deg)",offset:.55},{transform:"scale(.97)",offset:.8},{transform:"none"}],{duration:640,easing:"cubic-bezier(.34,1.2,.5,1)"});
     b.animate([{transform:"scale(.85)"},{transform:"scale(1.1)",offset:.6},{transform:"none"}],{duration:420,easing:"cubic-bezier(.34,1.3,.6,1)"});
@@ -4607,7 +4628,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1508";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·1523";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
