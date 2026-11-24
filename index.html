@@ -127,6 +127,10 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .seg button svg{width:18px;height:18px;flex:none}
 .seg .thumb{position:absolute;z-index:0;top:4px;left:0;height:calc(100% - 8px);border-radius:999px;background:var(--thumb);box-shadow:var(--raise);transition:transform .38s cubic-bezier(.3,1.3,.5,1),width .38s cubic-bezier(.3,1.3,.5,1);will-change:transform}
 .seg.no-anim .thumb{transition:none}
+/* inside cards and sheets the switch sits on a lighter surface, so its
+   thumb gets brighter to stay as clear as the main mode switcher */
+:root:not([data-theme="light"]) :is(.dlg,.pick-panel) .seg .thumb{background:#3b3b40;box-shadow:var(--raise),inset 0 0 0 1px rgba(255,255,255,.06)}
+:is(.dlg,.pick-panel) .seg button[aria-pressed="true"]{color:var(--ink);font-weight:600}
 .seg.sm button{height:34px;padding:0 12px;font-size:13px}
 .seg.full{display:grid;width:100%}
 .tabs button{padding:0 18px 0 14px}
@@ -372,8 +376,12 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .mcard.X{color:var(--x)} .mcard.O{color:var(--o)}
 .mcard:hover{background:var(--chip-2)}
 .mcard:active{scale:.96}
-.mcard[aria-pressed="true"]{background:var(--thumb);box-shadow:var(--raise),inset 0 0 0 2px color-mix(in srgb,currentColor 70%,transparent)}
-.mcard[aria-pressed="true"]::after{content:"";position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:9px;background:currentColor;animation:pop .45s var(--spring) both}
+/* the chosen mark: its own colour washed faintly through the card, a fine
+   edge in the same colour, and its label brought up to full ink */
+.mcard{transition:background-color .3s var(--out),box-shadow .3s var(--out),scale .2s var(--out)}
+.mcard.X[aria-pressed="false"]{color:color-mix(in srgb,var(--x) 55%,var(--mute))}.mcard.O[aria-pressed="false"]{color:color-mix(in srgb,var(--o) 55%,var(--mute))}
+.mcard[aria-pressed="true"]{background:color-mix(in srgb,currentColor 13%,var(--chip));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,currentColor 50%,transparent)}
+.mcard[aria-pressed="true"] small{color:var(--ink)}
 
 /* ---------- online lobby: room ready, coin toss, pick a mark ---------- */
 .lobby{grid-area:board;justify-self:center;align-self:center;z-index:3;width:var(--bs);height:var(--bs);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;border-radius:36px;background:color-mix(in srgb,var(--slab) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--float);animation:cardin .6s var(--spring-soft) both}
@@ -1097,7 +1105,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.22·2224</p>
+  <p class="build-tag">Version 2026.11.24·0009</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1962,6 +1970,9 @@ function flipActions(change){
   const row=document.querySelector(".actions"),kids=[...row.children];
   const before=new Map(kids.map(k=>[k,k.offsetParent?k.getBoundingClientRect():null]));
   try{change()}finally{flipping=false}
+  /* when something leaves, it shrinks away first and the rest wait for it:
+     the buttons are see-through, so nothing may slide across one still showing */
+  const leaving=kids.some(k=>before.get(k)&&!k.offsetParent),wait=leaving?140:0;
   kids.forEach(k=>{
     const a=before.get(k),b=k.offsetParent?k.getBoundingClientRect():null;
     if(a&&b){
@@ -1970,16 +1981,16 @@ function flipActions(change){
       const prev=flyers.get(k);if(prev){prev.g.remove();prev.a.cancel()}
       const z=k.id==="btnSettings"?4:k.classList.contains("pick")?6:3;
       const g=ghostOf(k,a,z);k.style.visibility="hidden";
-      const an=g.animate([{left:a.left+"px",top:a.top+"px",width:a.width+"px"},{left:b.left+"px",top:b.top+"px",width:b.width+"px"}],{duration:560,easing:"cubic-bezier(.34,1.22,.5,1)"});
+      const an=g.animate([{left:a.left+"px",top:a.top+"px",width:a.width+"px"},{left:b.left+"px",top:b.top+"px",width:b.width+"px"}],{duration:560,delay:wait,easing:"cubic-bezier(.34,1.22,.5,1)",fill:"backwards"});
       flyers.set(k,{g,a:an});
       an.onfinish=an.oncancel=()=>{g.remove();if(flyers.get(k)&&flyers.get(k).g===g){flyers.delete(k);k.style.visibility=""}};
     }
     /* fade to the button's own resting opacity, so a disabled one never looks live on the way in */
-    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:getComputedStyle(k).opacity,transform:"none",filter:"blur(0)"}],{duration:520,delay:220,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+    else if(!a&&b)k.animate([{opacity:0,transform:"translateY(18px) scale(.9)",filter:"blur(4px)"},{opacity:getComputedStyle(k).opacity,transform:"none",filter:"blur(0)"}],{duration:520,delay:220+wait,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
     else if(a&&!b){
       const g=ghostOf(k,a,1);
       /* leaving buttons get out of the way quickly, before anything slides over them */
-      g.animate([{opacity:getComputedStyle(g).opacity,transform:"none",filter:"blur(0)"},{opacity:0,transform:"translateY(10px) scale(.86)",filter:"blur(4px)"}],{duration:170,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
+      g.animate([{opacity:getComputedStyle(g).opacity,transform:"none",filter:"blur(0)"},{opacity:0,transform:"scale(.6)",filter:"blur(3px)"}],{duration:140,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>g.remove();
     }
   });
 }
@@ -2133,24 +2144,29 @@ function tick(el,val){
   el.appendChild(n);
 }
 let flipped=false;
+const seatLook={},seatBg={};
+/* turn "rgb(..) 0px 0px 0px 4px, …" into the same shadows with no size, for a ring to grow from */
+function ringZero(sh){if(!sh||sh==="none")return null;return sh.split(/,(?![^(]*\))/).map(p=>{const c=(p.trim().match(/^([a-z-]+\([^)]*\)|#[0-9a-f]+|[a-z]+)/i)||["transparent"])[0];return c+" 0px 0px 0px 0px"}).join(", ")}
 function renderPlayers(){
   /* you are always the left player: when you play O you simply take the
      O colours where you stand; nobody moves */
-  const f=mySide()==="O";
-  if(f!==flipped){flipped=f;$("pX").classList.toggle("pl",!f);$("pX").classList.toggle("pr",f);$("pO").classList.toggle("pl",f);$("pO").classList.toggle("pr",!f)}
+  const f=mySide()==="O",posOf=s=>($("p"+s).classList.contains("pl")?"L":"R");
+  const ringBefore={};
+  for(const s of ["X","O"])ringBefore[posOf(s)]=getComputedStyle($("p"+s+"orb")).boxShadow;
+  const flipNow=f!==flipped;
+  if(flipNow){flipped=f;$("pX").classList.toggle("pl",!f);$("pX").classList.toggle("pr",f);$("pO").classList.toggle("pl",f);$("pO").classList.toggle("pr",!f)}
   for(const s of ["X","O"]){
-    const el=$("p"+s),orb=$("p"+s+"orb"),k=kindOf(s);
-    /* who sits here changed (Player O becomes the Computer, a new avatar):
-       the old face fades off the new one in place instead of swapping in a frame */
+    const el=$("p"+s),orb=$("p"+s+"orb"),k=kindOf(s),pos=posOf(s);
+    /* the face shown at this seat changed (Player O becomes the Computer,
+       X becomes O): the old face fades off the new one in place. Looks are
+       kept per seat, not per element, so trading elements never shows a swap */
     const look=k+"|"+sideAvBg(s);
-    if(orb._look!==undefined&&orb._look!==look&&!still&&orb.offsetParent){
-      const c=getComputedStyle(orb),old=document.createElement("span");
-      Object.assign(old.style,{position:"absolute",inset:"0",borderRadius:"inherit",backgroundImage:c.backgroundImage,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition,backgroundColor:c.backgroundColor,pointerEvents:"none"});
+    if(seatLook[pos]!==undefined&&seatLook[pos]!==look&&!still&&orb.offsetParent&&seatBg[pos]){
+      const old=document.createElement("span");
+      Object.assign(old.style,{position:"absolute",inset:"0",borderRadius:"inherit",pointerEvents:"none"},seatBg[pos]);
       orb.appendChild(old);
-      /* a pure crossfade in place: nothing grows, shrinks or moves */
       old.animate([{opacity:1},{opacity:0}],{duration:420,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"}).onfinish=()=>old.remove();
     }
-    orb._look=look;
     orb.className="orb"+(k?" "+k:"");
     const mine=!!sideTarget(s);
     orb.style.background=sideAvBg(s);
@@ -2163,6 +2179,21 @@ function renderPlayers(){
     el.classList.toggle("thinking",mode==="ai"&&!over&&turn===aiSide&&s===aiSide);
     const nm=$("p"+s+"name");if(nm.textContent!==names[s]){const first=!nm.textContent;nm.textContent=names[s];if(!first&&!still){nm.classList.remove("swap");void nm.offsetWidth;nm.classList.add("swap")}}
     tick($("p"+s+"score"),score[s]);
+    const c=getComputedStyle(orb);seatLook[pos]=look;seatBg[pos]={backgroundImage:c.backgroundImage,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition,backgroundColor:c.backgroundColor};
+  }
+  /* when the seats trade elements, the ring at each seat would jump colour:
+     instead the old ring sinks behind the face and the new one grows back out */
+  if(flipNow&&!still)for(const s of ["X","O"]){
+    const orb=$("p"+s+"orb");if(!orb.offsetParent)continue;
+    /* read the ring's resting size, not the start of its own built-in fade */
+    orb.style.transition="none";const now=getComputedStyle(orb).boxShadow;
+    const was=ringBefore[posOf(s)];if(was===now){orb.style.transition="";continue}
+    const z0=ringZero(was),z1=ringZero(now),fr=[];
+    if(was&&was!=="none")fr.push({boxShadow:was,offset:0},{boxShadow:z0,offset:.42});else if(z1)fr.push({boxShadow:z1,offset:0});
+    if(now&&now!=="none")fr.push({boxShadow:z1,offset:.46},{boxShadow:now,offset:1});else if(z0)fr.push({boxShadow:z0,offset:1});
+    /* the ring's own fade stays off while this plays, or it would win over it */
+    if(fr.length>1){fr[0].offset=0;fr[fr.length-1].offset=1;const an=orb.animate(fr,{duration:640,easing:"cubic-bezier(.34,1.2,.5,1)"});an.onfinish=an.oncancel=()=>{orb.style.transition=""}}
+    else orb.style.transition="";
   }
 }
 function render(){flipActions(renderNow)}
