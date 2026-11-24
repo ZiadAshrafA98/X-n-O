@@ -690,7 +690,16 @@ button.mark{border:0;background:none;padding:0}
 #dlgRoom .dlg-head .ccode{font:500 15px var(--mono);letter-spacing:.18em;color:var(--mute)}
 .rp-share{display:flex;gap:8px;padding:0 6px 4px}
 .rp-share .btn{flex:1 1 auto;height:40px;font-size:13px}
-#rpQrWrap{padding:10px 0 4px}
+/* the room QR on a phone: it unfolds, and the sheet eases taller with it */
+.rp-qrfold{display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows .5s cubic-bezier(.32,.72,0,1),opacity .35s var(--out)}
+.rp-qrfold.open{grid-template-rows:1fr;opacity:1}
+.rp-qrin{min-height:0;overflow:hidden}
+.rp-qrin .qr-wrap{padding:10px 0 4px;transform:scale(.92);transition:transform .5s cubic-bezier(.34,1.3,.6,1)}
+.rp-qrfold.open .qr-wrap{transform:none}
+/* on a wide screen it is its own card beside the room window */
+.qr-side{position:fixed;z-index:52;display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 14px 10px;border-radius:24px;background:var(--slab);box-shadow:var(--float)}
+.qr-side[hidden]{display:none}
+.qr-side p{margin:0;font-size:12px;color:var(--mute)}
 .rp-label{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--faint);padding:14px 8px 8px}
 .court{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:0 4px}
 .court .vsx{font:500 11px var(--mono);color:var(--faint)}
@@ -915,6 +924,10 @@ a.sh-act{text-decoration:none}
 .seat-menu button{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:10px 12px;border:0;border-radius:12px;background:none;color:var(--ink);font:500 13px var(--sans);text-align:left;transition:background-color .15s}
 .seat-menu button:hover,.seat-menu button:focus-visible{background:var(--chip);outline:none}
 .seat-menu button small{font-weight:400;font-size:11px;color:var(--faint)}
+.seat-menu button{flex-direction:row;align-items:center;gap:11px}
+.seat-menu button>svg{width:17px;height:17px;flex:none;opacity:.8}
+.seat-menu .mi{display:flex;flex-direction:column;gap:2px;min-width:0}
+#rpLeave svg{width:17px;height:17px}
 .seat-menu .danger{color:var(--red)}
 .seat-menu .danger.armed{background:color-mix(in srgb,var(--red) 16%,transparent)}
 @keyframes menuin{from{opacity:0;transform:translateY(-6px) scale(.92)}to{opacity:1;transform:none}}
@@ -1311,7 +1324,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·2242</p>
+  <p class="build-tag">Version 2026.11.24·2311</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1342,6 +1355,8 @@ a.sh-act{text-decoration:none}
   </div>
 </section>
 
+<div class="qr-side" id="rpQrSide" hidden><div class="qr" id="rpQrSideImg" role="img" aria-label="QR code with the invite link"></div><p>Scan to join</p></div>
+
 <section class="dlg pop room-pop" id="dlgRoom" role="dialog" aria-modal="true" aria-labelledby="roomTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="roomTitle">Room <span class="ccode" id="rpCode"></span></h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -1350,14 +1365,14 @@ a.sh-act{text-decoration:none}
     <button class="btn" id="rpLink" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="rpLinkLbl">Copy link</span></button>
     <button class="sq" id="rpQrBtn" type="button" aria-label="Show QR code" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20h-3M17 20v.01M20 17v.01"/></svg></button>
   </div>
-  <div class="qr-wrap" id="rpQrWrap" hidden><div class="qr" id="rpQr" role="img" aria-label="QR code with the invite link"></div></div>
+  <div class="rp-qrfold" id="rpQrWrap"><div class="rp-qrin"><div class="qr-wrap"><div class="qr" id="rpQr" role="img" aria-label="QR code with the invite link"></div></div></div></div>
   <div class="rp-label"><span>On the board</span><span id="rpPhase"></span></div>
   <div class="court" id="rpCourt"></div>
   <div class="rp-label"><span>In the stands</span><span id="rpStandsN"></span></div>
   <div class="stands" id="rpStands"></div>
   <p class="rp-hint" id="rpHint"></p>
   <button class="rp-me" id="rpProfile" type="button"><span class="orb" id="rpMeOrb"></span><span class="rp-me-t"><b id="rpMeName"></b><span>Edit your profile</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
-  <button class="btn danger-soft" id="rpLeave" type="button">Leave room</button>
+  <button class="btn danger-soft" id="rpLeave" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h3.5A2.5 2.5 0 0 1 20 6.5v11a2.5 2.5 0 0 1-2.5 2.5H14M10 16l-4-4 4-4M6 12h10"/></svg><span class="lbl" id="rpLeaveLbl">Leave room</span></button>
   <div class="seat-menu" id="seatMenu" role="menu" hidden></div>
 </section>
 
@@ -3326,7 +3341,7 @@ function renderNet(){
   if(s!=="host-wait"&&qrOpen){qrOpen=false;$("qrBtn").setAttribute("aria-expanded","false")}
   /* the host closes the room for everyone; a guest just leaves it */
   $("leaveRoom").textContent=mmS||s==="guest-wait"?"Cancel":isHost?"Close room":"Leave";
-  $("chipLeave").textContent=isHost?"Close room":"Leave";$("rpLeave").textContent=isHost?"Close room":"Leave room";
+  $("chipLeave").textContent=isHost?"Close room":"Leave";setText($("rpLeaveLbl"),isHost?"Close room":"Leave room");
   if(!$("inviteBtn").dataset.busy)$("inviteLbl").textContent=canShare?"Share invite":"Copy invite link";
   otpEl.classList.toggle("busy",s==="guest-wait"&&!mmS);
   otpEl.classList.toggle("done",joined&&!isHost);
@@ -3944,39 +3959,73 @@ function renderRoomPanel(force){
   $("rpStandsN").textContent=`${people.length} / ${AUD_MAX}`;
   $("rpHint").textContent=isHost?(people.length?"Tap a seat for options, or drag someone to another seat.":"Share the link or QR. Anyone who joins after your opponent sits in the stands."):"";
   if(key===panelKey&&!force)return;panelKey=key;
+  const before={court:[...$("rpCourt").querySelectorAll(".seatc")].map(e=>e.dataset.id||""),stands:[...$("rpStands").querySelectorAll(".seatc")].map(e=>e.dataset.id||"")};
   $("rpCourt").innerHTML=seatHTML(hId,{big:1,tag:hId===myId?"You · host":"Host",mark:marks2[0]})+'<span class="vsx">VS</span>'+seatHTML(gId,{big:1,tag:gId===myId?"You":"",mark:marks2[1],label:"Open seat"});
   /* whole rows of seats: one more empty seat than people, rounded up to the row */
   const cols=narrowMQ.matches?3:4,slots=Math.min(AUD_MAX,Math.max(cols,Math.ceil((people.length+1)/cols)*cols));
   let h=people.map((id,i)=>seatHTML(id,{tag:id===myId?"You":"",i})).join("");
   for(let i=people.length;i<slots;i++)h+=seatHTML(null,{label:"Empty"});
   $("rpStands").innerHTML=h;
-}
+  /* a seat whose person is the same as before stays still: only the seats
+     that changed hands, a swap's two, or someone arriving, pop in again */
+  if(before.court.length)[...$("rpCourt").querySelectorAll(".seatc")].forEach((e,i)=>{if((e.dataset.id||"")===before.court[i])e.style.animation="none"});
+  if(before.stands.length)[...$("rpStands").querySelectorAll(".seatc")].forEach((e,i)=>{const id=e.dataset.id||"";if(id?before.stands.includes(id):before.stands[i]==="")e.style.animation="none"});}
 $("chipOpen").addEventListener("click",e=>openDialog("dlgRoom",e.currentTarget));
 $("rcPeople").addEventListener("click",e=>openDialog("dlgRoom",e.currentTarget));
 $("rpCopyCode").addEventListener("click",async e=>{const l=e.currentTarget.querySelector(".lbl");setText(l,await copyText(room||"")?"Copied":"Copy failed");setTimeout(()=>setText(l,"Copy code"),1400)});
 $("rpLink").addEventListener("click",async()=>{const url=linkFor(room);if(canShare){navigator.share({title:"X n O",text:"Join my X n O room "+room,url}).catch(()=>{});return}
   const l=$("rpLinkLbl");setText(l,await copyText(url)?"Link copied":"Copy failed");setTimeout(()=>setText(l,"Copy link"),1400)});
+/* The invite QR. On a phone it unfolds inside the sheet, and the sheet grows
+   with it. On a wider screen the room window keeps its size: the code opens
+   as its own small card beside the window, grown out of the QR button. */
+function qrSideClose(instant){
+  const c=$("rpQrSide");if(!c||c.hidden)return;$("rpQrBtn").setAttribute("aria-expanded","false");
+  if(instant||still){c.hidden=true;return}
+  c.animate([{opacity:1,transform:"none"},{opacity:0,transform:"scale(.9)"}],{duration:180,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=a=>{c.hidden=true;a.target.cancel()};
+}
+function qrSideOpen(btn){
+  const c=$("rpQrSide"),d=$("dlgRoom");
+  $("rpQrSideImg").innerHTML=$("qr").innerHTML;c.hidden=false;
+  const dr=d.getBoundingClientRect(),br=btn.getBoundingClientRect(),w=c.offsetWidth,h=c.offsetHeight;
+  const right=dr.right+14+w<=innerWidth-12,left=right?dr.right+14:Math.max(12,dr.left-14-w);
+  const top=Math.max(12,Math.min(innerHeight-h-12,br.top+br.height/2-h/2));
+  c.style.left=left+"px";c.style.top=top+"px";
+  c.style.transformOrigin=`${right?-14:w+14}px ${br.top+br.height/2-top}px`;
+  if(!still)c.animate([{opacity:0,transform:"scale(.6)"},{opacity:1,transform:"none"}],{duration:420,easing:"cubic-bezier(.34,1.3,.6,1)"});
+  btn.setAttribute("aria-expanded","true");
+}
 $("rpQrBtn").addEventListener("click",e=>{
-  const w=$("rpQrWrap"),b=e.currentTarget,open=w.hidden;
+  const b=e.currentTarget;
+  if(!narrowMQ.matches){if(!$("rpQrSide").hidden){qrSideClose();return}if(!drawQR(linkFor(room)))return;qrSideOpen(b);return}
+  const w=$("rpQrWrap"),open=!w.classList.contains("open");
   if(open){if(!drawQR(linkFor(room)))return;$("rpQr").innerHTML=$("qr").innerHTML}
-  b.setAttribute("aria-expanded",String(open));
-  flipHeight($("dlgRoom"),()=>{w.hidden=!open});
-  if(open&&!still)w.animate(VIS_IN,{duration:480,easing:"cubic-bezier(.34,1.3,.6,1)"});
+  b.setAttribute("aria-expanded",String(open));w.classList.toggle("open",open);
 });
+addEventListener("resize",()=>qrSideClose(true));
 $("rpLeave").addEventListener("click",e=>{if(leaveGuard($("chipOpen"),leaveAndReset))return;closeDialog(true);leaveAndReset()});
 
 /* host: tap a seat for options */
 const seatMenu=$("seatMenu");let menuFor=null;
-function closeSeatMenu(){if(seatMenu.hidden)return;seatMenu.hidden=true;const b=document.querySelector(`.seatc[aria-expanded="true"]`);if(b)b.setAttribute("aria-expanded","false");menuFor=null}
+/* the menu folds back into its seat rather than vanishing */
+function closeSeatMenu(instant){
+  if(seatMenu.hidden||seatMenu._out)return;
+  const b=document.querySelector(`.seatc[aria-expanded="true"]`);if(b)b.setAttribute("aria-expanded","false");menuFor=null;
+  if(instant||still){seatMenu.hidden=true;return}
+  const a=seatMenu.animate([{opacity:1,transform:"none"},{opacity:0,transform:"scale(.94) translateY(-4px)"}],{duration:170,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"});
+  seatMenu._out=a;a.onfinish=()=>{seatMenu._out=null;seatMenu.hidden=true;a.cancel()};
+}
 function openSeatMenu(btn){
   const id=btn.dataset.id;if(!isHost||!id||id===myId)return;
   if(menuFor===id){closeSeatMenu();return}
-  closeSeatMenu();menuFor=id;btn.setAttribute("aria-expanded","true");
+  closeSeatMenu(true);if(seatMenu._out){seatMenu._out.cancel();seatMenu._out=null;seatMenu.hidden=true}menuFor=id;btn.setAttribute("aria-expanded","true");
   const inGame=phase==="play"&&(history.length>0||marks.X.length+marks.O.length>0);
+  /* each choice carries a small icon: up into the game, down to the stands, out of the room */
+  const ic=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const item=(a,icon,t,sub,cls)=>`<button type="button" role="menuitem"${cls?` class="${cls}"`:""} data-a="${a}">${ic(icon)}<span class="mi"><span class="l">${t}</span><small>${sub}</small></span></button>`;
   let h=`<div class="who">${esc(nameOf(id))}</div>`;
-  if(id===partner)h+=`<button type="button" role="menuitem" data-a="stands">Move to the stands<small>${inGame?"Ends this game":"They keep watching"}</small></button>`;
-  else h+=`<button type="button" role="menuitem" data-a="play">Make opponent<small>${inGame?"Restarts with a new coin toss":"They take the open seat"}</small></button>`;
-  h+=`<button type="button" role="menuitem" class="danger" data-a="remove">Remove from room<small>They can't rejoin</small></button>`;
+  if(id===partner)h+=item("stands",'<path d="M12 4v10M8 10l4 4 4-4M5 20h14"/>',"Move to the stands",inGame?"Ends this game":"They keep watching");
+  else h+=item("play",'<path d="M12 20V10M8 14l4-4 4 4M5 4h14"/>',"Make opponent",inGame?"Restarts with a new coin toss":"They take the open seat");
+  h+=item("remove",'<circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6 1.6 0 3 .6 4.1 1.6M16 15l5 5M21 15l-5 5"/>',"Remove from room","They can't rejoin","danger");
   seatMenu.innerHTML=h;seatMenu.hidden=false;
   const d=$("dlgRoom"),dr=d.getBoundingClientRect(),br=btn.getBoundingClientRect(),mw=220;
   let left=br.left-dr.left+br.width/2-mw/2;left=Math.max(8,Math.min(dr.width-mw-8,left));
@@ -4047,7 +4096,7 @@ addEventListener("pointercancel",e=>endSeatDrag(e,true));
 ["rpCourt","rpStands"].forEach(x=>$(x).addEventListener("click",e=>{if(seatDragged)return;const b=e.target.closest("button.seatc");if(b)openSeatMenu(b)}));
 seatMenu.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b||!menuFor)return;const id=menuFor,a=b.dataset.a;
-  if(a==="remove"&&!b.classList.contains("armed")){b.classList.add("armed");b.firstChild.textContent="Tap again to remove";return}
+  if(a==="remove"&&!b.classList.contains("armed")){b.classList.add("armed");b.querySelector(".l").textContent="Tap again to remove";return}
   closeSeatMenu();
   if(a==="play")makeOpponent(id);else if(a==="stands")toStands(id);else if(a==="remove")removePerson(id);
 });
@@ -4461,7 +4510,7 @@ function openDialog(id,btn){
   if(id==="dlgInsight")updateInsight(true);
   if(id==="dlgAbout")setTimeout(buildAbout,0);
   if(id==="dlgProfile")buildProfile();
-  if(id==="dlgRoom"){$("rpQrWrap").hidden=true;$("rpQrBtn").setAttribute("aria-expanded","false");closeSeatMenu()}
+  if(id==="dlgRoom"){$("rpQrWrap").classList.remove("open");$("rpQrBtn").setAttribute("aria-expanded","false");qrSideClose(true);closeSeatMenu(true)}
   pickClose(false);
   d.hidden=false;d.querySelectorAll(".rcards").forEach(c=>placeRThumb(c,true));
   /* a switch placed while its dialog was hidden has no size yet: place every one now that it shows */
@@ -4475,6 +4524,7 @@ function openDialog(id,btn){
 }
 function closeDialog(instant){
   const d=openDlg;if(!d)return;openDlg=null;app.inert=false;
+  if(d.id==="dlgRoom")qrSideClose();
   if(d.id==="dlgScan")stopScan();
   const btn=openerBtn;openerBtn=null;if(btn)btn.setAttribute("aria-expanded","false");
   scrim.classList.remove("show");
@@ -4891,7 +4941,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·2242";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·2311";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
