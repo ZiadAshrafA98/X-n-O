@@ -174,7 +174,70 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .cell.dest::after{content:"";position:absolute;width:12%;aspect-ratio:1;border-radius:50%;background:var(--faint);opacity:.55;animation:destin .3s var(--out) both}
 .cell.dest:not(:disabled):hover::after{opacity:.9;scale:1.3}
 @keyframes destin{from{opacity:0;scale:.3}}
-:root[data-rule="M"] .grp-age{display:none}
+/* ---------- on/off rows ---------- */
+/* a label and a switch on one line, so a yes-or-no costs one row and not two */
+.group.tog-row{display:grid;grid-template-rows:1fr;padding-top:6px;padding-bottom:6px;
+  transition:grid-template-rows .46s cubic-bezier(.32,.72,0,1),padding .46s cubic-bezier(.32,.72,0,1),border-color .3s var(--out)}
+.tog-in{min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:opacity .3s var(--out)}
+.tog-lbl{font-size:14px;color:var(--ink-2);cursor:pointer;-webkit-user-select:none;user-select:none}
+/* Mark order numbers means nothing under Move one: the row folds away, and the sheet or the pop-up eases to its new height with it */
+:root[data-rule="M"] .group.grp-age{grid-template-rows:0fr;padding-top:0;padding-bottom:0;border-top-color:transparent;pointer-events:none}
+:root[data-rule="M"] .grp-age .tog-in{opacity:0}
+:root[data-rule="M"] .grp-age .liq-sw{visibility:hidden}
+
+/* ════ liquid ═══════════════════════════════════════════════
+   (Bencho) Prefix liq-. Every one of these is two layers in register:
+   opaque shapes, and anything that needs a crisp edge riding above.
+
+   (This port) The toggle has no goo pass any more — Bencho's own note in
+   the component says why: one round shape gains nothing from a
+   blur-then-threshold, it only loses its edge — so #liq-goo is not
+   mounted, and nothing here points at it.
+
+   Bencho's tokens, mapped to this page's own, and set on the switch itself
+   so nothing leaks out:
+     --fill-slab  the OFF track: the same ground the mode tabs sit on
+     --fill-on    the ON track: in dark, the grey of the tabs' own thumb,
+                  a step lighter; in light, the page's ink
+     --liq-off / --liq-dot  the droplet off and on
+   --board, --card, --ink, --nod-r and --pane-edge were for Bencho's Stroke
+   control and node card, which this page does not have. */
+.liq-sw{--fill-slab:#2c2c30;--fill-on:#505056;--liq-off:#77777e;--liq-dot:var(--ink);--liq-glow:0 1px 3px rgba(0,0,0,.45),inset 0 0 0 .5px rgba(255,255,255,.18)}
+:root[data-theme="light"] .liq-sw{--fill-slab:#e4e4e8;--fill-on:var(--ink);--liq-off:#ffffff;--liq-dot:#ffffff;--liq-glow:0 1px 3px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .liq-sw{--fill-slab:#e4e4e8;--fill-on:var(--ink);--liq-off:#ffffff;--liq-dot:#ffffff;--liq-glow:0 1px 3px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.06)}}
+
+/* ── ALWAYS A PILL ──────────────────────────────────────────
+   (Bencho) A switch is a pill: that is the shape the gesture is named
+   after, and squaring it turns a thing you slide into a thing you click.
+
+   ── OFF IS THE GROUND, ON IS A STEP UP ─────────────────────
+   (This port) Bencho's version inverts black and white. Here the on track
+   is a mid grey rather than full white, so a row of switches never shouts
+   louder than the content of the sheet; the bright droplet is what says
+   "on", the same way the tabs' selected label is the bright one. */
+.liq-sw{position:relative;flex:none;width:54px;height:32px;padding:0;border:0;border-radius:999px;
+  background:var(--fill-slab);cursor:pointer;
+  /* it is a rail you can push along, not only a button */
+  touch-action:none;-webkit-tap-highlight-color:transparent;
+  transition:background-color 420ms ease}
+.liq-sw[data-on="true"]{background:var(--fill-on)}
+.liq-sw:focus-visible{outline:2px solid color-mix(in srgb,var(--ink) 50%,transparent);outline-offset:2px}
+.liq-sw-blobs{position:absolute;inset:0}
+/* ── the droplet, and it is the ONLY body ───────────────────
+   (Bencho) `left: 0` is not optional. It is an inline element, so with
+   `left: auto` the static position is wherever the line box put it — and
+   the button it sits in centres its text, which pushed the thumb to the
+   middle of the track. */
+.liq-thumb{position:absolute;left:0;top:50%;
+  width:var(--liq-thumb,26px);height:var(--liq-thumb,26px);margin-top:calc(var(--liq-thumb,26px) / -2);
+  border-radius:999px;background:var(--liq-off);box-shadow:var(--liq-glow);will-change:transform;
+  /* (Bencho) transform belongs to the spring — a CSS transition on the same
+     property re-interpolates every frame the spring writes, and what you
+     see is the easing, not the spring. The colour is the only thing here
+     that eases. */
+  transition:background-color 420ms ease}
+.liq-sw[data-on="true"] .liq-thumb{background:var(--liq-dot)}
+@media (prefers-reduced-motion:reduce){.liq-thumb{transition-duration:160ms}}
 .age{position:absolute;top:10px;right:13px;font:500 11px var(--mono);color:var(--faint);transition:opacity .2s}
 .hint{position:absolute;bottom:9px;left:0;right:0;text-align:center;font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;animation:meta .3s var(--out) both}
 .hint.W{color:var(--green)} .hint.L{color:var(--red)} .hint.D{color:var(--faint)}
@@ -1177,12 +1240,12 @@ a.sh-act{text-decoration:none}
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="rcards" role="group" aria-labelledby="gl-rule"></div></div>
-  <div class="group stag" data-hide="online"><span class="group-label" id="gl-hints">Solver hints</span><div class="seg sm full" data-opt="hints" role="group" aria-labelledby="gl-hints"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
-  <div class="group stag grp-age"><span class="group-label" id="gl-age">Mark order numbers</span><div class="seg sm full" data-opt="age" role="group" aria-labelledby="gl-age"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
-  <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
+  <div class="group stag tog-row" data-hide="online"><div class="tog-in"><span class="tog-lbl" id="gl-hints">Solver hints</span><button class="liq-sw" type="button" role="switch" data-opt="hints" aria-checked="false" aria-labelledby="gl-hints"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
+  <div class="group stag tog-row grp-age"><div class="tog-in"><span class="tog-lbl" id="gl-age">Mark order numbers</span><button class="liq-sw" type="button" role="switch" data-opt="age" aria-checked="false" aria-labelledby="gl-age"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
+  <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1445</p>
+  <p class="build-tag">Version 2026.11.24·1508</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2421,6 +2484,146 @@ $("resetScore").addEventListener("click",()=>{
   score={X:0,O:0};saveScore();render();toast("Score reset");
 });
 
+/* ---------- LiquidToggle ---------- */
+/* Ported from Bencho's "Liquid toggle" (MIT, bencho.dev/licence). The
+   original is a React component driven by framer-motion; this page has no
+   build step, so the same springs run here on requestAnimationFrame. The
+   notes below are Bencho's, kept because they say why the numbers are what
+   they are. Where this port changes something, the note says so.
+
+   ══ 1 · Toggle ═══════════════════════════════════════════
+   (Bencho) One body that stretches. There was a second, smaller blob
+   running behind this one on a lagging spring, and the goo between them
+   necked into a thread — which is what a trail IS, and what it looks like.
+   What replaces it is the ONE body lengthening along its direction of
+   travel and thinning across it, so the elasticity is in the shape of the
+   thing moving rather than in something left behind.
+
+   Area is kept: scaleY is 1/scaleX, so the thumb is the same amount of
+   droplet whatever it is doing.
+
+   (This port) Sized for a settings row: a 54 × 32 track with a 26 droplet.
+   Bencho's point about the air still holds — the inset at the ends and the
+   inset above and below are the same gap seen twice, so PAD is one number
+   for both. And one thing is added: holding the switch squeezes the droplet
+   wider toward the middle, the way iOS does, and letting go hands it to an
+   underdamped spring, so it overshoots and settles — the elastic give. */
+const LIQ={TRACK:54,H:32,THUMB:26};
+LIQ.PAD=(LIQ.H-LIQ.THUMB)/2;
+LIQ.SHUT_X=LIQ.PAD;LIQ.OPEN_X=LIQ.TRACK-LIQ.THUMB-LIQ.PAD;LIQ.MID_X=(LIQ.SHUT_X+LIQ.OPEN_X)/2;
+const liqClamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
+/* one damped spring, stepped in small slices so a slow frame never blows it up */
+function liqSpring(s,target,k,c,m,dt){const n=Math.max(1,Math.ceil(dt/(1/240))),h=dt/n;for(let i=0;i<n;i++){const a=(-k*(s.p-target)-c*s.v)/m;s.v+=a*h;s.p+=s.v*h}}
+function LiquidToggle(el,{checked=false,onChange=null,stretch=50,speed=50}={}){
+  const {THUMB,SHUT_X,OPEN_X,MID_X}=LIQ,thumb=el.querySelector(".liq-thumb");
+  el.style.setProperty("--liq-thumb",THUMB+"px");
+  let on=!!checked,held=false,hot=false,grip=null,raf=0,last=0,lastX=0;
+  /* ── ONE POSITION, WRITTEN TWO WAYS ──────────────────────
+     (Bencho) The thumb's x is a value rather than a prop, which is what
+     lets a finger and a spring both drive it without one of them having to
+     know about the other: a drag writes it directly, a release animates it. */
+  const x={p:on?OPEN_X:SHUT_X,v:0};
+  /* the measured speed, smoothed by its own spring (380 / 34 / 0.6) */
+  const eased={p:0,v:0};
+  /* the hover swell and the press squeeze, each a spring of its own */
+  const swell={p:1,v:0},press={p:0,v:0};
+  /* ── the divisor is the whole tuning ─────────────────────
+     (Bencho) Dividing the speed by 600 puts the peak stretch at about 1.09
+     at the default, and the cap at 0.4 leaves the top of the knob
+     somewhere to go. (This port) The stretch defaults to 50 rather than 36:
+     the travel here is half Bencho's, so the droplet moves slower and needs
+     the extra give to read as liquid at all. */
+  const lengthen=v=>1+Math.min(.4,Math.abs(v)/600)*(liqClamp(stretch,0,100)/100);
+  /* ── how the thumb lands when it is let go ───────────────
+     (Bencho) Damping is a constant: 21.5 is zeta 0.87, so it still arrives
+     with a hint of give, and the hint is the whole of it. Speed is the
+     stiffness, because how fast a switch crosses is a real question. */
+  const settle={k:170-(50-speed)*1.1,c:21.5,m:.9};
+  function paint(){
+    const L=lengthen(eased.p),sq=Math.max(0,press.p);
+    /* ── the hover swell goes in the SAME transform ──────────
+       (Bencho) The CSS scale property applies BEFORE transform, so it
+       scaled the coordinate system the translate then moved through, and the
+       droplet drifted toward the end it was sitting at. Multiplied into
+       scaleX and scaleY instead, it swells about the droplet's own centre
+       and the position is untouched. (This port) The squeeze goes in the
+       same way, and grows toward the middle of the track, so the droplet
+       never pokes past the end it rests against. */
+    const wide=L*swell.p*(1+.26*sq),tall=swell.p/L*(1-.08*sq);
+    const lean=THUMB*.26*sq/2*(x.p>MID_X?-1:1);
+    thumb.style.transform=`translateX(${(x.p+lean).toFixed(2)}px) scale(${wide.toFixed(4)},${tall.toFixed(4)})`;
+  }
+  function frame(t){
+    const dt=Math.min(.032,(t-last)/1000||1/60);last=t;
+    if(!held)liqSpring(x,on?OPEN_X:SHUT_X,settle.k,settle.c,settle.m,dt);
+    const vel=(x.p-lastX)/dt;lastX=x.p;
+    liqSpring(eased,vel,380,34,.6,dt);
+    liqSpring(swell,hot?1.035:1,380,34,.6,dt);
+    /* the squeeze lets go on a livelier spring (zeta about 0.45): the elastic part */
+    liqSpring(press,held?1:0,520,19,.7,dt);
+    paint();
+    const rest=!held&&Math.abs(x.p-(on?OPEN_X:SHUT_X))<.02&&Math.abs(x.v)<.05&&Math.abs(eased.p)<.5&&Math.abs(eased.v)<2&&Math.abs(swell.p-(hot?1.035:1))<.0005&&Math.abs(press.p)<.002&&Math.abs(press.v)<.01;
+    if(rest){x.p=on?OPEN_X:SHUT_X;x.v=0;eased.p=eased.v=0;press.p=press.v=0;paint();raf=0}else raf=requestAnimationFrame(frame);
+  }
+  function wake(){if(!raf){last=performance.now();lastX=x.p;raf=requestAnimationFrame(frame)}}
+  function show(){el.dataset.on=String(on);el.setAttribute("aria-checked",String(on))}
+  function flip(v,tell){if(v===on)return;on=v;show();wake();if(tell&&onChange)onChange(on)}
+  /* the component may be drawn scaled, so a client delta is divided back out into the track's own units */
+  const local=cx=>{const b=el.getBoundingClientRect(),k=b.width/(el.offsetWidth||b.width)||1;return(cx-b.left)/k};
+  el.addEventListener("pointerdown",e=>{
+    /* ── NO OFFSET YET. It is taken at the first MOVE. ──────
+       (Bencho) Deciding the offset on press made the droplet TELEPORT to
+       the finger on the first move. Taking it at the first move means that
+       move produces no displacement at all, so a drag always starts from
+       where the droplet actually is. */
+    grip={id:e.pointerId,grab:null,moved:false};held=true;wake();
+    try{el.setPointerCapture(e.pointerId)}catch(err){/* not a live pointer */}
+  });
+  el.addEventListener("pointermove",e=>{
+    if(e.pointerType==="mouse"&&!hot&&!grip){hot=true;wake()}
+    const g=grip;if(!g||g.id!==e.pointerId)return;
+    const at=local(e.clientX);
+    if(g.grab===null)g.grab=at-x.p;
+    const next=liqClamp(at-g.grab,SHUT_X,OPEN_X);
+    if(Math.abs(next-x.p)>.4)g.moved=true;
+    x.p=next;x.v=0;
+    /* it flips as it passes the middle rather than on release, so the track answers under your finger */
+    if(g.moved)flip(next>MID_X,true);
+  });
+  const up=e=>{
+    const g=grip;if(!g)return;grip=null;
+    /* ── AND THE RELEASE IS GUARDED TOO ────────────────────
+       (Bencho) Unguarded, a release that throws leaves `held` on, and a
+       held switch never settles. */
+    try{el.releasePointerCapture(e.pointerId)}catch(err){/* never captured */}
+    /* a press that never travelled is a CLICK, and a click toggles */
+    if(!g.moved)flip(!on,true);
+    held=false;wake();
+  };
+  el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);
+  el.addEventListener("pointerenter",e=>{if(e.pointerType==="mouse"){hot=true;wake()}});
+  el.addEventListener("pointerleave",()=>{hot=false;wake()});
+  /* the keyboard still gets a plain switch */
+  el.addEventListener("keydown",e=>{if(e.key!==" "&&e.key!=="Enter")return;e.preventDefault();flip(!on,true)});
+  /* the browser's own click (from the keyboard or a label) is handled above, so it does nothing more */
+  el.addEventListener("click",e=>e.preventDefault());
+  show();paint();
+  return{
+    get on(){return on},
+    /* set from outside: animated, or straight to rest */
+    set(v,animate){v=!!v;if(v===on&&!animate)return;on=v;show();
+      if(animate===false||still){if(raf){cancelAnimationFrame(raf);raf=0}x.p=on?OPEN_X:SHUT_X;x.v=0;eased.p=eased.v=0;paint()}else wake()}
+  };
+}
+
+/* the on/off settings use it: the switch, and the label beside it, both flip it */
+const liqToggles={};
+document.querySelectorAll(".liq-sw[data-opt]").forEach(el=>{
+  const k=el.dataset.opt;
+  liqToggles[k]=LiquidToggle(el,{checked:opt[k]==="1",onChange:v=>onOpt(k,v?"1":"0")});
+  const lbl=el.parentElement.querySelector(".tog-lbl");if(lbl)lbl.addEventListener("click",()=>{const t=liqToggles[k];t.set(!t.on,true);onOpt(k,t.on?"1":"0")});
+});
+
 /* ---------- Rule cards ---------- */
 /* After three marks: two cards, each with a tiny board that plays its rule
    on a loop while that card is the chosen one. A highlight slides between
@@ -2468,7 +2671,7 @@ function setSeg(seg,val,animate){
   seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.v??b.dataset.mode)===val)));
   placeThumb(seg,animate);
 }
-function syncOptSegs(animate){document.documentElement.dataset.rule=rule;syncRuleCards(animate);document.querySelectorAll(".seg[data-opt]").forEach(s=>{const k=s.dataset.opt;setSeg(s,k==="rule"?rule:opt[k],animate)})}
+function syncOptSegs(animate){document.documentElement.dataset.rule=rule;syncRuleCards(animate);for(const k in liqToggles)liqToggles[k].set(opt[k]==="1",!!animate&&liqToggles[k].on!==(opt[k]==="1"));document.querySelectorAll(".seg[data-opt]").forEach(s=>{const k=s.dataset.opt;setSeg(s,k==="rule"?rule:opt[k],animate)})}
 document.querySelectorAll(".seg[data-opt]").forEach(s=>s.addEventListener("click",e=>{const b=e.target.closest("button");if(b)onOpt(s.dataset.opt,b.dataset.v)}));
 function onOpt(k,v){
   if(k==="rule"){
@@ -2486,6 +2689,8 @@ function onOpt(k,v){
     for(const el of [a,b])[...el.children].forEach(n=>{if(n.classList.contains("outgoing"))n.remove();else n.className=""});
     t.append(...a.childNodes);a.append(...b.childNodes);b.append(t)}
   opt[k]=v;saveOpt();syncOptSegs(true);
+  /* turning reaction sounds on plays one, so you hear what you switched on */
+  if(k==="sfx"&&v==="1")setTimeout(()=>playSfx("wow"),30);
   if((k==="youAre"||k==="first")&&mode==="ai")setMode("ai");else render();
 }
 
@@ -3404,7 +3609,7 @@ emoTray.querySelectorAll("button[data-e]").forEach(b=>{if(EMO_ART[b.dataset.e])b
 /* a tap plays the reaction's own motion on its button before it flies */
 emoTray.addEventListener("pointerdown",e=>{const b=e.target.closest("button[data-e]");if(!b||still)return;b.classList.remove("play");void b.offsetWidth;b.classList.add("play");setTimeout(()=>b.classList.remove("play"),900)});
 /* turning sounds on plays one, so you know what you will hear */
-document.querySelector('.seg[data-opt="sfx"]').addEventListener("click",()=>setTimeout(()=>{if(opt.sfx==="1")playSfx("wow")},30));
+/* turning reaction sounds on plays one, so you hear what you switched on (see onOpt) */
 function sendEmote(k){
   if(!EMO[k]||!connOpen||Date.now()<emoCool)return;
   playSfx(k);
@@ -4402,7 +4607,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1445";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·1508";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
