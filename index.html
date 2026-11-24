@@ -409,6 +409,34 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .mcard{perspective:320px}
 .mcard .mg{position:relative;display:inline-block;transform-style:preserve-3d}
 .mcard .mg-f{position:relative;display:block;transform:translateZ(0)}
+/* ---------- rule cards: the same two-card switch as X or O, each with a tiny game that shows the rule ---------- */
+.rcards{position:relative;isolation:isolate;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.rthumb{position:absolute;z-index:0;left:0;top:0;height:100%;border-radius:18px;pointer-events:none;
+  background:color-mix(in srgb,var(--rt,var(--green)) 13%,var(--chip));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--rt,var(--green)) 50%,transparent);
+  transition:transform .5s cubic-bezier(.3,1.25,.5,1),width .5s cubic-bezier(.3,1.25,.5,1),background-color .35s var(--out),box-shadow .35s var(--out)}
+.rthumb.no-anim{transition:none}
+.rcard{position:relative;z-index:1;border:0;border-radius:18px;padding:14px 8px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--mute);background:var(--chip);transition:color .35s var(--out),background-color .2s ease,scale .2s var(--out)}
+.rcard:hover{background:var(--chip-2)} .rcard:active{scale:.96}
+.rcard[aria-pressed="true"]{background:transparent;color:var(--ink)}
+.rcard svg{width:52px;height:52px;margin-bottom:4px;overflow:visible}
+.rcard b{font-size:14px;font-weight:600}
+.rcard small{font-size:11px;line-height:1.3;color:var(--mute);text-align:center}
+.rcard .rb{fill:currentColor;opacity:.1}
+.rcard .rx{fill:none;stroke:var(--x);stroke-width:2.6;stroke-linecap:round}
+.rcard .ro{fill:none;stroke:var(--o);stroke-width:2.4}
+.rcard svg{transition:opacity .35s var(--out)} .rcard[aria-pressed="false"] svg{opacity:.6}
+.rcard .anim{transform-box:fill-box;transform-origin:center}
+.rcard .r-mv{animation:rmove 3.2s cubic-bezier(.45,.05,.25,1) infinite;transform-box:view-box;transform-origin:8px 8px}
+@keyframes rmove{0%,26%{transform:none;opacity:1}44%{transform:translate(16px,-13px) scale(1.2)}60%,86%{transform:translate(32px,0);opacity:1}92%{transform:translate(32px,0);opacity:0}93%{transform:none;opacity:0}100%{transform:none;opacity:1}}
+.rcard .r-dot{animation:rdot 3.2s ease infinite}
+@keyframes rdot{0%,10%{opacity:0}22%,52%{opacity:.6}60%,100%{opacity:0}}
+.rcard .r-old{animation:rold 3.2s ease infinite}
+@keyframes rold{0%,14%,28%{opacity:1}21%{opacity:.35}42%,90%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:none}}
+.rcard .r-new{animation:rnew 3.2s cubic-bezier(.34,1.4,.6,1) infinite}
+@keyframes rnew{0%,44%{opacity:0;transform:scale(.3)}58%{opacity:1;transform:scale(1.15)}66%,88%{opacity:1;transform:none}94%,100%{opacity:0;transform:scale(.6)}}
+/* only the chosen card plays; the other rests on its first frame */
+.rcard[aria-pressed="false"] .anim{animation:none}
+@media (prefers-reduced-motion:reduce){.rcard .anim{animation:none!important}}
 .mcard .mg-d{position:absolute;left:0;top:0;transform:translateZ(calc(var(--z) * -1.15px));color:color-mix(in srgb,currentColor calc(78% - var(--z) * 5%),#000)}
 
 /* ---------- online lobby: room ready, coin toss, pick a mark ---------- */
@@ -1148,13 +1176,13 @@ a.sh-act{text-decoration:none}
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule"><span class="thumb"></span><button type="button" data-v="M">Move one</button><button type="button" data-v="A">Oldest fades</button></div></div>
+  <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="rcards" role="group" aria-labelledby="gl-rule"></div></div>
   <div class="group stag" data-hide="online"><span class="group-label" id="gl-hints">Solver hints</span><div class="seg sm full" data-opt="hints" role="group" aria-labelledby="gl-hints"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
   <div class="group stag grp-age"><span class="group-label" id="gl-age">Mark order numbers</span><div class="seg sm full" data-opt="age" role="group" aria-labelledby="gl-age"><span class="thumb"></span><button type="button" data-v="0">Off</button><button type="button" data-v="1">On</button></div></div>
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1410</p>
+  <p class="build-tag">Version 2026.11.24·1445</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1180,7 +1208,7 @@ a.sh-act{text-decoration:none}
         <div class="stat stag" style="--i:3"><b id="statMoves">7</b><span>moves to force it</span></div>
         <div class="stat stag" style="--i:4"><b id="statPos" data-n="66682">66,682</b><span>positions solved</span></div>
       </div>
-      <div class="ins-rule stag" style="--i:5"><span class="group-label" id="gl-rule2">After three marks</span><div class="seg sm full" data-opt="rule" role="group" aria-labelledby="gl-rule2"><span class="thumb"></span><button type="button" data-v="M">Move one</button><button type="button" data-v="A">Oldest fades</button></div></div>
+      <div class="ins-rule stag" style="--i:5"><span class="group-label" id="gl-rule2">After three marks</span><div class="rcards" role="group" aria-labelledby="gl-rule2"></div></div>
     </div>
   </div>
 </section>
@@ -1991,15 +2019,17 @@ $("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if
 $("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
 $("lbList").addEventListener("click",e=>{if(e.target.closest("[data-play]")){closeDialog();if(mode!=="ai")goMode("ai")}});
 /* ---------- Options (segmented controls) ---------- */
-const defaults={level:"medium",youAre:"X",first:"me",rule:"M",rv:2,hints:"0",age:"1",alt:"1",sfx:"1"};
+const defaults={level:"medium",youAre:"X",first:"me",rule:"M",rv:3,hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
 if(!opt){ // carry over settings from the previous version of the site
   opt={...defaults,hints:store.get("xo.hints",false)?"1":"0",
     age:store.get("xo.age",true)?"1":"0",alt:store.get("xo.alt",true)?"1":"0",level:store.get("xo.level","medium")};
 }
+/* the move rule became the game: everyone starts on it once, and can still pick a fade rule in Settings.
+   This reads the saved settings' own marker, before the defaults are mixed in. */
+const savedRv=opt.rv;
 opt={...defaults,...opt};
-/* the move rule became the game: everyone starts on it once, and can still pick a fade rule in Settings */
-if(opt.rv!==2){opt.rule="M";opt.rv=2;store.set("xo.opt",opt)}
+if(savedRv!==3){opt.rule="M";opt.rv=3;store.set("xo.opt",opt)}
 const saveOpt=()=>store.set("xo.opt",opt);
 
 /* ---------- Game state ---------- */
@@ -2391,6 +2421,38 @@ $("resetScore").addEventListener("click",()=>{
   score={X:0,O:0};saveScore();render();toast("Score reset");
 });
 
+/* ---------- Rule cards ---------- */
+/* After three marks: two cards, each with a tiny board that plays its rule
+   on a loop while that card is the chosen one. A highlight slides between
+   them, as in the X or O picker. */
+function ruleSVG(v){
+  const cell=i=>[(i%3)*16+8,Math.floor(i/3)*16+8];
+  const X=(i,cls)=>{const[x,y]=cell(i);return`<path class="rx ${cls||""}"${/r-new/.test(cls||"")?' opacity="0"':""} d="M${x-4} ${y-4}L${x+4} ${y+4}M${x+4} ${y-4}L${x-4} ${y+4}"/>`};
+  const O=i=>{const[x,y]=cell(i);return`<circle class="ro" cx="${x}" cy="${y}" r="4.4"/>`};
+  const board=Array.from({length:9},(_,i)=>{const[x,y]=cell(i);return`<rect class="rb" x="${x-7}" y="${y-7}" width="14" height="14" rx="3.5"/>`}).join("");
+  /* Move one: the X in the corner lifts and slides across to finish the diagonal */
+  if(v==="M")return`<svg viewBox="0 0 48 48" aria-hidden="true">${board}<circle class="anim r-dot" cx="40" cy="8" r="2" fill="currentColor" opacity="0"/>${X(4)}${X(6)}${O(1)}${O(8)}${X(0,"anim r-mv")}</svg>`;
+  /* Oldest fades: a fourth X lands and the oldest one gives way */
+  return`<svg viewBox="0 0 48 48" aria-hidden="true">${board}${X(0,"anim r-old")}${X(4)}${X(5)}${O(2)}${O(6)}${X(3,"anim r-new")}</svg>`;
+}
+const RULE_CARDS=[["M","Move one","Pick a mark, move it","var(--green)"],["A","Oldest fades","A fourth mark replaces it","var(--amber)"]];
+document.querySelectorAll(".rcards").forEach(c=>{
+  c.innerHTML=`<span class="rthumb" aria-hidden="true"></span>`+RULE_CARDS.map(([v,t,s])=>`<button class="rcard" type="button" data-v="${v}" aria-pressed="false">${ruleSVG(v)}<b>${t}</b><small>${s}</small></button>`).join("");
+  c.addEventListener("click",e=>{const b=e.target.closest(".rcard");if(b)onOpt("rule",b.dataset.v)});
+});
+function placeRThumb(c,instant){
+  const t=c.querySelector(".rthumb"),on=c.querySelector('.rcard[aria-pressed="true"]');if(!t||!on||!on.offsetWidth)return;
+  if(instant)t.classList.add("no-anim");
+  t.style.width=on.offsetWidth+"px";t.style.transform=`translateX(${on.offsetLeft}px)`;
+  t.style.setProperty("--rt",(RULE_CARDS.find(r=>r[0]===on.dataset.v)||RULE_CARDS[0])[3]);
+  if(instant){void t.offsetWidth;t.classList.remove("no-anim")}
+}
+function syncRuleCards(animate){
+  /* the old Before-you-place rule still plays in rooms that use it; it shows as Oldest fades */
+  const v=rule==="M"?"M":"A";
+  document.querySelectorAll(".rcards").forEach(c=>{c.querySelectorAll(".rcard").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===v)));placeRThumb(c,!animate)});
+}
+
 /* ---------- Segmented controls ---------- */
 /* The thumb is placed from the pressed button's own box, so the labels can
    change length without the control jumping. It travels on a spring that
@@ -2406,7 +2468,7 @@ function setSeg(seg,val,animate){
   seg.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.v??b.dataset.mode)===val)));
   placeThumb(seg,animate);
 }
-function syncOptSegs(animate){document.documentElement.dataset.rule=rule;document.querySelectorAll(".seg[data-opt]").forEach(s=>{const k=s.dataset.opt;setSeg(s,k==="rule"?rule:opt[k],animate)})}
+function syncOptSegs(animate){document.documentElement.dataset.rule=rule;syncRuleCards(animate);document.querySelectorAll(".seg[data-opt]").forEach(s=>{const k=s.dataset.opt;setSeg(s,k==="rule"?rule:opt[k],animate)})}
 document.querySelectorAll(".seg[data-opt]").forEach(s=>s.addEventListener("click",e=>{const b=e.target.closest("button");if(b)onOpt(s.dataset.opt,b.dataset.v)}));
 function onOpt(k,v){
   if(k==="rule"){
@@ -2420,6 +2482,8 @@ function onOpt(k,v){
   /* your score and the computer's trade sides with the marks: the two numbers
      trade elements too, so the number at each seat stays put */
   if(k==="youAre"&&mode==="ai"){const a=$("pXscore"),b=$("pOscore"),t=document.createDocumentFragment();
+    /* moving a number restarts its entrance, so the moved ones come over already settled */
+    for(const el of [a,b])[...el.children].forEach(n=>{if(n.classList.contains("outgoing"))n.remove();else n.className=""});
     t.append(...a.childNodes);a.append(...b.childNodes);b.append(t)}
   opt[k]=v;saveOpt();syncOptSegs(true);
   if((k==="youAre"||k==="first")&&mode==="ai")setMode("ai");else render();
@@ -2433,6 +2497,8 @@ function setMode(m){
   if(m==="ai"){aiSide=other(opt.youAre);names[aiSide]="Computer";names[opt.youAre]=myName}
   else if(m==="local"){names.X=localName("X");names.O=localName("O")}
   else setOnlineNames();
+  /* away from a room you play your own rule again, whatever the last room used */
+  if(m!=="online"){rule=RULES.includes(opt.rule)?opt.rule:"M";syncOptSegs(false)}
   loadScore();
   newRound(m==="ai"?(opt.first==="ai"?aiSide:opt.youAre):"X");
 }
@@ -2667,6 +2733,8 @@ function updateNetStatus(){
 
 function begin(c,host,restore){
   leave(true);
+  /* every new room starts on Move one; a guest takes the host's rule anyway */
+  if(!restore){rule="M";syncOptSegs(false)}
   room=c;isHost=host;phase="lobby";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;updateMe();
   myId=(restore&&restore.myId)||rid();seq=Math.floor(Math.random()*1e6);seen=new Set();
   if(restore&&typeof restore.partner==="string"){partner=restore.partner;partnerSeen=Date.now()}
@@ -3908,7 +3976,7 @@ function openDialog(id,btn){
   if(id==="dlgProfile")buildProfile();
   if(id==="dlgRoom"){$("rpQrWrap").hidden=true;$("rpQrBtn").setAttribute("aria-expanded","false");closeSeatMenu()}
   pickClose(false);
-  d.hidden=false;anchorPop(d,btn,rect);scrim.hidden=false;d.style.transform="";
+  d.hidden=false;d.querySelectorAll(".rcards").forEach(c=>placeRThumb(c,true));anchorPop(d,btn,rect);scrim.hidden=false;d.style.transform="";
   scrim.classList.toggle("clear",d.classList.contains("pop")&&!narrowMQ.matches);
   requestAnimationFrame(()=>scrim.classList.add("show"));
   app.inert=true;if(btn)btn.setAttribute("aria-expanded","true");
@@ -4334,7 +4402,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1410";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·1445";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
