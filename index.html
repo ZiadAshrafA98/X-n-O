@@ -835,8 +835,6 @@ button.seatc{touch-action:none}
 .pl-txt .mt{position:relative;display:inline-block;overflow:visible;font-variant-numeric:tabular-nums}
 .pl-txt .mt-out{position:absolute;left:0;top:0;display:inline-block;white-space:pre;transform-origin:left center}
 .pl-txt .mt-in{display:inline-block;white-space:pre;transform-origin:left center}
-/* a phrase morphing never smears over the words beside it */
-#plA2.morphing{overflow-x:clip;overflow-y:visible;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent)}
 @keyframes ping{0%{transform:scale(.5);opacity:.8}100%{transform:scale(1.6);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pl-dot::after{animation:none}}
 /* ---------- the stand-in rows ---------- */
@@ -1330,7 +1328,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·2334</p>
+  <p class="build-tag">Version 2026.11.24·2338</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -4412,15 +4410,24 @@ function morphText(el,txt){
   const inn=document.createElement("span");inn.className="mt-in";inn.textContent=txt;
   el.append(inn,out);
   const w1=inn.getBoundingClientRect().width,E="cubic-bezier(.22,1,.36,1)";
-  el.animate([{width:w0+"px"},{width:w1+"px"}],{duration:num?420:380,easing:E});
+  el.animate([{width:w0+"px"},{width:w1+"px"}],{duration:num?420:360,easing:E});
   if(num){
     inn.animate([{opacity:0,transform:`translateY(${dir*60}%)`,filter:"blur(2px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:420,easing:E});
     out.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translateY(${dir*-60}%)`,filter:"blur(2px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>out.remove();
     return;
   }
-  el.classList.add("morphing");clearTimeout(el._mt);el._mt=setTimeout(()=>el.classList.remove("morphing"),420);
-  inn.animate([{opacity:0,filter:"blur(5px)",letterSpacing:"-.08em",transform:"scaleX(1.08)"},{opacity:1,filter:"blur(0)",letterSpacing:"0em",transform:"none"}],{duration:340,delay:60,easing:E,fill:"backwards"});
-  out.animate([{opacity:1,filter:"blur(0)",letterSpacing:"0em",transform:"none"},{opacity:0,filter:"blur(6px)",letterSpacing:".12em",transform:"scaleX(1.06)"}],{duration:240,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>out.remove();
+  /* both phrases are stretched to the box's own width at every moment, the
+     old one narrowing and the new one widening as the box eases between
+     them, so neither ever spills past the box and nothing needs cutting.
+     Underneath, they trade places through a quick blur. */
+  const D=360;
+  /* a part arriving from nothing, or leaving to nothing, just fades through the blur */
+  if(w0<1||w1<1){
+    out.animate([{opacity:1,filter:"blur(0)"},{opacity:0,filter:"blur(4px)"}],{duration:D*.6,easing:E,fill:"forwards"}).onfinish=()=>out.remove();
+    inn.animate([{opacity:0,filter:"blur(4px)"},{opacity:1,filter:"blur(0)"}],{duration:D,easing:E});return;
+  }
+  out.animate([{opacity:1,filter:"blur(0)",transform:"none"},{opacity:0,filter:"blur(5px)",transform:`scaleX(${(w1/w0).toFixed(3)})`}],{duration:D,easing:E,fill:"forwards"}).onfinish=()=>out.remove();
+  inn.animate([{opacity:0,filter:"blur(5px)",transform:`scaleX(${(w0/w1).toFixed(3)})`},{opacity:1,filter:"blur(0)",transform:"none"}],{duration:D,easing:E});
 }
 /* listen only while it can help: Online tab open, no room joined */
 function pulseSync(){if(mode==="online"&&!room)pulseStart();else pulseStop(mode!=="online");pulseShow()}
@@ -5003,7 +5010,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·2334";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·2338";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
