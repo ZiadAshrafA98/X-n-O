@@ -218,7 +218,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
   background:var(--fill-slab);cursor:pointer;
   /* it is a rail you can push along, not only a button */
   touch-action:none;-webkit-tap-highlight-color:transparent;
-  transition:background-color 420ms ease}
+  transition:background-color 320ms ease}
 .liq-sw[data-on="true"]{background:var(--fill-on)}
 .liq-sw:focus-visible{outline:2px solid color-mix(in srgb,var(--ink) 50%,transparent);outline-offset:2px}
 .liq-sw-blobs{position:absolute;inset:0}
@@ -234,7 +234,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
      property re-interpolates every frame the spring writes, and what you
      see is the easing, not the spring. The colour is the only thing here
      that eases. */
-  transition:background-color 420ms ease}
+  transition:background-color 320ms ease}
 .liq-sw[data-on="true"] .liq-thumb{background:var(--liq-dot)}
 @media (prefers-reduced-motion:reduce){.liq-thumb{transition-duration:160ms}}
 .age{position:absolute;top:10px;right:13px;font:500 11px var(--mono);color:var(--faint);transition:opacity .2s}
@@ -1248,7 +1248,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1523</p>
+  <p class="build-tag">Version 2026.11.24·1525</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2517,7 +2517,7 @@ LIQ.SHUT_X=LIQ.PAD;LIQ.OPEN_X=LIQ.TRACK-LIQ.THUMB-LIQ.PAD;LIQ.MID_X=(LIQ.SHUT_X+
 const liqClamp=(v,lo,hi)=>Math.min(hi,Math.max(lo,v));
 /* one damped spring, stepped in small slices so a slow frame never blows it up */
 function liqSpring(s,target,k,c,m,dt){const n=Math.max(1,Math.ceil(dt/(1/240))),h=dt/n;for(let i=0;i<n;i++){const a=(-k*(s.p-target)-c*s.v)/m;s.v+=a*h;s.p+=s.v*h}}
-function LiquidToggle(el,{checked=false,onChange=null,stretch=50,speed=50}={}){
+function LiquidToggle(el,{checked=false,onChange=null,stretch=50,speed=85}={}){
   const {THUMB,SHUT_X,OPEN_X,MID_X}=LIQ,thumb=el.querySelector(".liq-thumb");
   el.style.setProperty("--liq-thumb",THUMB+"px");
   let on=!!checked,held=false,hot=false,grip=null,raf=0,last=0,lastX=0;
@@ -2541,6 +2541,9 @@ function LiquidToggle(el,{checked=false,onChange=null,stretch=50,speed=50}={}){
      (Bencho) Damping is a constant: 21.5 is zeta 0.87, so it still arrives
      with a hint of give, and the hint is the whole of it. Speed is the
      stiffness, because how fast a switch crosses is a real question. */
+  /* (This port) Speed defaults to 85, not 50: stiffness 208 instead of 170,
+     so it crosses about a tenth quicker. With damping unchanged the ratio
+     drops from 0.87 to 0.79, a touch more give on landing to go with it. */
   const settle={k:170-(50-speed)*1.1,c:21.5,m:.9};
   function paint(){
     const L=lengthen(eased.p),sq=Math.max(0,press.p);
@@ -4628,7 +4631,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1523";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·1525";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
