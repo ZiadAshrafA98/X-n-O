@@ -805,7 +805,38 @@ button.seatc[aria-expanded="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
 .lb-wait i{display:inline-flex;gap:5px}
 .lb-wait i b{width:6px;height:6px;border-radius:9px;background:var(--mute);animation:bounce 1s ease-in-out infinite}
 .lb-wait i b:nth-child(2){animation-delay:.15s}.lb-wait i b:nth-child(3){animation-delay:.3s}
-.lb-empty .btn{height:44px}
+.lb-empty .btn{height:44px;margin-top:4px}
+/* ---------- the stand-in rows ---------- */
+.lb-skel{animation:none;background:var(--tile)}
+.lb-skel .sk{display:block;height:12px;border-radius:99px;
+  background:linear-gradient(100deg,var(--chip) 0%,var(--chip) 38%,var(--chip-2) 50%,var(--chip) 62%,var(--chip) 100%);background-size:300% 100%;
+  animation:shimmer 1.4s ease-in-out infinite;animation-delay:calc(var(--i) * 70ms)}
+.lb-skel .sk-rank{width:18px;margin:0 auto}
+.lb-skel .sk-av{width:40px;height:40px}
+.lb-skel .sk-name{height:13px;justify-self:start;max-width:100%}
+.lb-skel .sk-stat{width:30px;height:16px;justify-self:end}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:0 0}}
+/* a real row arriving where its stand-in was: it sharpens in place */
+.lb-row.lb-in{animation:lbin .42s cubic-bezier(.22,1,.36,1) both}
+@keyframes lbin{from{opacity:0;filter:blur(6px);transform:scale(.985)}to{opacity:1;filter:none;transform:none}}
+/* ---------- the empty board ---------- */
+.lb-empty{animation:rise .5s var(--spring-soft) both;gap:8px}
+.lb-pod{width:150px;height:auto;margin-bottom:6px;overflow:visible}
+.lb-pod .pod-step{fill:var(--chip-2)} .lb-pod .s1{fill:color-mix(in srgb,#f2c14e 20%,var(--chip-2))}
+.lb-pod .pod-n{font:700 13px var(--sans);fill:var(--faint);text-anchor:middle}
+.lb-pod .s1+.s3~.pod-n:first-of-type{fill:#c9962a}
+.lb-pod .pod-seat{fill:none;stroke:color-mix(in srgb,#f2c14e 70%,transparent);stroke-width:2;stroke-dasharray:4 4;animation:seat 6s linear infinite;transform-box:fill-box;transform-origin:center}
+.lb-pod .pod-ghost{fill:var(--chip-2)}
+.lb-pod .pod-crown{animation:hover 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.lb-pod .pod-spark{fill:#f2c14e;opacity:0;animation:spark 2.8s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.lb-pod .pod-spark.k2{animation-delay:1.4s}
+@keyframes seat{to{transform:rotate(360deg)}}
+@keyframes hover{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@keyframes spark{0%,100%{opacity:0;transform:scale(.4)}40%{opacity:.9;transform:scale(1)}70%{opacity:0;transform:scale(.6) rotate(45deg)}}
+.lb-et{font-size:16px;font-weight:600;color:var(--ink)}
+.lb-empty>span{max-width:300px}
+.lb-note{max-width:300px;font-size:12px;color:var(--faint)}
+@media (prefers-reduced-motion:reduce){.lb-skel .sk,.lb-pod *{animation:none!important}}
 .lb-foot{margin:12px 0 0;padding:12px 6px 0;border-top:1px solid var(--hair);font-size:12px;line-height:1.45;color:var(--faint);text-align:center}
 .sh-act .ic.ms{background:linear-gradient(135deg,#00b2ff,#a033ff);color:#fff}
 .sh-act .ic.li{background:#0a66c2;color:#fff}
@@ -1248,7 +1279,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1525</p>
+  <p class="build-tag">Version 2026.11.24·1534</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2061,29 +2092,89 @@ function lbFetch(){
     setTimeout(()=>{cs.forEach(c=>{try{c.end(true)}catch(x){}});res([...got.values()])},2600);
   });
 }
+/* ---------- Loading, then the board ----------
+   While the relays answer, the list shows grey stand-in rows with a light
+   passing over them, shaped like the real ones. When the board arrives each
+   real row takes the place of its stand-in, top to bottom, one after the
+   other, so the board fills in rather than appearing all at once. */
+const LB_SKEL=6;
+function skelRow(i){
+  const w=[62,48,70,54,40,58][i%6];
+  return`<li class="lb-row lb-skel" aria-hidden="true" style="--i:${i}"><span class="sk sk-rank"></span><span class="sk sk-av"></span><span class="sk sk-name" style="width:${w}%"></span><span class="sk sk-stat"></span><span class="sk sk-stat"></span></li>`;
+}
+function rowHTML(r,i){
+  return`<li class="lb-row${r.id===lbId?" me":""}${i<3?" top t"+(i+1):""}" style="--i:${i}">
+    <span class="lb-rank"${i<3?` aria-label="${["First","Second","Third"][i]} place"`:""}>${i+1}</span><span class="lb-av"><span class="orb" style="background:${r.av?`url('${avUri(r.av)}') center/cover`:orbHue(r.id)}"></span>${i===0?'<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15 1 4l6 5 5-8 5 8 6-5-1 11Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 14.5h18" stroke="#fff3c4" stroke-width="1.2" opacity=".7"/><circle cx="12" cy="1.6" r="1.4" fill="#fff3c4"/></svg>':""}</span>
+    <span class="lb-name">${esc(r.n)}${r.id===lbId?'<small>You</small>':""}</span>
+    <span class="lb-stat"><b>${r.best}</b><small>in a row</small></span><span class="lb-stat"><b>${r.fast||"–"}</b><small>fastest</small></span></li>`;
+}
+/* An empty board is an invitation: an empty podium with the top step waiting
+   for someone, and a button that starts exactly that game. */
+function emptyHTML(){
+  const lv=LEVEL_NAME[lbLevel];
+  const note=lbLevel==="perfect"&&rule==="M"?`<small class="lb-note">Perfect never loses with Move one. Pick Oldest fades in Settings to take it on.</small>`:"";
+  return`<li class="lb-empty"><svg class="lb-pod" viewBox="0 0 160 112" aria-hidden="true">
+      <g class="pod-crown"><path d="M68 22 66 8l7 6 7-10 7 10 7-6-2 14Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.6" stroke-linejoin="round"/><circle cx="80" cy="3" r="1.8" fill="#fff3c4"/></g>
+      <circle class="pod-seat" cx="80" cy="42" r="13"/>
+      <circle class="pod-ghost" cx="40" cy="62" r="10"/><circle class="pod-ghost" cx="120" cy="70" r="10"/>
+      <rect class="pod-step s2" x="18" y="76" width="44" height="34" rx="7"/><rect class="pod-step s1" x="58" y="60" width="44" height="50" rx="7"/><rect class="pod-step s3" x="98" y="84" width="44" height="26" rx="7"/>
+      <text x="80" y="92" class="pod-n">1</text><text x="40" y="99" class="pod-n">2</text><text x="120" y="103" class="pod-n">3</text>
+      <path class="pod-spark" d="M118 26l2 5 5 2-5 2-2 5-2-5-5-2 5-2Z"/><path class="pod-spark k2" d="M36 34l1.5 3.5 3.5 1.5-3.5 1.5-1.5 3.5-1.5-3.5-3.5-1.5 3.5-1.5Z"/>
+    </svg>
+    <b class="lb-et">The top spot on ${lv} is open</b>
+    <span>Win against the ${lv} computer and your name goes here first.</span>${note}
+    <button class="btn primary" type="button" data-play>Play the computer · ${lv}</button></li>`;
+}
 async function openBoard(btn){
   lbLevel=lbLevel||opt.level||"perfect";setSeg($("lbLevels"),lbLevel,false);
   openDialog("dlgBoard",btn);
   if(lbEntry())lbPublishSoon();
-  $("lbList").innerHTML='<li class="lb-wait"><i aria-hidden="true"><b></b><b></b><b></b></i>Loading the board</li>';
-  lbCache=await lbFetch();lbRender();
+  const ul=$("lbList");ul.setAttribute("aria-busy","true");
+  ul.innerHTML=Array.from({length:LB_SKEL},(_,i)=>skelRow(i)).join("")+'<li class="sr">Loading the board</li>';
+  /* the stand-ins stay at least a moment, so a quick answer still reads as loading and not as a flicker */
+  const [data]=await Promise.all([lbFetch(),new Promise(r=>setTimeout(r,still?0:450))]);
+  lbCache=data;ul.removeAttribute("aria-busy");lbRender(true);
 }
-function lbRender(){
+function lbRows(){
+  const all=new Map();lbCache.forEach(e=>all.set(e.id,e));const mine=lbEntry();if(mine)all.set(lbId,mine);
+  return[...all.values()].map(e=>lbVerify(e,lbLevel)).filter(Boolean)
+    .sort((a,b)=>(b.best-a.best)||((a.fast||99)-(b.fast||99))).slice(0,50);
+}
+function lbRender(fromSkeleton){
   const ul=$("lbList");
   if(lbCache===null){ul.innerHTML='<li class="lb-empty">Can’t reach the leaderboard right now. Check your connection and try again.</li>';return}
   /* include you from this device, so you see yourself even before the relays answer */
-  const all=new Map();lbCache.forEach(e=>all.set(e.id,e));const mine=lbEntry();if(mine)all.set(lbId,mine);
-  const rows=[...all.values()].map(e=>lbVerify(e,lbLevel)).filter(Boolean)
-    .sort((a,b)=>(b.best-a.best)||((a.fast||99)-(b.fast||99))).slice(0,50);
-  if(!rows.length){ul.innerHTML=`<li class="lb-empty">No records on ${LEVEL_NAME[lbLevel]} yet.<br>Win a game against the computer to be first.<button class="btn" type="button" data-play>Play the computer</button></li>`;return}
-  ul.innerHTML=rows.map((r,i)=>`<li class="lb-row${r.id===lbId?" me":""}${i<3?" top t"+(i+1):""}" style="--i:${i}">
-    <span class="lb-rank"${i<3?` aria-label="${["First","Second","Third"][i]} place"`:""}>${i+1}</span><span class="lb-av"><span class="orb" style="background:${r.av?`url('${avUri(r.av)}') center/cover`:orbHue(r.id)}"></span>${i===0?'<svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15 1 4l6 5 5-8 5 8 6-5-1 11Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.4" stroke-linejoin="round"/><path d="M3 14.5h18" stroke="#fff3c4" stroke-width="1.2" opacity=".7"/><circle cx="12" cy="1.6" r="1.4" fill="#fff3c4"/></svg>':""}</span>
-    <span class="lb-name">${esc(r.n)}${r.id===lbId?'<small>You</small>':""}</span>
-    <span class="lb-stat"><b>${r.best}</b><small>in a row</small></span><span class="lb-stat"><b>${r.fast||"–"}</b><small>fastest</small></span></li>`).join("");
+  const rows=lbRows();
+  const skels=fromSkeleton&&!still?[...ul.querySelectorAll(".lb-skel")]:[];
+  ul.querySelectorAll(".sr").forEach(n=>n.remove());
+  if(!skels.length){ul.innerHTML=rows.length?rows.map(rowHTML).join(""):emptyHTML();return}
+  if(!rows.length){
+    /* nothing to fill in: the stand-ins clear away together and the invitation rises in their place */
+    skels.forEach((sk,i)=>sk.animate([{opacity:1},{opacity:0,transform:"scale(.97)"}],{duration:220,delay:i*30,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}));
+    setTimeout(()=>{ul.innerHTML=emptyHTML()},220+skels.length*30);return;
+  }
+  /* each real row takes its stand-in's place, one after the other */
+  rows.forEach((r,i)=>{
+    const t=document.createElement("template");t.innerHTML=rowHTML(r,i).trim();const li=t.content.firstChild;li.classList.add("lb-in");li.style.setProperty("--i","0");
+    setTimeout(()=>{
+      const sk=skels[i];
+      if(sk&&sk.isConnected)sk.replaceWith(li);else{const after=ul.querySelectorAll(".lb-row:not(.lb-skel)")[i-1];after?after.after(li):ul.prepend(li)}
+    },i<LB_SKEL?i*90:LB_SKEL*90+(i-LB_SKEL)*25);
+  });
+  /* stand-ins left over once the board is shorter than them fold away */
+  skels.slice(rows.length).forEach((sk,k)=>setTimeout(()=>{if(!sk.isConnected)return;
+    sk.animate([{opacity:1,height:sk.offsetHeight+"px"},{opacity:0,height:"0px",paddingTop:"0px",paddingBottom:"0px",marginTop:"-6px"}],{duration:300,easing:"cubic-bezier(.32,.72,0,1)",fill:"forwards"}).onfinish=()=>sk.remove()},rows.length*90+k*40));
 }
 $("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;lbLevel=b.dataset.v;setSeg($("lbLevels"),lbLevel,true);if(lbCache!==undefined)lbRender()});
 $("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
-$("lbList").addEventListener("click",e=>{if(e.target.closest("[data-play]")){closeDialog();if(mode!=="ai")goMode("ai")}});
+/* the invitation starts the very game it names: the computer, on the level you were looking at */
+$("lbList").addEventListener("click",e=>{if(!e.target.closest("[data-play]"))return;
+  closeDialog();
+  const lv=lbLevel;
+  if(opt.level!==lv){opt.level=lv;saveOpt();syncOptSegs(false)}
+  if(mode!=="ai")goMode("ai");else{clearTimeout(aiTimer);newRound(firstMover())}
+  toast(`Playing the ${LEVEL_NAME[lv]} computer`);
+});
 /* ---------- Options (segmented controls) ---------- */
 const defaults={level:"medium",youAre:"X",first:"me",rule:"M",rv:3,hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
@@ -4205,7 +4296,9 @@ function openDialog(id,btn){
   if(id==="dlgProfile")buildProfile();
   if(id==="dlgRoom"){$("rpQrWrap").hidden=true;$("rpQrBtn").setAttribute("aria-expanded","false");closeSeatMenu()}
   pickClose(false);
-  d.hidden=false;d.querySelectorAll(".rcards").forEach(c=>placeRThumb(c,true));anchorPop(d,btn,rect);scrim.hidden=false;d.style.transform="";
+  d.hidden=false;d.querySelectorAll(".rcards").forEach(c=>placeRThumb(c,true));
+  /* a switch placed while its dialog was hidden has no size yet: place every one now that it shows */
+  d.querySelectorAll(".seg").forEach(s=>placeThumb(s,false));anchorPop(d,btn,rect);scrim.hidden=false;d.style.transform="";
   scrim.classList.toggle("clear",d.classList.contains("pop")&&!narrowMQ.matches);
   requestAnimationFrame(()=>scrim.classList.add("show"));
   app.inert=true;if(btn)btn.setAttribute("aria-expanded","true");
@@ -4631,7 +4724,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·1525";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·1534";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
