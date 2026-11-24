@@ -961,7 +961,8 @@ a.sh-act{text-decoration:none}
 .sp-logo:not(.intro) path,.sp-logo:not(.intro) circle{stroke-dashoffset:1;opacity:0}
 .sp-logo.out path,.sp-logo.out circle{opacity:1}
 .sp-logo.out path,.sp-logo.out circle{stroke-dashoffset:0}
-.sp-tag{margin:-10px 0 0;font-size:13px;color:var(--mute)}
+.sp-logo{margin-bottom:-6px}
+.sp-tag{margin:0;font-size:13px;color:var(--mute)}
 
 /* small phones: "Can you win?" folds to its trophy so the header stays on one line */
 @media (max-width:379px){.win-pill{width:44px;padding:0;justify-content:center}.win-pill .wp-lbl{display:none}}
@@ -1022,9 +1023,9 @@ a.sh-act{text-decoration:none}
 <div class="glow" aria-hidden="true"><i class="gl"></i><i class="ga"></i><i class="go"></i><i class="gk"></i></div>
 
 <div class="splash" id="splash" aria-hidden="true">
-  <div class="sp-board" id="spBoard"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
   <div class="sp-logo mark" id="spLogo"><svg viewBox="0 0 28 20"><g class="gx"><path class="lx1" pathLength="1" d="M3 5.5 11 14.5"/><path class="lx2" pathLength="1" d="M11 5.5 3 14.5"/></g><circle class="lo" pathLength="1" cx="20.5" cy="10" r="4.6"/></svg></div>
-  <p class="sp-tag">Three marks each. The oldest fades.</p>
+  <div class="sp-board" id="spBoard"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <p class="sp-tag">Three marks each. Then move one.</p>
 </div>
 
 <div class="app" id="app" data-mode="local" data-net="idle">
@@ -1153,7 +1154,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·1238</p>
+  <p class="build-tag">Version 2026.11.24·1410</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1361,7 +1362,7 @@ function pickMove(me,op,rule,level){
   return Math.random()<.5&&safe.length?rnd(safe).c:rnd(ms).c;
 }
 /* ---------- Player avatars ---------- */
-/* Six comic heads drawn like the "Made by" portraits: ink outline that gets
+/* Eight comic heads drawn like the "Made by" portraits: ink outline that gets
    heavier on the shadow side, three flat tones of shade, a cool rim light,
    warm highlights and heavy-lidded eyes. Each sits on a flat colour with a
    flat offset shadow. Every one becomes a data URI once, so it can paint any
@@ -1402,6 +1403,23 @@ function aEye(cx,cy,o){
 const aBg=(bg,head)=>`<rect width="100" height="100" fill="${bg}"/>`+(head?`<path d="${head}" transform="translate(4 5)" fill="#000" opacity=".16"/>`:"");
 const hiStroke=(d,c,w,o)=>`<path d="${d}" fill="none" stroke="${c}" stroke-width="${w||2.6}" stroke-linecap="round" opacity="${o||.6}"/>`;
 const AVATARS={
+  frog:{name:"Frog",art:()=>{
+    const c=["#7cbd4f","#57943a","#3a6a26"];
+    const head="M50 38C68 38 84 44 89 58C93 71 84 83 68 86C62 87.5 56 88 50 88C44 88 38 87.5 32 86C16 83 7 71 11 58C16 44 32 38 50 38Z";
+    const bump=(x)=>`M${x-15} 40C${x-15} 30 ${x-8} 22 ${x} 22C${x+8} 22 ${x+15} 30 ${x+15} 40C${x+15} 47 ${x+8} 51 ${x} 51C${x-8} 51 ${x-15} 47 ${x-15} 40Z`;
+    return aBg("#b44a4f",head+bump(35)+bump(65))+
+      cel(head,c,[9,82],
+        `<path d="M20 74C30 84 70 84 80 74C76 84 64 88 50 88C36 88 24 84 20 74Z" fill="#cfe39a"/><path d="M50 79C62 79 72 77 80 74C76 84 64 88 50 88Z" fill="#a9c477"/>`+
+        hiStroke("M22 56Q28 48 38 46","#c4ef8f",2.6,.6)+
+        `<circle cx="26" cy="66" r="1.2" fill="${c[2]}" opacity=".7"/><circle cx="30" cy="70" r="1" fill="${c[2]}" opacity=".6"/><circle cx="76" cy="64" r="1.4" fill="${c[2]}" opacity=".8"/><circle cx="72" cy="69" r="1" fill="${c[2]}" opacity=".7"/>`,
+        "M89 58C93 71 84 83 68 86C62 87.5 56 88 50 88")+
+      cel(bump(35),c,[20,30],hiStroke("M25 34Q28 26 35 25","#c4ef8f",2.2,.7))+
+      cel(bump(65),c,[50,30],"","M80 40C80 47 73 51 65 51")+
+      aEye(35,38,{iris:"#e8b52c",r:8,lid:.4,lidColor:c[0]})+aEye(65,38,{iris:"#e8b52c",r:8,lid:.4,lidColor:c[1]})+
+      `<path d="M26 29.5L43 31.5M74 29.5L57 31.5" stroke="#2d5a1c" stroke-width="2.2" stroke-linecap="round"/>`+
+      `<ellipse cx="45.5" cy="60" rx="1.3" ry="1" fill="${AINK}"/><ellipse cx="54.5" cy="60" rx="1.3" ry="1" fill="${AINK}"/>`+
+      `<path d="M24 67Q50 77 76 67" fill="none" stroke="${AINK}" stroke-width="2.2" stroke-linecap="round"/><path d="M22.5 64.5Q23 67.5 25.5 68M77.5 64.5Q77 67.5 74.5 68" fill="none" stroke="${AINK}" stroke-width="1.6" stroke-linecap="round"/>`+
+      `<path d="M36 72Q50 76 64 72" fill="none" stroke="${c[2]}" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>`}},
   fox:{name:"Fox",art:()=>{
     const c=["#e9823a","#bd5a26","#8a3b19"],hi="#ffc48a";
     const ear="M21 48C17 34 18 20 22 8C31 14 40 23 46 32Z",inn="M25 40C23 31 23 22 25 15C30 20 35 25 39 31Z";
@@ -1991,6 +2009,18 @@ let marks={X:[],O:[]},turn="X",starter="X",over=false,winCells=null,history=[];
 let sel=-1;
 const moving=()=>rule==="M"&&marks[turn].length===3;
 let score=store.get("xo.score",{X:0,O:0});
+/* Against the computer the score is yours and the computer's, whichever mark
+   you play; Same device keeps its own X and O score. Online, the room's. */
+function loadScore(){
+  if(mode==="ai"){let s=store.get("xo.score.ai",null);
+    if(!s){const l=store.get("xo.score",{X:0,O:0});s={me:l[opt.youAre]|0,ai:l[other(opt.youAre)]|0}}
+    score={[opt.youAre]:s.me|0,[other(opt.youAre)]:s.ai|0}}
+  else if(mode==="local")score=store.get("xo.score",{X:0,O:0});
+}
+function saveScore(){
+  if(mode==="ai")store.set("xo.score.ai",{me:score[opt.youAre],ai:score[other(opt.youAre)]});
+  else if(mode==="local")store.set("xo.score",score);
+}
 const names={X:"Player X",O:"Player O"};
 let me=null,aiSide="O",aiTimer=null;
 /* online state lives up here so render() can read it from the first call */
@@ -2111,7 +2141,7 @@ function applyMove(c){
   marks[turn]=place(marks[turn],c,rule);sel=-1;
   const wl=winLine(marks[turn]);
   recMove(turn,c);
-  if(wl){over=true;winCells=wl;score[turn]++;store.set("xo.score",score);recWin(turn)}
+  if(wl){over=true;winCells=wl;score[turn]++;saveScore();recWin(turn)}
   else turn=other(turn);
   render();return true;
 }
@@ -2351,14 +2381,14 @@ $("undoBtn").addEventListener("click",()=>{
   /* against the computer, take back your last move and its reply together */
   const steps=mode==="ai"&&(over?turn===aiSide:turn!==aiSide)?2:1;
   for(let k=0;k<steps&&history.length;k++){
-    if(over){score[turn]--;store.set("xo.score",score)}
+    if(over){score[turn]--;saveScore()}
     const h=history.pop();marks={X:h.X,O:h.O};turn=h.turn;over=false;winCells=null;
   }
   render();maybeAI();
 });
 $("resetScore").addEventListener("click",()=>{
   if(mode==="online"&&room){closeDialog();request("reset");return}
-  score={X:0,O:0};store.set("xo.score",score);render();toast("Score reset");
+  score={X:0,O:0};saveScore();render();toast("Score reset");
 });
 
 /* ---------- Segmented controls ---------- */
@@ -2387,6 +2417,10 @@ function onOpt(k,v){
     updateInsight();return;
   }
   if(opt[k]===v)return;
+  /* your score and the computer's trade sides with the marks: the two numbers
+     trade elements too, so the number at each seat stays put */
+  if(k==="youAre"&&mode==="ai"){const a=$("pXscore"),b=$("pOscore"),t=document.createDocumentFragment();
+    t.append(...a.childNodes);a.append(...b.childNodes);b.append(t)}
   opt[k]=v;saveOpt();syncOptSegs(true);
   if((k==="youAre"||k==="first")&&mode==="ai")setMode("ai");else render();
 }
@@ -2399,6 +2433,7 @@ function setMode(m){
   if(m==="ai"){aiSide=other(opt.youAre);names[aiSide]="Computer";names[opt.youAre]=myName}
   else if(m==="local"){names.X=localName("X");names.O=localName("O")}
   else setOnlineNames();
+  loadScore();
   newRound(m==="ai"?(opt.first==="ai"?aiSide:opt.youAre):"X");
 }
 /* The thumb moves on the press itself, before any game work, so the switch
@@ -2512,7 +2547,10 @@ function nameOf(id){if(!id)return"";if(id===myId)return myName;return(isHost?pna
 function hueOf(id){let h=7;for(const ch of String(id))h=(h*31+ch.charCodeAt(0))%360;return h}
 function orbHue(id){const h=hueOf(id);return`radial-gradient(circle at 32% 30%,hsl(${h} 90% 86%),hsl(${h} 72% 58%) 45%,hsl(${h} 70% 32%))`}
 /* the avatar each person picked, or their colour dot */
-let myAv=cleanAv(store.get("xo.av",""));
+/* nobody starts as a plain dot: until you pick, you are the Frog, and the
+   second player on a shared device the Fox. A picked plain dot is kept. */
+const AV_DEFAULT={me:"frog",O:"fox"};
+let myAv=(()=>{const v=store.get("xo.av",null);return v===null?AV_DEFAULT.me:cleanAv(v)})();
 const pav=new Map();
 function avOf(id){if(!id)return"";if(id===myId)return myAv;return cleanAv(isHost?pav.get(id):(roster.avs||{})[id])}
 /* your own avatar never depends on being in a room */
@@ -2520,7 +2558,7 @@ function myAvBg(){return myAv?`url('${avUri(myAv)}') center/cover`:""}
 function avBg(id){const k=avOf(id);return k?`url('${avUri(k)}') center/cover`:""}
 function orbBg(id){return avBg(id)||orbHue(id)}
 /* Same device: each side keeps its own name and avatar on this device */
-const localProf=(()=>{const v=store.get("xo.local",null)||{},o={};for(const s of ["X","O"]){const p=v[s]||{};o[s]={n:cleanName(p.n||""),av:cleanAv(p.av)}}return o})();
+const localProf=(()=>{const v=store.get("xo.local",null)||{},o={};for(const s of ["X","O"]){const p=v[s]||{};o[s]={n:cleanName(p.n||""),av:p.av===undefined?(s==="O"?AV_DEFAULT.O:AV_DEFAULT.me):cleanAv(p.av)}}return o})();
 const MARK_BG={X:"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",O:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)"};
 /* you are always the left player: X on a shared device, your mark against
    the computer or online */
@@ -3413,7 +3451,7 @@ function buildProfile(){
   const cur=profCur();
   $("profTitle").textContent=profFor==="me"?"Your profile":"Player "+profFor;
   $("profName").value=cur.n;
-  $("avGrid").innerHTML=["",...AV_KEYS].map((k,i)=>{const nm=k?AVATARS[k].name:"Colour dot";
+  $("avGrid").innerHTML=[...AV_KEYS,""].map((k,i)=>{const nm=k?AVATARS[k].name:"Plain colour";
     return`<button class="av-opt stag" type="button" role="radio" data-av="${k}" aria-checked="${k===cur.av}" tabindex="${k===cur.av?0:-1}" aria-label="${nm}" style="--i:${i+2};background:${k?`url('${avUri(k)}') center/cover`:profDot()}"><span class="av-tip">${nm}</span></button>`}).join("");
   paintProf();
 }
@@ -4235,6 +4273,8 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    skips straight to the hand-off. Automated browsers skip it unless asked. */
 (function splash(){
   const sp=$("splash");if(!sp)return;
+  /* a page that just reloaded itself for an update goes straight in */
+  if(qs.has("v")){sp.remove();return}
   if(navigator.webdriver&&!qs.has("splash")){sp.remove();return}
   if(still){sp.animate([{opacity:1},{opacity:0}],{duration:250,delay:350,fill:"forwards"}).onfinish=()=>sp.remove();return}
   const bd=$("spBoard"),tiles=[...bd.children],timers=[];let done=false;
@@ -4283,7 +4323,39 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
 
 /* build the solver tables while the page is idle, so hints, the computer
    and the analysis never make a press wait */
-(window.requestIdleCallback||(f=>setTimeout(f,600)))(()=>{solve("A");solve("B")});
+(window.requestIdleCallback||(f=>setTimeout(f,600)))(()=>{solve("M");solve("A")});
+
+/* ---------- Staying current ---------- */
+/* Each build stamps itself and writes the same stamp to version.json. An
+   open page (a tab left open, a phone that keeps it in memory, a copy the
+   browser kept) asks for that file, never from any cache, when it starts,
+   when you come back to it and every ten minutes. If a newer build is out it
+   loads it at the first moment nothing would be lost: no marks on the board,
+   no dialog open and no online room. The reload goes to a fresh address, so
+   no cache can hand back the old page, and that marker is then tidied away. */
+(function staying(){
+  const BUILD="2026.11.24·1410";if(BUILD.startsWith("__"))return;
+  try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
+  let next=null,busy=false;
+  const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
+  const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&marks.X.length+marks.O.length===0;
+  function go(){
+    if(!next||!calm())return;
+    try{sessionStorage.setItem("xo.upd",next)}catch(e){}
+    const u=new URL(location.href);u.searchParams.set("v",next);location.replace(u.toString());
+  }
+  function check(){
+    if(busy||document.visibilityState==="hidden")return;busy=true;
+    fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
+      /* only ever forward, and only once per build, so a slow mirror can never loop it */
+      if(j&&typeof j.v==="string"&&j.v>BUILD&&tried()!==j.v){next=j.v;go()}
+    }).catch(()=>{}).finally(()=>{busy=false});
+  }
+  setTimeout(check,4000);setInterval(check,600000);setInterval(go,1500);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check()});
+  addEventListener("pageshow",e=>{if(e.persisted)check()});
+  addEventListener("online",check);
+})();
 })();
 </script>
 </body>
