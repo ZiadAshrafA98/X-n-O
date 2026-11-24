@@ -831,6 +831,10 @@ button.seatc{touch-action:none}
 .pulse[data-live="true"] .pl-dot{background:var(--green)}
 .pulse[data-live="true"] .pl-dot::after{content:"";position:absolute;inset:-4px;border-radius:99px;border:1.5px solid var(--green);opacity:0;animation:ping 1.8s ease-out infinite}
 .pulse[data-live="true"] .pl-txt{color:var(--ink-2)}
+.pl-txt{display:inline-flex;align-items:baseline;white-space:pre;transition:color .4s var(--out)}
+.pl-txt .mt{position:relative;display:inline-block;overflow:visible;font-variant-numeric:tabular-nums}
+.pl-txt .mt-out{position:absolute;left:0;top:0;white-space:pre}
+.pl-txt .mt-in{display:inline-block;white-space:pre}
 @keyframes ping{0%{transform:scale(.5);opacity:.8}100%{transform:scale(1.6);opacity:0}}
 @media (prefers-reduced-motion:reduce){.pl-dot::after{animation:none}}
 /* ---------- the stand-in rows ---------- */
@@ -1294,7 +1298,7 @@ a.sh-act{text-decoration:none}
           <button class="btn primary grow" id="inviteBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><span class="lbl" id="inviteLbl">Copy invite link</span></button>
           <button class="btn danger" id="leaveRoom" type="button" hidden>Leave</button>
         </div>
-        <div class="pulse" id="mmPulse" hidden aria-live="polite"><span class="pl-faces" id="plFaces"></span><span class="pl-dot" aria-hidden="true"></span><span class="pl-txt" id="plTxt">Checking who’s around</span></div>
+        <div class="pulse" id="mmPulse" hidden aria-live="polite"><span class="pl-faces" id="plFaces"></span><span class="pl-dot" aria-hidden="true"></span><span class="pl-txt" id="plTxt"><span class="mt" id="plA"></span><span class="mt" id="plA2">Checking who’s around</span><span class="mt" id="plSep"></span><span class="mt" id="plB"></span><span class="mt" id="plB2"></span></span></div>
         <p class="note" id="netNote" aria-live="polite"></p>
       </section>
 
@@ -1324,7 +1328,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·2311</p>
+  <p class="build-tag">Version 2026.11.24·2323</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -4369,13 +4373,34 @@ function pulseShow(){
   const ids=new Set(pulse.here.keys());
   const online=ids.size+1,looking=seekers.length,warm=now-pulse.t0>2200||ids.size>0;
   el.hidden=false;el.dataset.live=String(looking>0);
-  const txt=!warm?"Checking who’s around":looking?`${looking} looking for a match · ${online} online`:`Nobody searching yet · ${online} online`;
-  const key=txt+"|"+seekers.slice(0,3).map(s=>s.av+s.n).join(",");if(key===pulseKey)return;pulseKey=key;
-  const t=$("plTxt");if(t.textContent!==txt){t.textContent=txt;if(!still){t.classList.remove("swap");void t.offsetWidth;t.classList.add("swap")}}
+  /* the line is five small parts, and only the parts that change move: a
+     count rolls up when it rises and down when it falls, a phrase crossfades,
+     and the line eases to its new width around them */
+  const parts=!warm?["","Checking who’s around","","",""]:[looking?String(looking):"",looking?" looking for a match":"Nobody searching yet"," · ",String(online)," online"];
+  const key=parts.join("|")+"|"+seekers.slice(0,3).map(s=>s.av+s.n).join(",");if(key===pulseKey)return;pulseKey=key;
+  ["plA","plA2","plSep","plB","plB2"].forEach((id,i)=>morphText($(id),parts[i]));
   /* up to three faces of the people searching, overlapping like a little queue */
   const f=$("plFaces"),want=seekers.slice(0,3);
   f.innerHTML=want.map((s,i)=>`<span class="orb" title="${esc(s.n)}" style="--k:${i};background:${s.av?`url('${avUri(s.av)}') center/cover`:orbHue(s.n)}"></span>`).join("");
   f.hidden=!want.length;
+}
+/* Swap a bit of text in place: the old words slide out one way while the new
+   slide in from the other, and the span eases between their widths, so the
+   words beside it glide rather than jump. Numbers roll with their value. */
+function morphText(el,txt){
+  if(!el)return;const cur=el.dataset.t??el.textContent;if(cur===txt)return;el.dataset.t=txt;
+  if(still||!el.offsetParent){el.textContent=txt;return}
+  const a=parseFloat(cur),b=parseFloat(txt),dir=!isNaN(a)&&!isNaN(b)&&b<a?-1:1;
+  const w0=el.getBoundingClientRect().width;
+  el.textContent="";
+  const out=document.createElement("span");out.className="mt-out";out.textContent=cur;
+  const inn=document.createElement("span");inn.className="mt-in";inn.textContent=txt;
+  el.append(inn,out);
+  const w1=inn.getBoundingClientRect().width;
+  const E="cubic-bezier(.22,1,.36,1)";
+  el.animate([{width:w0+"px"},{width:w1+"px"}],{duration:420,easing:E});
+  inn.animate([{opacity:0,transform:`translateY(${dir*60}%)`,filter:"blur(2px)"},{opacity:1,transform:"none",filter:"blur(0)"}],{duration:420,easing:E});
+  out.animate([{opacity:1,transform:"none"},{opacity:0,transform:`translateY(${dir*-60}%)`,filter:"blur(2px)"}],{duration:260,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).onfinish=()=>out.remove();
 }
 /* listen only while it can help: Online tab open, no room joined */
 function pulseSync(){if(mode==="online"&&!room)pulseStart();else pulseStop();pulseShow()}
@@ -4475,8 +4500,17 @@ let openDlg=null,openerBtn=null;
 function anchorPop(d,btn,rect){
   /* the settings panel unfolds out of its own button: placed above it, and
      scaled from the point the button sits under */
+  d.style.translate="";
   if(narrowMQ.matches||!btn||!d.classList.contains("pop")){d.style.left=d.style.bottom=d.style.top=d.style.transformOrigin="";return}
   const r=rect||btn.getBoundingClientRect();
+  if(d.id==="dlgRoom"){
+    /* the room window always opens in the middle of the screen, whichever
+       button opened it, so a tall room never runs off the top; it still
+       grows out of that button, and stays centred as people come and go */
+    const w=d.offsetWidth||440,h=d.offsetHeight||520,left=Math.round((innerWidth-w)/2),top=(innerHeight-h)/2;
+    d.style.left=left+"px";d.style.top="50%";d.style.bottom="";d.style.translate="0 -50%";
+    d.style.transformOrigin=`${r.left+r.width/2-left}px ${r.top+r.height/2-top}px`;return;
+  }
   if(d.id==="dlgProfile"){
     /* your profile opens beside your own dot: to its left when there is room */
     const w=d.offsetWidth||320,h=d.offsetHeight||300,cy=r.top+r.height/2,toLeft=r.left-w-14>=12;
@@ -4941,7 +4975,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.24·2311";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.24·2323";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
