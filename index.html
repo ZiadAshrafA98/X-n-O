@@ -415,6 +415,26 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .coin .back{transform:rotateY(180deg)}
 .coin-shadow{position:absolute;bottom:-6px;left:50%;width:70px;height:10px;margin-left:-35px;border-radius:50%;background:rgba(0,0,0,.35);filter:blur(4px)}
 .coin-wrap{position:relative}
+/* ---------- the coin: minted silver, 18 px thick ---------- */
+.xc-stage{--cs:clamp(120px,calc(var(--bs) * .36),172px);position:relative;width:100%;height:calc(var(--cs) * 1.75);perspective:900px;perspective-origin:50% 30%;touch-action:none;-webkit-user-select:none;user-select:none}
+.xc-stage.can{cursor:grab}.xc-stage.can:active{cursor:grabbing}
+.xc-pos{position:absolute;left:50%;top:36%;width:var(--cs);height:var(--cs);margin:calc(var(--cs) / -2) 0 0 calc(var(--cs) / -2);transform-style:preserve-3d}
+.xc-coin{position:absolute;inset:0;transform-style:preserve-3d}
+.xc-idle{animation:xcfloat 3.6s ease-in-out infinite}
+@keyframes xcfloat{0%,100%{translate:0 0}50%{translate:0 -6px}}
+.xc-edge{position:absolute;inset:0;border-radius:50%;transform:translateZ(calc(var(--z) * 1px));background:repeating-conic-gradient(from 0deg,#c9ced6 0 1.6deg,#7c838e 1.6deg 3.2deg)}
+.xc-face{position:absolute;inset:0;border-radius:50%;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.xc-face.f{transform:translateZ(9px)}
+.xc-face.b{transform:rotateX(180deg) translateZ(9px)}
+.xc-field{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#fff 0%,#fbfcfd 18%,#c9ced6 58%,#7c838e 100%);
+  box-shadow:inset 0 0 0 calc(var(--cs) * .04) #c9ced6,inset 0 0 0 calc(var(--cs) * .045) #7c838e,inset 0 0 0 calc(var(--cs) * .05) rgba(255,255,255,.7),inset 0 0 0 calc(var(--cs) * .087) #c9ced6,inset 0 0 0 calc(var(--cs) * .093) #7c838e,inset 3px 4px 10px rgba(255,255,255,.3),inset -6px -8px 16px rgba(0,0,0,.35)}
+.xc-medal{position:absolute;inset:24%;border-radius:50%;padding:calc(var(--cs) * .033);background:linear-gradient(145deg,#7c838e,#fff 55%,#c9ced6);box-shadow:0 2px 6px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.2)}
+.xc-medal span{display:block;width:100%;height:100%;border-radius:50%;box-shadow:inset 0 3px 8px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.25)}
+.xc-sheen{position:absolute;inset:0;border-radius:50%;pointer-events:none;mix-blend-mode:soft-light;background:linear-gradient(var(--sa,115deg),rgba(255,255,255,0) 30%,rgba(255,255,255,.75) 48%,rgba(255,255,255,0) 64%)}
+/* the shadow lies where the coin will land, and only shows as it comes down */
+.xc-floor{position:absolute;left:50%;top:36%;width:var(--cs);height:var(--cs);margin:calc(var(--cs) / -2) 0 0 calc(var(--cs) / -2);transform-style:preserve-3d;pointer-events:none}
+.xc-shadow{position:absolute;inset:4%;border-radius:50%;background:radial-gradient(closest-side,rgba(0,0,0,.55),rgba(0,0,0,.2) 70%,transparent);filter:blur(4px);opacity:0}
+:root[data-theme="light"] .xc-shadow{background:radial-gradient(closest-side,rgba(0,0,0,.28),rgba(0,0,0,.1) 70%,transparent)}
 .choices{display:flex;gap:12px}
 .choice{width:104px;height:112px;border:0;border-radius:28px;background:var(--chip);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:52px;font-weight:600;line-height:1;transition:scale .35s var(--spring),background-color .2s ease;animation:pop .55s var(--spring) both}
 .choice+.choice{animation-delay:.07s}
@@ -1121,7 +1141,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·0032</p>
+  <p class="build-tag">Version 2026.11.24·0047</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2968,6 +2988,53 @@ function choose(mark){
   pushState();toast(`You're ${mark} · you start`);render();
 }
 const faceStyle=k=>({"":"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",o:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)",friend:"radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e)"}[k]);
+/* ---------- The coin ---------- */
+/* Minted silver with a ridged edge, one player's avatar on each face. It
+   stands facing you before the toss; flicked (or tossed with the button) it
+   flips end over end, travels a little away from you, lands tilted on the
+   ground, bounces, rocks and settles with the winner's face up and upright. */
+const XC_T=18,XC_REST=62,XC_LAND="0px,calc(var(--cs) * .36),calc(var(--cs) * -1.05)";
+function coinHTML(frontBg,backBg){
+  const face=(c,bg)=>`<div class="xc-face ${c}"><div class="xc-field"></div><div class="xc-medal"><span style="background:${bg}"></span></div><div class="xc-sheen"></div></div>`;
+  return`<div class="xc-stage" id="xcStage"><div class="xc-floor" style="transform:translate3d(${XC_LAND}) rotateX(${XC_REST}deg)"><span class="xc-shadow" id="xcShadow" style="transform:translateZ(-${XC_T/2+1}px)"></span></div>
+    <div class="xc-pos" id="xcPos"><div class="xc-coin xc-idle" id="xcCoin">${face("f",frontBg)}${Array.from({length:XC_T},(_,i)=>`<i class="xc-edge" style="--z:${i-XC_T/2+.5}"></i>`).join("")}${face("b",backBg)}</div></div></div>`;
+}
+/* standing, the coin leans a little toward the pointer; a quick upward flick tosses it */
+function coinIdle(onFlick){
+  const st=$("xcStage"),coin=$("xcCoin");if(!st)return;
+  let drag=null,trail=[];
+  const lean=(x,y)=>{const r=st.getBoundingClientRect(),nx=Math.max(-1,Math.min(1,(x-(r.left+r.width/2))/(r.width/2))),ny=Math.max(-1,Math.min(1,(y-(r.top+r.height*.36))/(r.height/2)));
+    coin.style.transform=`rotateY(${(nx*16).toFixed(1)}deg) rotateX(${(-ny*12).toFixed(1)}deg)`;st.querySelectorAll(".xc-sheen").forEach(s=>s.style.setProperty("--sa",(115+nx*30)+"deg"))};
+  const home=()=>{coin.animate([{transform:coin.style.transform||"none"},{transform:"none"}],{duration:600,easing:"cubic-bezier(.34,1.4,.5,1)"});coin.style.transform=""};
+  if(onFlick)st.classList.add("can");
+  st.addEventListener("pointermove",e=>{if(e.pointerType==="mouse"&&!drag)lean(e.clientX,e.clientY);if(drag){lean(e.clientX,e.clientY);trail.push({y:e.clientY,t:performance.now()});if(trail.length>6)trail.shift()}});
+  st.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"&&!drag)home()});
+  if(!onFlick)return;
+  st.addEventListener("pointerdown",e=>{drag=true;trail=[{y:e.clientY,t:performance.now()}];st.setPointerCapture(e.pointerId);lean(e.clientX,e.clientY)});
+  const up=()=>{if(!drag)return;drag=null;const a=trail[0],b=trail[trail.length-1],v=b&&a&&b.t>a.t?(a.y-b.y)/(b.t-a.t):0;
+    if(v>.45){st.classList.remove("can");onFlick()}else home()};
+  st.addEventListener("pointerup",up);st.addEventListener("pointercancel",up);
+}
+/* the toss itself: frontUp says which face ends on top */
+function coinToss(frontUp,done){
+  const pos=$("xcPos"),coin=$("xcCoin"),sh=$("xcShadow");if(!pos){done();return}
+  coin.classList.remove("xc-idle");const from=coin.style.transform||"none";coin.style.transform="";
+  const turns=4,land=XC_REST+turns*360+(frontUp?0:180),tilt=26,D=2200;
+  const P=(x,y,z)=>`translate3d(${x},${y},${z})`,L=XC_LAND.split(","),cs="var(--cs)";
+  /* the path: up and away from you, then down onto the ground a little further off, one bounce and a tiny one */
+  pos.animate([{transform:P(0,0,0),easing:"cubic-bezier(.2,.6,.35,1)"},
+    {transform:P(0,`calc(${cs} * -.3)`,`calc(${cs} * -.75)`),offset:.34,easing:"cubic-bezier(.55,0,.85,.4)"},
+    {transform:P(...L),offset:.66,easing:"cubic-bezier(.2,.7,.4,1)"},
+    {transform:P(L[0],`calc(${cs} * .26)`,L[2]),offset:.74,easing:"cubic-bezier(.5,0,.8,.5)"},
+    {transform:P(...L),offset:.81,easing:"cubic-bezier(.2,.7,.4,1)"},
+    {transform:P(L[0],`calc(${cs} * .335)`,L[2]),offset:.85},{transform:P(...L),offset:.88},{transform:P(...L)}],{duration:D,fill:"forwards"});
+  const r=(x,y)=>`rotateX(${x}deg) rotateY(${y}deg)`;
+  /* the turn: end over end in the air, it meets the ground tilted, rocks back and forth, smaller each time, and lies flat */
+  coin.animate([{transform:from,easing:"cubic-bezier(.25,.6,.45,1)"},{transform:r(land-tilt,8),offset:.66,easing:"cubic-bezier(.3,.6,.5,1)"},
+    {transform:r(land+12,-7),offset:.74},{transform:r(land-7,5),offset:.81},{transform:r(land+4,-3),offset:.87},{transform:r(land-1.5,1),offset:.94},{transform:r(land,0)}],{duration:D,fill:"forwards"});
+  sh.animate([{opacity:0,scale:".5"},{opacity:0,scale:".5",offset:.42},{opacity:1,scale:"1",offset:.66},{opacity:.75,scale:".9",offset:.74},{opacity:1,scale:"1",offset:.81},{opacity:1,scale:"1"}],{duration:D,fill:"forwards"});
+  setTimeout(done,D+550);
+}
 let lobbyKey="";
 function renderLobby(){
   const L=$("lobby");
@@ -2984,10 +3051,9 @@ function renderLobby(){
     const hostWon=tossWinner==="host",oH=hostMark==="O"?" o":"",oG=hostMark==="O"?"":" o";
     if(phase==="lobby"){L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb" style="background:${avBg(hostId)}"></span><span class="seat-name">${esc(nameOf(hostId)||"Host")}</span></div><span class="v">VS</span><div class="seat-col"><span class="orb o" style="background:${avBg(guestId)}"></span><span class="seat-name">${esc(nameOf(guestId)||"Guest")}</span></div></div><h3 class="swap">You're watching</h3><p class="swap">The players toss a coin to see who picks X or O.</p>`;return}
     if(!done){
-      L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">Host</span><span class="face back" style="background:${faceStyle("o")}">Guest</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Coin toss</h3><p class="swap">Heads the host picks, tails the guest does.</p>`;
+      L.innerHTML=`${coinHTML(orbBg(hostId),orbBg(guestId))}<h3 class="swap">Coin toss</h3><p class="swap">Heads the host picks, tails the guest does.</p>`;
       const finish=()=>{tossDone.add(tossId);render()};if(still){finish();return}
-      const end=hostWon?0:180;
-      $("coin").animate([{transform:"translateY(0) rotateY(0deg) rotateX(12deg)",easing:"cubic-bezier(.2,.7,.4,1)"},{transform:"translateY(-120px) rotateY(900deg) rotateX(12deg)",offset:.45,easing:"cubic-bezier(.6,0,.8,.4)"},{transform:`translateY(0) rotateY(${1800+end}deg) rotateX(0deg)`,offset:.85},{transform:`translateY(-14px) rotateY(${1800+end}deg)`,offset:.92},{transform:`translateY(0) rotateY(${1800+end}deg)`}],{duration:1900,fill:"forwards"}).onfinish=()=>setTimeout(finish,350);
+      coinToss(hostWon,finish);
       return;
     }
     L.innerHTML=`<span class="orb${hostWon?"":" o"}" style="width:56px;height:56px;animation:pop .55s var(--spring) both"></span><h3 class="swap">${hostWon?"Host":"Guest"} won the toss</h3><p class="swap">They are picking X or O, then they move first.</p><span class="seat" data-state="waiting" style="width:44px;height:44px"><i></i><i></i><i></i></span>`;
@@ -2995,26 +3061,19 @@ function renderLobby(){
   }
   const myFace=me==="O"&&phase!=="lobby"?"o":"";
   if(phase==="lobby"){
-    L.innerHTML=`<div class="vs"><div class="seat-col"><span class="orb${myFace?" o":""}" style="background:${myAvBg()}"></span><span class="seat-name me">${esc(myName)}</span></div><span class="v">VS</span><div class="seat-col"><span class="orb friend" style="background:${avBg(partner)}"></span><span class="seat-name">${esc(nameOf(partner)||"Friend")}</span></div></div>
-      <h3 class="swap">Room ready</h3><p class="swap">Toss a coin. The winner picks X or O and moves first.</p>
+    L.innerHTML=`${coinHTML(orbBg(myId),orbBg(partner))}
+      <h3 class="swap">Room ready</h3><p class="swap">Flick the coin up, or tap Toss. Whoever’s face lands up picks X or O and moves first.</p>
       <button class="btn primary big" id="tossBtn" type="button"${netShown==="lost"?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Toss the coin</span></button>`;
-    setTimeout(()=>dropIn(L.querySelector(".vs .orb.friend")),180);
-    $("tossBtn").onclick=e=>{const b=e.currentTarget;b.disabled=true;b.classList.add("waiting");b.querySelector(".lbl").textContent="Tossing…";isHost?doToss():publish({t:"tossreq"})};
+    const ask=()=>{const b=$("tossBtn");if(!b||b.disabled)return;b.disabled=true;b.classList.add("waiting");b.querySelector(".lbl").textContent="Tossing…";isHost?doToss():publish({t:"tossreq"})};
+    $("tossBtn").onclick=ask;coinIdle(netShown==="lost"?null:ask);
     return;
   }
   if(!done){
-    L.innerHTML=`<div class="coin-wrap"><div class="coin-stage"><div class="coin" id="coin"><span class="face" style="background:${faceStyle("")}">You</span><span class="face back" style="background:${faceStyle("friend")}">${esc((nameOf(partner)||"Friend").split(" ")[0])}</span></div></div><span class="coin-shadow" id="coinShadow"></span></div><h3 class="swap">Tossing the coin</h3><p class="swap">Heads you pick, tails your friend does.</p>`;
+    L.innerHTML=`${coinHTML(orbBg(myId),orbBg(partner))}<h3 class="swap">Coin toss</h3><p class="swap">Flick the coin up, or tap Toss. Whoever’s face lands up picks X or O and moves first.</p>
+      <button class="btn primary big waiting" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Tossing…</span></button>`;
     const finish=()=>{tossDone.add(tossId);render()};
     if(still){finish();return}
-    const end=iWon?0:180,coin=$("coin"),sh=$("coinShadow");
-    coin.animate([
-      {transform:"translateY(0) rotateY(0deg) rotateX(12deg)",easing:"cubic-bezier(.2,.7,.4,1)"},
-      {transform:`translateY(-120px) rotateY(${900}deg) rotateX(12deg)`,offset:.45,easing:"cubic-bezier(.6,0,.8,.4)"},
-      {transform:`translateY(0) rotateY(${1800+end}deg) rotateX(0deg)`,offset:.85},
-      {transform:`translateY(-14px) rotateY(${1800+end}deg)`,offset:.92},
-      {transform:`translateY(0) rotateY(${1800+end}deg)`}
-    ],{duration:1900,fill:"forwards"}).onfinish=()=>setTimeout(finish,350);
-    sh.animate([{transform:"scale(1)",opacity:1},{transform:"scale(.45)",opacity:.4,offset:.45},{transform:"scale(1)",opacity:1,offset:.85},{transform:"scale(.85)",offset:.92},{transform:"scale(1)"}],{duration:1900,fill:"forwards"});
+    coinToss(iWon,finish);
     return;
   }
   if(iWon){
