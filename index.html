@@ -378,10 +378,22 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .mcard:active{scale:.96}
 /* the chosen mark: its own colour washed faintly through the card, a fine
    edge in the same colour, and its label brought up to full ink */
-.mcard{transition:background-color .3s var(--out),box-shadow .3s var(--out),scale .2s var(--out)}
+/* one tinted highlight slides between the two cards and takes the colour of
+   the mark it lands on; the cards themselves stay still */
+.mcards{position:relative;isolation:isolate}
+.mthumb{position:absolute;z-index:0;left:0;top:0;height:100%;border-radius:18px;pointer-events:none;
+  background:color-mix(in srgb,var(--mt,var(--x)) 13%,var(--chip));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--mt,var(--x)) 50%,transparent);
+  transition:transform .5s cubic-bezier(.3,1.25,.5,1),width .5s cubic-bezier(.3,1.25,.5,1),background-color .35s var(--out),box-shadow .35s var(--out)}
+.mthumb.no-anim{transition:none}
+.mcard{z-index:1;background:transparent;transition:color .35s var(--out),scale .2s var(--out)}
+.mcard:not([aria-pressed="true"]){background:var(--chip)}
+.mcard:not([aria-pressed="true"]):hover{background:var(--chip-2)}
 .mcard.X[aria-pressed="false"]{color:color-mix(in srgb,var(--x) 55%,var(--mute))}.mcard.O[aria-pressed="false"]{color:color-mix(in srgb,var(--o) 55%,var(--mute))}
-.mcard[aria-pressed="true"]{background:color-mix(in srgb,currentColor 13%,var(--chip));box-shadow:inset 0 0 0 1.5px color-mix(in srgb,currentColor 50%,transparent)}
+.mcard[aria-pressed="true"]{background:transparent}
+.mcard small{transition:color .35s var(--out)}
 .mcard[aria-pressed="true"] small{color:var(--ink)}
+/* the mark spins once when picked */
+.mcard .mg{display:inline-block;transform-style:preserve-3d;backface-visibility:visible}
 
 /* ---------- online lobby: room ready, coin toss, pick a mark ---------- */
 .lobby{grid-area:board;justify-self:center;align-self:center;z-index:3;width:var(--bs);height:var(--bs);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;border-radius:36px;background:color-mix(in srgb,var(--slab) 88%,transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:var(--float);animation:cardin .6s var(--spring-soft) both}
@@ -1026,7 +1038,7 @@ a.sh-act{text-decoration:none}
         <button class="pick-pill" id="pickPill" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="pickPanel" aria-label="Your mark, who starts and level"><span class="pick-glyph" id="pickGlyph"><span>X</span></span><span class="pick-txt" id="pickTxt">You're X</span><svg class="pick-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
         <div class="pick-panel" id="pickPanel" role="dialog" aria-label="Play the computer">
           <div class="pick-item pick-label">You play</div>
-          <div class="pick-item mcards"><button class="mcard X" type="button" data-v="X" aria-pressed="true">X<small>Crosses</small></button><button class="mcard O" type="button" data-v="O" aria-pressed="false">O<small>Noughts</small></button></div>
+          <div class="pick-item mcards" id="mcards"><span class="mthumb" id="mthumb" aria-hidden="true"></span><button class="mcard X" type="button" data-v="X" aria-pressed="true"><span class="mg">X</span><small>Crosses</small></button><button class="mcard O" type="button" data-v="O" aria-pressed="false"><span class="mg">O</span><small>Noughts</small></button></div>
           <div class="pick-item pick-label" id="pl-first">Who starts</div>
           <div class="pick-item"><div class="seg sm full" data-opt="first" role="group" aria-labelledby="pl-first"><span class="thumb"></span><button type="button" data-v="me">You</button><button type="button" data-v="ai">Computer</button></div></div>
           <div class="pick-item pick-label" id="pl-level">Level</div>
@@ -1105,7 +1117,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag" data-for="online"><span class="group-label" id="gl-sfx">Reaction sounds</span><div class="seg sm full" data-opt="sfx" role="group" aria-labelledby="gl-sfx"><span class="thumb"></span><button type="button" data-v="1">On</button><button type="button" data-v="0">Off</button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.24·0009</p>
+  <p class="build-tag">Version 2026.11.24·0025</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2144,7 +2156,7 @@ function tick(el,val){
   el.appendChild(n);
 }
 let flipped=false;
-const seatLook={},seatBg={};
+const seatLook={},seatBg={},seatName={};
 /* turn "rgb(..) 0px 0px 0px 4px, …" into the same shadows with no size, for a ring to grow from */
 function ringZero(sh){if(!sh||sh==="none")return null;return sh.split(/,(?![^(]*\))/).map(p=>{const c=(p.trim().match(/^([a-z-]+\([^)]*\)|#[0-9a-f]+|[a-z]+)/i)||["transparent"])[0];return c+" 0px 0px 0px 0px"}).join(", ")}
 function renderPlayers(){
@@ -2177,7 +2189,11 @@ function renderPlayers(){
     el.style.setProperty("--ring-glow",`color-mix(in srgb,var(${ringVar[k]}) 30%,transparent)`);
     el.classList.toggle("on",turn===s);
     el.classList.toggle("thinking",mode==="ai"&&!over&&turn===aiSide&&s===aiSide);
-    const nm=$("p"+s+"name");if(nm.textContent!==names[s]){const first=!nm.textContent;nm.textContent=names[s];if(!first&&!still){nm.classList.remove("swap");void nm.offsetWidth;nm.classList.add("swap")}}
+    /* the name animates only when the name at this seat changes; two
+       elements trading seats keep their names still */
+    const nm=$("p"+s+"name");if(nm.textContent!==names[s]){nm.textContent=names[s];nm.classList.remove("swap");
+      if(seatName[pos]!==undefined&&seatName[pos]!==names[s]&&!still){void nm.offsetWidth;nm.classList.add("swap")}}
+    seatName[pos]=names[s];
     tick($("p"+s+"score"),score[s]);
     const c=getComputedStyle(orb);seatLook[pos]=look;seatBg[pos]={backgroundImage:c.backgroundImage,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition,backgroundColor:c.backgroundColor};
   }
@@ -2315,6 +2331,14 @@ function renderPick(){
   const m=opt.youAre==="O"?"O":"X";
   if(lastGlyph!==m){lastGlyph=m;const g=$("pickGlyph");g.className="pick-glyph "+m;g.innerHTML="<span>"+m+"</span>";$("pickTxt").textContent="You're "+m}
   pick.querySelectorAll(".mcard").forEach(c=>c.setAttribute("aria-pressed",String(c.dataset.v===m)));
+  placeMThumb(m);
+}
+/* the highlight under the chosen card: placed from the card's own box, so it slides to it */
+function placeMThumb(m,instant){
+  const t=$("mthumb"),c=pick.querySelector(`.mcard[data-v="${m}"]`);if(!t||!c||!c.offsetWidth)return;
+  if(instant||!t.dataset.on)t.classList.add("no-anim");
+  t.style.width=c.offsetWidth+"px";t.style.transform=`translateX(${c.offsetLeft}px)`;t.style.setProperty("--mt",m==="O"?"var(--o)":"var(--x)");t.dataset.on="1";
+  if(t.classList.contains("no-anim")){void t.offsetWidth;t.classList.remove("no-anim")}
 }
 function pickOpen(){
   if(pick.hasAttribute("data-open"))return;
@@ -2324,7 +2348,7 @@ function pickOpen(){
     pick.removeAttribute("data-sink");
     pick.querySelectorAll(".pick-item").forEach((it,i)=>it.style.transitionDelay=(90+i*38)+"ms");
     pick.setAttribute("data-open","");pickPill.setAttribute("aria-expanded","true");
-    pick.querySelectorAll(".seg[data-opt]").forEach(sg=>placeThumb(sg,false));
+    pick.querySelectorAll(".seg[data-opt]").forEach(sg=>placeThumb(sg,false));placeMThumb(opt.youAre==="O"?"O":"X",true);
     setTimeout(()=>{const c=pick.querySelector('.mcard[aria-pressed="true"]');c&&c.focus({preventScroll:true})},still?0:260);
   },still?0:90);
 }
@@ -2335,7 +2359,11 @@ function pickClose(focusPill){
   if(focusPill)pickPill.focus({preventScroll:true});
 }
 pickPill.addEventListener("click",pickOpen);
-pick.querySelectorAll(".mcard").forEach(c=>c.addEventListener("click",()=>{onOpt("youAre",c.dataset.v);renderPick()}));
+pick.querySelectorAll(".mcard").forEach(c=>c.addEventListener("click",()=>{
+  const changed=opt.youAre!==c.dataset.v;
+  /* the picked mark gives one quick, light turn around its own axis */
+  if(changed&&!still)c.querySelector(".mg").animate([{transform:"perspective(300px) rotateY(0)"},{transform:"perspective(300px) rotateY(180deg) scale(1.08)",offset:.5},{transform:"perspective(300px) rotateY(360deg)"}],{duration:460,easing:"cubic-bezier(.4,0,.2,1)"});
+  onOpt("youAre",c.dataset.v);renderPick()}));
 /* anywhere but the panel puts it away; a press by a person, not by a script */
 document.addEventListener("pointerdown",e=>{if(e.isTrusted&&pick.hasAttribute("data-open")&&!pick.contains(e.target))pickClose(false)});
 pick.addEventListener("keydown",e=>{if(e.key==="Escape"){e.stopPropagation();pickClose(true)}});
