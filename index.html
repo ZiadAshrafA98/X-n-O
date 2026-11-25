@@ -11,6 +11,17 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="site.webmanifest">
 <meta name="apple-mobile-web-app-title" content="X n O">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" href="splash/1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" href="splash/1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="splash/1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" href="splash/1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" href="splash/1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" href="splash/828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" href="splash/1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" href="splash/750x1334.png">
 <link rel="canonical" href="https://ziadashrafa98.github.io/X-n-O/">
 <!-- the card shown when the link is shared in WhatsApp, iMessage, Slack, X and others -->
 <meta property="og:type" content="website">
@@ -62,6 +73,8 @@
 html,body{margin:0;height:100%}
 /* one screen: the page itself never scrolls, even when a sheet is parked below it */
 html,body{overflow:hidden;overflow:clip;overscroll-behavior:none}
+/* no double-tap zoom: taps land at once, as in an app */
+html{touch-action:manipulation}
 body{background:var(--bg);color:var(--ink);font:400 14px/1.4 var(--sans);overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;transition:background-color .4s var(--out),color .4s var(--out)}
 button,input{font:inherit;color:inherit}
 button{cursor:pointer;-webkit-user-select:none;user-select:none}
@@ -821,6 +834,33 @@ button.seatc{touch-action:none}
 .lb-wait i b{width:6px;height:6px;border-radius:9px;background:var(--mute);animation:bounce 1s ease-in-out infinite}
 .lb-wait i b:nth-child(2){animation-delay:.15s}.lb-wait i b:nth-child(3){animation-delay:.3s}
 .lb-empty .btn{height:44px;margin-top:4px}
+/* ---------- installing the game ---------- */
+.inst-row{display:flex;align-items:center;gap:12px;margin:0 6px 8px;padding:12px;border-radius:18px;background:var(--chip)}
+.inst-row[hidden]{display:none}
+.inst-ic{width:42px;height:42px;flex:none;border-radius:11px;background:#101011 url(icon-192.png) center/cover;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.inst-ic.big{width:48px;height:48px;border-radius:13px}
+.inst-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.inst-t b{font-size:14px;font-weight:600}
+.inst-t span{font-size:12px;color:var(--mute)}
+.inst-row .btn{height:36px;padding:0 16px;font-size:13px}
+.inst-dlg{width:min(420px,calc(100vw - 48px));padding:16px 16px 18px}
+.inst-head{display:flex;align-items:center;gap:12px;min-width:0}
+.inst-head h2{margin:0;font-size:17px;font-weight:600}
+.inst-sub{display:block;font-size:13px;color:var(--mute)}
+.inst-steps{list-style:none;margin:4px 0 16px;padding:0;display:flex;flex-direction:column;gap:10px;counter-reset:st}
+.inst-steps li{counter-increment:st;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:16px;background:var(--chip);font-size:14px;line-height:1.35}
+.inst-steps li::before{content:counter(st);width:26px;height:26px;flex:none;border-radius:99px;background:var(--chip-2);display:grid;place-items:center;font-size:13px;font-weight:600}
+.inst-steps li span{flex:1}
+.inst-steps svg{width:24px;height:24px;flex:none}
+/* phones already end every sheet with Done */
+@media (max-width:1079px){#instOk{display:none}.inst-steps{margin-bottom:4px}}
+/* the one-time dot on Settings, pointing at the install row */
+.btn.round.has-dot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:var(--green);box-shadow:0 0 0 2px var(--bg);animation:pop .4s var(--spring) both}
+#btnSettings{position:relative}
+.rb-lbl~.has-dot::after{right:10px}
+/* installed: no browser habits */
+.is-app body{-webkit-touch-callout:none}
+.is-app .board,.is-app .player{-webkit-user-select:none;user-select:none}
 /* ---------- who's around, under the Online buttons ---------- */
 .pulse{display:flex;align-items:center;justify-content:center;gap:8px;min-height:28px;margin-top:2px;font-size:12.5px;color:var(--mute);animation:rise .4s var(--out) both}
 .pulse[hidden]{display:none}
@@ -1322,13 +1362,14 @@ a.sh-act{text-decoration:none}
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="inst-row stag" id="instRow" hidden><span class="inst-ic" aria-hidden="true"></span><span class="inst-t"><b>Install X n O</b><span>Full screen, and plays offline</span></span><button class="btn primary" id="instBtn" type="button">Install</button></div>
   <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="rcards" role="group" aria-labelledby="gl-rule"></div></div>
   <div class="group stag tog-row" data-hide="online"><div class="tog-in"><span class="tog-lbl" id="gl-hints">Solver hints</span><button class="liq-sw" type="button" role="switch" data-opt="hints" aria-checked="false" aria-labelledby="gl-hints"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag tog-row grp-age"><div class="tog-in"><span class="tog-lbl" id="gl-age">Mark order numbers</span><button class="liq-sw" type="button" role="switch" data-opt="age" aria-checked="false" aria-labelledby="gl-age"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·0349</p>
+  <p class="build-tag">Version 2026.11.25·0409</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1360,6 +1401,13 @@ a.sh-act{text-decoration:none}
 </section>
 
 <div class="qr-side" id="rpQrSide" hidden><div class="qr" id="rpQrSideImg" role="img" aria-label="QR code with the invite link"></div><p>Scan to join</p></div>
+
+<section class="dlg modal inst-dlg" id="dlgInstall" role="dialog" aria-modal="true" aria-labelledby="instTitle" tabindex="-1" hidden>
+  <span class="grab" aria-hidden="true"></span>
+  <div class="dlg-head"><span class="inst-head"><span class="inst-ic big" aria-hidden="true"></span><span><h2 id="instTitle">Add X n O to your home screen</h2><span class="inst-sub" id="instSub"></span></span></span><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <ol class="inst-steps" id="instSteps"></ol>
+  <button class="btn primary" id="instOk" type="button" style="width:100%" data-close>Got it</button>
+</section>
 
 <section class="dlg pop room-pop" id="dlgRoom" role="dialog" aria-modal="true" aria-labelledby="roomTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
@@ -2396,7 +2444,7 @@ function applyMove(c){
   marks[turn]=place(marks[turn],c,rule);sel=-1;
   const wl=winLine(marks[turn]);
   recMove(turn,c);
-  if(wl){over=true;winCells=wl;score[turn]++;saveScore();recWin(turn)}
+  if(wl){over=true;winCells=wl;score[turn]++;saveScore();recWin(turn);try{countRound();if(isYou(turn)||mode==="local")buzz([18,40,28])}catch(e){}}
   else turn=other(turn);
   render();return true;
 }
@@ -2406,12 +2454,12 @@ function onCell(c){
   if(mode==="online"&&(!room||!connOpen||phase!=="play"||turn!==me))return;
   /* with three marks down: tap one of yours to pick it up, then tap where it goes */
   if(moving()){
-    if(marks[turn].includes(c)){sel=sel===c?-1:c;render();return}
+    if(marks[turn].includes(c)){sel=sel===c?-1:c;buzz(6);render();return}
     if(sel<0)return;
     c=mv(sel,c);
   }
-  if(mode==="online"){if(applyMove(c))pushState();return}
-  if(applyMove(c))maybeAI();
+  if(mode==="online"){if(applyMove(c)){buzz(10);pushState()}return}
+  if(applyMove(c)){buzz(10);maybeAI()}
 }
 function maybeAI(){
   clearTimeout(aiTimer);
@@ -2603,7 +2651,7 @@ function render(){flipActions(renderNow)}
 function renderNow(){
   app.dataset.role=mode==="online"&&role==="aud"?"aud":"player";
   app.dataset.phase=mode==="online"&&room?phase:"play";
-  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();pulseSync();
+  renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();pulseSync();if(typeof appSync==="function")try{appSync()}catch(e){}
   $("undoBtn").disabled=!canUndo();
   $("newBtn").disabled=!canNew();
   /* buttons still sliding into place carry the same state */
@@ -3112,8 +3160,10 @@ function startPing(){
     if(partner&&connOpen&&Date.now()-partnerSeen>PEER_LOST){connOpen=false;render()}
   },PING_EVERY);
 }
+/* with no connection at all, the Online tab says so, and that the rest still works */
+function offlineNote(){return mode==="online"&&!room&&!navigator.onLine?"You’re offline. Same device and Computer still work.":""}
 function updateNetStatus(){
-  if(!room){net("");return}
+  if(!room){net(offlineNote());return}
   net(liveBrokers()===0?"Connection lost. Reconnecting…":"");
 }
 
@@ -4311,7 +4361,7 @@ function mmOn(m){
    both dots lean in, then you go to your room together */
 function mmFound(peer,r,host){
   mm.phase="found";mm.peer=peer;clearInterval(mm.seekT);
-  toast("Match found","friend");render();
+  toast("Match found","friend");buzz([14,60,14]);render();
   if(!still){
     const me=$("meOrb"),seat=$("seat");
     dropIn(seat);
@@ -4738,7 +4788,12 @@ let saved=null;try{saved=JSON.parse(sessionStorage.getItem("xo.online")||"null")
 if(saved&&saved.room&&(saved.isHost?(!roomParam||roomParam===saved.room):roomParam===saved.room)){
   setMode("online");begin(saved.room,!!saved.isHost,saved);
 }else if(roomParam){setMode("online");joinRoom(roomParam)}
-else setMode("local");
+else{
+  /* home screen shortcuts open a mode straight away: ?mode=ai, ?mode=online (&find to start looking) */
+  const want=qs.get("mode");setMode(["ai","online","local"].includes(want)?want:"local");
+  if(want==="online"&&qs.has("find"))setTimeout(()=>{if(!room&&!mm)findMatch()},700);
+  if(want){try{const u=new URL(location.href);u.searchParams.delete("mode");u.searchParams.delete("find");window.history.replaceState(window.history.state,"",u)}catch(e){}}
+}
 placeAll();
 /* ---------- About the makers ---------- */
 /* Drawn as comic heads in a modern hero style: three-tone cel shading,
@@ -5001,6 +5056,89 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    and the analysis never make a press wait */
 (window.requestIdleCallback||(f=>setTimeout(f,600)))(()=>{solve("M");solve("A")});
 
+/* ---------- As an app ---------- */
+/* Installed, the game opens full screen from the home screen and plays
+   offline. A small worker keeps its files (see sw.js); the page still comes
+   from the network whenever there is one, so updates arrive as before. */
+function isApp(){return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}
+document.documentElement.classList.toggle("is-app",isApp());
+if("serviceWorker" in navigator&&!qs.has("nosw"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+
+/* Installing. Chrome and Edge offer their own small install bar, which is
+   left alone; the same offer is kept for the button in Settings. Where a
+   browser has no such offer (Safari, in-app browsers) the button opens a
+   short how-to with that browser's own steps. */
+var installEvt=null,installedNow=false; /* installed during this visit; an app removed later is offered again */
+const UA=navigator.userAgent;
+const IOS=/iPad|iPhone|iPod/.test(UA)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+const IN_APP=/FBAN|FBAV|Instagram|LinkedInApp|Snapchat|TikTok|Line\//i.test(UA);
+const ANDROID=/Android/i.test(UA),SAFARI_MAC=!IOS&&/Safari/.test(UA)&&!/Chrome|Chromium|Edg|OPR/.test(UA),FIREFOX=/Firefox|FxiOS/.test(UA);
+function installKind(){
+  if(isApp()||installedNow)return null;
+  if(installEvt)return"prompt";
+  if(IN_APP)return"inapp";
+  if(IOS)return"ios";
+  if(SAFARI_MAC)return"mac";
+  if(FIREFOX&&!ANDROID)return"firefox";
+  return"menu";
+}
+addEventListener("beforeinstallprompt",e=>{installEvt=e;appSync()});
+addEventListener("appinstalled",()=>{installEvt=null;installedNow=true;appSync();toast("X n O is on your home screen")});
+const I_SHARE='<svg viewBox="0 0 24 24" fill="none" stroke="#5aa2ff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2h-1"/></svg>';
+const I_ADD='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>';
+const I_DOTS='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>';
+const I_DOTSH='<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>';
+const I_PHONE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="3"/><path d="M12 7.5v7M9 11.5l3 3 3-3"/></svg>';
+const I_GLOBE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg>';
+const step=(t,ic)=>`<li><span>${t}</span>${ic||""}</li>`;
+function openInstallHelp(){
+  const k=installKind(),sub=$("instSub"),ol=$("instSteps"),title=$("instTitle");
+  title.textContent=k==="mac"?"Add X n O to your Dock":"Add X n O to your home screen";
+  if(k==="ios"){sub.textContent="Two taps in Safari";ol.innerHTML=step("Tap <b>Share</b> in the browser bar",I_SHARE)+step("Choose <b>Add to Home Screen</b>",I_ADD)}
+  else if(k==="inapp"){sub.textContent="This app’s browser can’t install games";ol.innerHTML=step(`Tap the <b>menu</b> at the top`,I_DOTSH)+step(`Choose <b>Open in ${IOS?"Safari":"Chrome"}</b>`,I_GLOBE)+step("Then tap <b>Install</b> in Settings there",I_PHONE)}
+  else if(k==="mac"){sub.textContent="One step in Safari";ol.innerHTML=step("In the menu bar, choose <b>File</b>, then <b>Add to Dock</b>",I_ADD)}
+  else if(k==="firefox"){sub.textContent="Firefox on a computer can’t install games";ol.innerHTML=step("Open this page in <b>Chrome</b>, <b>Edge</b> or <b>Safari</b>",I_GLOBE)+step("Then tap <b>Install</b> in Settings there",I_PHONE)}
+  else{sub.textContent="From your browser’s menu";ol.innerHTML=step(`Open the browser <b>menu</b>`,I_DOTS)+step("Choose <b>Install app</b> or <b>Add to Home screen</b>",I_ADD)}
+  openDialog("dlgInstall",$("instBtn"));
+}
+$("instBtn").addEventListener("click",()=>{
+  if(installEvt){const e=installEvt;e.prompt();e.userChoice.then(c=>{if(c&&c.outcome==="accepted"){installEvt=null;installedNow=true}appSync()}).catch(()=>{});return}
+  openInstallHelp();
+});
+
+/* the one-time dot on Settings: after a couple of finished rounds, until Settings is first opened */
+var roundsDone=store.get("xo.rounds",0);
+function countRound(){roundsDone++;store.set("xo.rounds",roundsDone)}
+$("btnSettings").addEventListener("click",()=>{if(!store.get("xo.setSeen",false)){store.set("xo.setSeen",true);appSync()}});
+
+/* keep the screen awake while waiting for or playing someone online */
+var wakeLock=null,wakeAsk=false;
+function wakeSync(){
+  const want=mode==="online"&&(!!room||!!mm)&&document.visibilityState==="visible";
+  if(want&&!wakeLock&&!wakeAsk&&navigator.wakeLock){wakeAsk=true;navigator.wakeLock.request("screen").then(l=>{wakeAsk=false;if(!(mode==="online"&&(room||mm))){l.release();return}wakeLock=l;l.addEventListener("release",()=>{wakeLock=null})}).catch(()=>{wakeAsk=false})}
+  else if(!want&&wakeLock){wakeLock.release().catch(()=>{});wakeLock=null}
+}
+/* a light tap you can feel on phones that allow it (iPhones do not) */
+function buzz(p){if(navigator.vibrate&&matchMedia("(pointer:coarse)").matches){try{navigator.vibrate(p)}catch(e){}}}
+/* "your turn" as a dot on the app icon while the game is in the background */
+function badgeSync(){
+  if(!("setAppBadge" in navigator))return;
+  const mine=mode==="online"&&!!room&&phase==="play"&&!over&&turn===me&&document.visibilityState==="hidden";
+  (mine?navigator.setAppBadge():navigator.clearAppBadge()).catch(()=>{});
+}
+/* online with no connection: say so plainly, and that the rest still works */
+
+function appSync(){
+  const row=$("instRow");if(row)row.hidden=!installKind();
+  $("btnSettings").classList.toggle("has-dot",!!installKind()&&roundsDone>=2&&!store.get("xo.setSeen",false)&&!openDlg);
+  if(mode==="online"&&!room){const n=$("netNote"),t=offlineNote();if(t)net(t);else if(n&&n.textContent.startsWith("You’re offline"))net("")}
+  wakeSync();badgeSync();
+}
+addEventListener("online",appSync);addEventListener("offline",appSync);
+document.addEventListener("visibilitychange",appSync);
+matchMedia("(display-mode: standalone)").addEventListener?.("change",()=>{document.documentElement.classList.toggle("is-app",isApp());appSync()});
+appSync();
+
 /* ---------- Staying current ---------- */
 /* Each build stamps itself and writes the same stamp to version.json. An
    open page (a tab left open, a phone that keeps it in memory, a copy the
@@ -5010,7 +5148,7 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·0349";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·0409";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
