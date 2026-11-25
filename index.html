@@ -1239,9 +1239,10 @@ a.sh-act{text-decoration:none}
    game's buttons. Windows slide in from the right edge as a side panel. */
 @media (orientation:landscape) and (max-height:540px){
   /* the sides take what the screen can spare, never less than a column of buttons */
-  :root{--rail:clamp(150px,calc((100vw - 100dvh) / 2 - 10px),260px);--bs:min(calc(100dvh - 28px),calc(100vw - 2 * var(--rail) - 72px))}
-  .app{display:grid;height:100dvh;grid-template-columns:minmax(0,1fr) var(--bs) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"logo board icons" "pl board pr" "tabs board status" "tabs board actions";column-gap:20px;row-gap:10px;
+  /* the top row (logo, status, small buttons) takes 44px; the board gets the rest of the height */
+  :root{--rail:clamp(150px,calc((100vw - 100dvh) / 2),260px);--bs:min(calc(100dvh - 82px),calc(100vw - 2 * var(--rail) - 72px))}
+  .app{display:grid;height:100dvh;grid-template-columns:minmax(0,1fr) var(--bs) minmax(0,1fr);grid-template-rows:44px minmax(0,1fr) auto;
+    grid-template-areas:"logo status icons" "pl board pr" "tabs board actions";column-gap:20px;row-gap:10px;
     padding:14px max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left))}
   .top,.stage{display:contents}
   #logo{grid-area:logo;justify-self:start;align-self:center}
@@ -1254,10 +1255,14 @@ a.sh-act{text-decoration:none}
   .icons{grid-area:icons;justify-self:end;align-self:center;gap:6px;display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:var(--rail)}
   .icons .ibtn{width:40px;height:40px}
   .win-pill{width:40px;height:40px;padding:0;justify-content:center}.win-pill .wp-lbl{display:none}
-  .status{grid-area:status;justify-self:center;max-width:100%}
+  /* the status sits right above the board, centred on it */
+  .status{grid-area:status;justify-self:center;align-self:center;max-width:100%}
   .board-wrap,.lobby{grid-area:board;align-self:center;justify-self:center}
   .lobby{padding:14px;gap:10px;border-radius:28px}
+  /* each player is centred in the height between the top row and the buttons */
   .player{align-self:center;justify-self:center}
+  /* Share lives in the computer picker, next to your record, so the buttons stay on one line */
+  .actions #shareBtn{display:none}
   .actions{grid-area:actions;justify-self:end;align-self:end;width:var(--rail);max-width:100%;gap:8px}
   .actions .btn.big{height:44px}
   .actions #newBtn{padding:0 16px}
@@ -1290,7 +1295,13 @@ a.sh-act{text-decoration:none}
   /* the game's buttons fit on one line: New round becomes a round button, and the
      computer picker shows just your mark; its panel opens leftwards, on screen */
   /* right-aligned, so Settings, always last, keeps the same corner whatever sits beside it */
-  .actions{flex-wrap:wrap;justify-content:flex-end;max-width:var(--rail);gap:6px}
+  .actions{flex-wrap:wrap;justify-content:flex-end;max-width:var(--rail);gap:5px}
+  /* every row of buttons is the same height, so nothing in it bobs up or down between modes */
+  .actions{align-items:center;align-content:flex-end}
+  .actions>*{min-height:52px;display:flex;align-items:center}
+  .actions>[hidden]{display:none}
+  .actions .btn.round{width:46px;height:46px;flex:none}
+  .actions #newBtn{width:48px;height:48px}
   .actions #newBtn{width:48px;height:48px;padding:0;flex:none}
   .actions #newBtn .nb-lbl{display:none}
   .pick{--pw:60px}
@@ -1311,6 +1322,14 @@ a.sh-act{text-decoration:none}
   .app[data-mode="online"] .card .otp .c{height:48px;font-size:20px}
   .app[data-mode="online"] .card .pulse{min-height:22px}
   .app[data-mode="online"] .card .note:empty{display:none}
+  /* "Play a friend" and "Your room" lie sideways: the two seats on the left, the code and buttons stacked on the right */
+  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .card.room{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;row-gap:8px;align-items:center}
+  .app[data-mode="online"] .card.room>*{grid-column:2}
+  .app[data-mode="online"] .card.room>.card-head{grid-column:1/-1}
+  .app[data-mode="online"] .card.room>.seats{grid-column:1;grid-row:2/span 4;align-self:center}
+  .app[data-mode="online"] .card.room>.pulse{grid-column:1/-1}
+  .app[data-mode="online"] .card.room .card-actions{flex-direction:column;gap:8px}
+  .app[data-mode="online"] .card.room .card-actions .btn{width:100%;flex:none;height:40px}
   /* the cards are as tall as what they hold, centred in the space */
   .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .card{align-self:center;max-height:100%;overflow:auto}
   /* in a game, the room bar takes a line of its own under the other buttons */
@@ -1474,7 +1493,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·0537</p>
+  <p class="build-tag">Version 2026.11.25·1104</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5267,7 +5286,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·0537";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·1104";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
