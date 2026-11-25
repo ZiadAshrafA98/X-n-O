@@ -4,7 +4,7 @@
    instead, and Same device and Computer play as usual. Everything else the
    game is made of is kept from install and served from here. Fonts are kept
    the first time they load. Online play still needs the internet. */
-const V="2026.11.25·2149",CACHE="xno-"+V,FONTS="xno-fonts";
+const V="2026.11.25·2210",CACHE="xno-"+V,FONTS="xno-fonts";
 const CORE=["./","site.webmanifest","mqtt.min.js","qr.js","jsqr.js","wave.js","favicon.svg","favicon-32.png","apple-touch-icon.png","icon-192.png","icon-512.png","icon-maskable-512.png"];
 
 self.addEventListener("install",e=>{

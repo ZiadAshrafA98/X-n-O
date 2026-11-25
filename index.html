@@ -1337,7 +1337,8 @@ a.sh-act{text-decoration:none}
   #dlgRoom>.rp-hint{grid-column:2;grid-row:6}
   #dlgRoom>#rpLeave{grid-column:2;grid-row:7;align-self:end;width:100%;margin:12px 0 0}
   /* players: stacked as on desktop, face over name over score, just a little smaller */
-  .player{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .player{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .player .pname{margin-bottom:-4px}
   .player .orb{width:64px;height:64px}
   .player .pname{font-size:13px;color:var(--mute);max-width:var(--rail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .player .pscore{font-size:40px;height:42px}
@@ -1548,7 +1549,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·2149</p>
+  <p class="build-tag">Version 2026.11.25·2210</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -3119,6 +3120,8 @@ function goMode(m){
   if(m===mode)return;
   setSeg($("tabs"),m,true);
   /* into or out of Online: your avatar and name travel with you */
+  /* a switch that does not cross Online ends any journey still in flight */
+  if((m==="online")===(mode==="online")&&typeof morphAbort==="function")morphAbort();
   const mv=(m==="online")!==(mode==="online")?morphStart():null;
   /* the new mode opens on a fresh board: nothing to undo or restart yet */
   /* everything in the row is settled in this one step (the Share button
@@ -4388,8 +4391,19 @@ function meParts(){
   const s=mySide();if(!s)return null;const o=$("p"+s+"orb");if(!onScreen(o))return null;
   const n=$("p"+s+"name");return{orb:o,name:onScreen(n)&&n.getBoundingClientRect().width?n:null};
 }
+/* The mode changed again while you were still travelling (say Online, then
+   Computer, then Same device): the seat you were flying to may now be on the
+   other side, so the copy fades out where it is and the real dot takes over,
+   rather than running across the screen to a seat that is no longer yours. */
+function morphAbort(){
+  const st=morph;if(!st)return;
+  st.parts.forEach(el=>{el.getAnimations().forEach(a=>{try{a.commitStyles()}catch(e){}a.cancel()});el.animate([{opacity:1},{opacity:0}],{duration:160,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
+  st.hidden.forEach(el=>el.style.visibility="");if(st.cardHidden)$("roomCard").style.opacity="";
+  st.hidden=[];st.cardHidden=false;morph=null;
+  setTimeout(()=>st.parts.forEach(el=>el.remove()),170);
+}
 function morphClear(){
-  if(!morph)return;morph.parts.forEach(el=>el.remove());morph.hidden.forEach(el=>el.style.visibility="");morph=null;
+  if(!morph)return;if(morph.cardHidden)$("roomCard").style.opacity="";morph.parts.forEach(el=>el.remove());morph.hidden.forEach(el=>el.style.visibility="");morph=null;
 }
 function bgOf(el){const c=getComputedStyle(el);return{backgroundImage:c.backgroundImage,backgroundColor:c.backgroundColor,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition}}
 function fixedAt(el,r,z){Object.assign(el.style,{position:"fixed",left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",margin:"0",zIndex:String(z||45),pointerEvents:"none"});document.body.appendChild(el);return el}
@@ -4409,9 +4423,14 @@ function morphStart(){
   const p=still?null:meParts();
   /* clearing the card's leftover animation restarts its entrance (94% and lower down)
      for a frame; when the card is about to fold away it is measured as it is and left alone */
-  if(!p||!p.card){$("roomCard").style.animation="";$("roomCard").style.transformOrigin=""}
+  if(!p){$("roomCard").style.animation="";$("roomCard").style.transformOrigin=""}
+  /* going into Online with your dot: the card will grow out of the dot, so its own
+     entrance must not play first (it showed as a faint full-size card for a frame or two) */
+  else if(!p.card){$("roomCard").style.animation="none";$("roomCard").style.transformOrigin=""}
   if(!p)return null;
   const st={parts:[],hidden:[],fromOnline:!!p.online};
+  /* ...and it stays out of sight until the grow begins, so it never shows at full size first */
+  if(!p.online){$("roomCard").style.opacity="0";st.cardHidden=true}
   if(p.card){
     /* the card shrinks back into the dot; its own dot is left to the stand-in */
     const r=p.card.getBoundingClientRect(),g=p.card.cloneNode(true);
@@ -4446,7 +4465,9 @@ function morphLand(st){
   const done=()=>{if(morph!==st)return;
     /* the page may have shifted while we flew (a phone's address bar, a late
        layout change): if the seat moved, glide the last few pixels first */
-    if(!st.fixed&&p){const r2=where();if(r2&&Math.hypot(r2.left-r.left,r2.top-r.top,r2.width-r.width)>1.5){st.fixed=true;
+    if(!st.fixed&&p){const r2=where();
+      if(r2&&Math.hypot(r2.left-r.left,r2.top-r.top)>60){morph=st;morphAbort();return}
+      if(r2&&Math.hypot(r2.left-r.left,r2.top-r.top,r2.width-r.width)>1.5){st.fixed=true;
       const k=r.width/r2.width;flyTo(st.orb,r,r2,k,200,"cubic-bezier(.22,1,.36,1)");
       if(st.name&&nr){const n2=p.name.getBoundingClientRect();flyTo(st.name,nr,n2,1,200,"cubic-bezier(.22,1,.36,1)")}
       r=r2;setTimeout(done,210);return}}
@@ -4459,8 +4480,9 @@ function morphLand(st){
   };
   if(!p){st.parts.forEach(el=>el.animate([{opacity:1},{opacity:0}],{duration:200,fill:"forwards"}));setTimeout(()=>{if(morph===st)morphClear()},220);return}
   const sheet=p.online&&narrow?$("dock"):null,card=p.online&&!narrow?$("roomCard"):null;
-  if(!p.online){const pl=p.orb.closest(".player");if(pl)pl.getAnimations().forEach(a=>a.finish())}
-  if(card){card.getAnimations().forEach(a=>a.cancel());card.style.animation="none";card.querySelectorAll(".seat-col").forEach(e=>e.getAnimations().forEach(a=>a.finish()))}
+  /* measure where things will rest: the player block and everything in it (the name too) finish their entrance first */
+  if(!p.online){const pl=p.orb.closest(".player");if(pl)pl.getAnimations({subtree:true}).forEach(a=>a.finish())}
+  if(card){card.style.opacity="";card.getAnimations().forEach(a=>a.cancel());card.style.animation="none";card.querySelectorAll(".seat-col").forEach(e=>e.getAnimations().forEach(a=>a.finish()))}
   /* where your dot will rest: on a phone the sheet may still be rising, so take its slide off */
   const where=()=>{if(!p.orb.isConnected)return null;let a=p.orb.getBoundingClientRect();
     if(sheet){const ty=new DOMMatrix(getComputedStyle(sheet).transform).m42;a=new DOMRect(a.left,a.top-ty,a.width,a.height)}return a};
@@ -5355,7 +5377,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·2149";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·2210";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
