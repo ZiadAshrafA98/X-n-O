@@ -318,7 +318,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 /* ---------- online cards ---------- */
 .dock{display:contents}
 .card{width:min(340px,100%);padding:20px;border-radius:28px;background:var(--slab);box-shadow:var(--float);display:flex;flex-direction:column;gap:18px;animation:cardin .6s var(--spring-soft) both}
-@media (min-width:1080px){.app:not([data-mode="online"]) .card,.app[data-net="live"] .card,.app[data-net="lost"] .card{display:none}}
+@media (min-width:1080px),(orientation:landscape) and (max-height:540px){.app:not([data-mode="online"]) .card,.app[data-net="live"] .card,.app[data-net="lost"] .card{display:none}}
 .card.room{grid-area:pl;justify-self:center;align-self:center}
 .card.join{grid-area:pr;justify-self:center;align-self:center;animation-delay:.06s}
 .card-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -853,7 +853,7 @@ button.seatc{touch-action:none}
 .inst-steps li span{flex:1}
 .inst-steps svg{width:24px;height:24px;flex:none}
 /* phones already end every sheet with Done */
-@media (max-width:1079px){#instOk{display:none}.inst-steps{margin-bottom:4px}}
+@media (max-width:1079px) and (orientation:portrait),(max-width:1079px) and (min-height:541px){#instOk{display:none}.inst-steps{margin-bottom:4px}}
 /* the one-time dot on Settings, pointing at the install row */
 .btn.round.has-dot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:var(--green);box-shadow:0 0 0 2px var(--bg);animation:pop .4s var(--spring) both}
 #btnSettings{position:relative}
@@ -1068,7 +1068,8 @@ a.sh-act{text-decoration:none}
 @keyframes scanline{from{top:20%}to{top:80%}}
 
 /* ---------- narrow screens: stacked layout and bottom sheets ---------- */
-@media (max-width:1079px){
+/* phones held upright (and taller screens): a phone on its side has its own layout further down */
+@media (max-width:1079px) and (orientation:portrait),(max-width:1079px) and (min-height:541px){
   :root{--bs:min(calc(100vw - 32px),calc(100dvh - 318px),520px)}
   .top{flex-wrap:wrap;row-gap:14px;padding:max(14px,env(safe-area-inset-top)) 16px 0;min-height:0}
   .tabs-wrap{position:static;transform:none;order:3;width:100%}
@@ -1151,7 +1152,7 @@ a.sh-act{text-decoration:none}
   .ins-side{padding:6px 6px 0}
   .ins-close{display:none}
 }
-@media (max-width:1079px) and (max-height:700px){
+@media (max-width:1079px) and (max-height:700px) and (orientation:portrait),(max-width:1079px) and (max-height:700px) and (min-height:541px){
   :root{--bs:min(calc(100vw - 32px),calc(100dvh - 292px))}
   .stage{row-gap:12px;padding-top:10px}
 }
@@ -1193,7 +1194,7 @@ a.sh-act{text-decoration:none}
   .app:is([data-mode="ai"],[data-mode="local"]) .actions .round:not(#shareBtn):not(#btnSettings){flex:none}
 }
 /* short phones keep one row: every round button holds its circle, and against the computer New round keeps just its icon */
-@media (max-width:1079px) and (max-height:599px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
+@media (max-width:1079px) and (max-height:599px) and (orientation:portrait),(max-width:1079px) and (max-height:599px) and (min-height:541px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
 /* small phones against the computer: the row holds a share button too, so New round keeps just its icon */
 @media (max-width:379px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
 
@@ -1230,6 +1231,110 @@ a.sh-act{text-decoration:none}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.12s!important}
 }
+
+/* ---------- a phone on its side ----------
+   The board takes nearly the full height in the middle. The header folds
+   into the two sides: on the left the logo, you, and the three modes (as
+   icons); on the right the small buttons, your opponent, the status and the
+   game's buttons. Windows slide in from the right edge as a side panel. */
+@media (orientation:landscape) and (max-height:540px){
+  /* the sides take what the screen can spare, never less than a column of buttons */
+  :root{--rail:clamp(150px,calc((100vw - 100dvh) / 2 - 10px),260px);--bs:min(calc(100dvh - 28px),calc(100vw - 2 * var(--rail) - 72px))}
+  .app{display:grid;height:100dvh;grid-template-columns:minmax(0,1fr) var(--bs) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"logo board icons" "pl board pr" "tabs board status" "tabs board actions";column-gap:20px;row-gap:10px;
+    padding:14px max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left))}
+  .top,.stage{display:contents}
+  #logo{grid-area:logo;justify-self:start;align-self:center}
+  /* the mode switcher has ONE place and ONE size in every mode, so switching modes never moves it;
+     the game's buttons likewise keep the bottom right */
+  .tabs-wrap{grid-area:tabs;position:static;transform:none;align-self:end;justify-self:start;width:var(--rail)}
+  .tabs{display:grid;width:100%}
+  .tabs button{font-size:0;gap:0;padding:0;height:40px}
+  .tabs button svg{width:20px;height:20px}
+  .icons{grid-area:icons;justify-self:end;align-self:center;gap:6px;display:flex;flex-wrap:wrap;justify-content:flex-end;max-width:var(--rail)}
+  .icons .ibtn{width:40px;height:40px}
+  .win-pill{width:40px;height:40px;padding:0;justify-content:center}.win-pill .wp-lbl{display:none}
+  .status{grid-area:status;justify-self:center;max-width:100%}
+  .board-wrap,.lobby{grid-area:board;align-self:center;justify-self:center}
+  .lobby{padding:14px;gap:10px;border-radius:28px}
+  .player{align-self:center;justify-self:center}
+  .actions{grid-area:actions;justify-self:end;align-self:end;width:var(--rail);max-width:100%;gap:8px}
+  .actions .btn.big{height:44px}
+  .actions #newBtn{padding:0 16px}
+  .bleachers{display:none}
+  .card.room{grid-area:pl;align-self:center;width:100%;max-width:300px;padding:14px;gap:12px}
+  .card.join{grid-area:pr;align-self:center;width:100%;max-width:300px;padding:14px;gap:12px}
+  /* windows: one panel from the right edge, full height */
+  .pop,.modal{top:12px!important;bottom:12px!important;right:max(12px,env(safe-area-inset-right))!important;left:auto!important;translate:none!important;
+    width:min(420px,calc(100vw - 24px));max-height:none;overflow:auto;border-radius:28px;padding:12px 12px 14px;transform-origin:100% 50%}
+  .dlg .grab{display:none}
+  .insight{grid-template-columns:1fr}
+  /* the room panel: wider, in two columns, so it hardly scrolls */
+  #dlgRoom{width:min(760px,calc(100vw - 24px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-content:start}
+  #dlgRoom>.dlg-head{grid-column:1/-1;grid-row:1}
+  /* left: sharing, who is on the board, your profile; right: the stands and leaving */
+  #dlgRoom>.rp-share{grid-column:1;grid-row:2}
+  #dlgRoom>.rp-qrfold{grid-column:1;grid-row:3}
+  #dlgRoom>.rp-l1{grid-column:1;grid-row:4}
+  #dlgRoom>.court{grid-column:1;grid-row:5/7;align-self:start}
+  #dlgRoom>.rp-me{grid-column:1;grid-row:7;margin:12px 0 0;align-self:end}
+  #dlgRoom>.rp-l2{grid-column:2;grid-row:2;padding-top:6px}
+  #dlgRoom>.stands{grid-column:2;grid-row:3/6;align-self:start}
+  #dlgRoom>.rp-hint{grid-column:2;grid-row:6}
+  #dlgRoom>#rpLeave{grid-column:2;grid-row:7;align-self:end;width:100%;margin:12px 0 0}
+  /* players: stacked as on desktop, face over name over score, just a little smaller */
+  .player{display:flex;flex-direction:column;align-items:center;gap:6px}
+  .player .orb{width:64px;height:64px}
+  .player .pname{font-size:13px;color:var(--mute);max-width:var(--rail);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .player .pscore{font-size:40px;height:42px}
+  /* the game's buttons fit on one line: New round becomes a round button, and the
+     computer picker shows just your mark; its panel opens leftwards, on screen */
+  /* right-aligned, so Settings, always last, keeps the same corner whatever sits beside it */
+  .actions{flex-wrap:wrap;justify-content:flex-end;max-width:var(--rail);gap:6px}
+  .actions #newBtn{width:48px;height:48px;padding:0;flex:none}
+  .actions #newBtn .nb-lbl{display:none}
+  .pick{--pw:60px}
+  .pick-pill .pick-txt,#pickTxt{display:none}
+  .pick-body,.pick-panel{left:auto;right:0}
+  .pick{--panel-w:300px}
+  .pick-panel{padding:10px;gap:2px}
+  /* Online, before a game: the two cards share the screen, half each */
+  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]){grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;
+    grid-template-areas:"logo icons" "pl pr" "tabs actions"}
+  /* the online cards, made compact so they fit above the switcher without moving it */
+  .app[data-mode="online"] .card{padding:12px 14px;gap:10px;border-radius:24px}
+  .app[data-mode="online"] .card .seats{gap:22px;padding:0}
+  .app[data-mode="online"] .card .seat-col{gap:4px}
+  .app[data-mode="online"] .card .seat-col .orb,.app[data-mode="online"] .card .seat{width:48px;height:48px}
+  .app[data-mode="online"] .card .code-row{height:46px}
+  .app[data-mode="online"] .card .btn{height:40px}
+  .app[data-mode="online"] .card .otp .c{height:48px;font-size:20px}
+  .app[data-mode="online"] .card .pulse{min-height:22px}
+  .app[data-mode="online"] .card .note:empty{display:none}
+  /* the cards are as tall as what they hold, centred in the space */
+  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .card{align-self:center;max-height:100%;overflow:auto}
+  /* in a game, the room bar takes a line of its own under the other buttons */
+  .app[data-mode="online"] .chip{flex-basis:100%;justify-content:space-between}
+  .app[data-mode="online"] .chip #chipCode{display:none}
+  .app[data-mode="online"] .chip{gap:8px;max-width:var(--rail)}
+  /* the picker never runs off the top: it is capped to the screen, and scrolls if it must */
+  /* the picker opens as the same full-height side panel as every other window */
+  .pick[data-open] .pick-body,.pick[data-open] .pick-panel{position:fixed;top:12px;bottom:12px;right:max(12px,env(safe-area-inset-right));left:auto;
+    width:min(380px,calc(100vw - 24px));height:auto;max-height:none;border-radius:28px;transition:none;animation:pkside .52s cubic-bezier(.2,1.1,.3,1) both}
+  .pick[data-open] .pick-body{z-index:60;box-shadow:var(--float)}
+  .pick[data-open] .pick-panel{z-index:61;padding:18px 16px;gap:6px;overflow:auto;scrollbar-width:none}
+  .pick[data-open] .pick-item{transition-delay:0s!important}
+  .pick[data-open] .mcard{height:76px;font-size:30px}
+  .pick-panel::-webkit-scrollbar{display:none}
+  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) :is(.board-wrap,.player,.status){display:none}
+  .card.room,.card.join{max-width:400px;justify-self:center}
+}
+/* the smallest phones on their side: a touch smaller buttons so each row stays one row */
+@media (orientation:landscape) and (max-height:540px) and (max-width:720px){
+  .icons{gap:4px}.icons .ibtn,.win-pill{width:34px;height:34px}
+  .icons svg{width:17px;height:17px}
+}
+@keyframes pkside{from{transform:translateX(calc(100% + 24px))}}
 </style>
 </head>
 <body>
@@ -1369,7 +1474,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·0436</p>
+  <p class="build-tag">Version 2026.11.25·0537</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1418,9 +1523,9 @@ a.sh-act{text-decoration:none}
     <button class="sq" id="rpQrBtn" type="button" aria-label="Show QR code" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3h-3zM20 14v.01M20 20h-3M17 20v.01M20 17v.01"/></svg></button>
   </div>
   <div class="rp-qrfold" id="rpQrWrap"><div class="rp-qrin"><div class="qr-wrap"><div class="qr" id="rpQr" role="img" aria-label="QR code with the invite link"></div></div></div></div>
-  <div class="rp-label"><span>On the board</span><span id="rpPhase"></span></div>
+  <div class="rp-label rp-l1"><span>On the board</span><span id="rpPhase"></span></div>
   <div class="court" id="rpCourt"></div>
-  <div class="rp-label"><span>In the stands</span><span id="rpStandsN"></span></div>
+  <div class="rp-label rp-l2"><span>In the stands</span><span id="rpStandsN"></span></div>
   <div class="stands" id="rpStands"></div>
   <p class="rp-hint" id="rpHint"></p>
   <button class="rp-me" id="rpProfile" type="button"><span class="orb" id="rpMeOrb"></span><span class="rp-me-t"><b id="rpMeName"></b><span>Edit your profile</span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
@@ -1496,6 +1601,8 @@ a.sh-act{text-decoration:none}
 const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 const $=id=>document.getElementById(id);
 const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+/* a phone held upright, or any narrow screen tall enough for the stacked layout; a phone on its side is not "narrow" */
+const PHONE_Q="(max-width:1079px) and (orientation:portrait),(max-width:1079px) and (min-height:541px)",LAND_Q="(orientation:landscape) and (max-height:540px)";
 const still=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const app=$("app");
 
@@ -2968,7 +3075,9 @@ function placeMThumb(m,instant){
 }
 function pickOpen(){
   if(pick.hasAttribute("data-open"))return;
-  pick.style.setProperty("--panel-h",pickPanel.offsetHeight+"px");
+  /* on a phone on its side the panel may only grow as tall as the room above the picker */
+  const room=typeof landMQ!=="undefined"&&landMQ.matches?pick.getBoundingClientRect().bottom-12:1e4;
+  pick.style.setProperty("--panel-h",Math.min(pickPanel.scrollHeight,room)+"px");
   pick.setAttribute("data-sink","");clearTimeout(pickBeat);
   pickBeat=setTimeout(()=>{
     pick.removeAttribute("data-sink");
@@ -3404,7 +3513,7 @@ function renderNet(){
   otpEl.classList.toggle("done",joined&&!isHost);
   otpIn.disabled=s==="guest-wait"||joined;
   applyVis($("joinCard"),[[$("joinBtn"),!(s==="guest-wait"||joined)]]);
-  joinVis(!(matchMedia("(max-width:1079px)").matches&&(!!mmS||isHost&&!!room&&(s==="host-wait"||joined))));
+  joinVis(!(matchMedia(PHONE_Q).matches&&(!!mmS||isHost&&!!room&&(s==="host-wait"||joined))));
   const chip=$("chip"),showChip=s==="live"||s==="lost";
   if(showChip&&chip.hidden)setTimeout(()=>dropIn($("chipFriend")),220);
   $("emo").hidden=s!=="live";if(s!=="live")emoClose();
@@ -4199,7 +4308,7 @@ $("bleachers").addEventListener("click",e=>openDialog("dlgRoom",e.currentTarget)
    frames where neither copy is on screen. */
 let morph=null;
 function meParts(){
-  if(mode==="online"&&onScreen($("meOrb")))return{orb:$("meOrb"),name:$("meName"),card:matchMedia("(max-width:1079px)").matches?null:$("roomCard"),online:true};
+  if(mode==="online"&&onScreen($("meOrb")))return{orb:$("meOrb"),name:$("meName"),card:matchMedia(PHONE_Q).matches?null:$("roomCard"),online:true};
   const s=mySide();if(!s)return null;const o=$("p"+s+"orb");if(!onScreen(o))return null;
   const n=$("p"+s+"name");return{orb:o,name:onScreen(n)&&n.getBoundingClientRect().width?n:null};
 }
@@ -4245,7 +4354,7 @@ function flyTo(el,from,to,sc,D,E){
 }
 function morphLand(st){
   if(!st||st!==morph)return;
-  const p=meParts(),narrow=matchMedia("(max-width:1079px)").matches;
+  const p=meParts(),narrow=matchMedia(PHONE_Q).matches;
   const done=()=>{if(morph!==st)return;
     /* the page may have shifted while we flew (a phone's address bar, a late
        layout change): if the seat moved, glide the last few pixels first */
@@ -4585,13 +4694,13 @@ $("seeBoard").addEventListener("click",()=>{reviewing=true;syncWave()});
 /* On wide screens settings unfold out of their button's corner and the
    rules and analysis open as a centred card; on narrow screens all three
    become bottom sheets you can drag away. */
-const scrim=$("scrim"),narrowMQ=matchMedia("(max-width:1079px)");
+const scrim=$("scrim"),narrowMQ=matchMedia(PHONE_Q),landMQ=matchMedia(LAND_Q);
 let openDlg=null,openerBtn=null;
 function anchorPop(d,btn,rect){
   /* the settings panel unfolds out of its own button: placed above it, and
      scaled from the point the button sits under */
   d.style.translate="";
-  if(narrowMQ.matches||!btn||!d.classList.contains("pop")){d.style.left=d.style.bottom=d.style.top=d.style.transformOrigin="";return}
+  if(narrowMQ.matches||landMQ.matches||!btn||!d.classList.contains("pop")){d.style.left=d.style.bottom=d.style.top=d.style.transformOrigin="";return}
   const r=rect||btn.getBoundingClientRect();
   if(d.id==="dlgRoom"){
     /* the room window always opens in the middle of the screen, whichever
@@ -4614,11 +4723,14 @@ function anchorPop(d,btn,rect){
 }
 function openFrames(d){
   if(narrowMQ.matches)return[{transform:"translateY(100%)"},{transform:"none"}];
+  /* a phone on its side: every window is a panel that slides in from the right edge */
+  if(landMQ.matches)return[{transform:"translateX(calc(100% + 24px))"},{transform:"none"}];
   if(d.classList.contains("pop"))return[{opacity:0,transform:"translateY(10px) scale(.86,.72)"},{opacity:1,transform:"none"}];
   return[{opacity:0,transform:"translateY(12px) scale(.9)"},{opacity:1,transform:"none"}];
 }
 function closeFrames(d){
   if(narrowMQ.matches)return[{transform:getComputedStyle(d).transform==="none"?"none":getComputedStyle(d).transform},{transform:"translateY(100%)"}];
+  if(landMQ.matches)return[{transform:"none"},{transform:"translateX(calc(100% + 24px))"}];
   if(d.classList.contains("pop"))return[{opacity:1,transform:"none"},{opacity:0,transform:"translateY(8px) scale(.92,.86)"}];
   return[{opacity:1,transform:"none"},{opacity:0,transform:"scale(.96)"}];
 }
@@ -4643,7 +4755,7 @@ function openDialog(id,btn){
   requestAnimationFrame(()=>scrim.classList.add("show"));
   app.inert=true;if(btn)btn.setAttribute("aria-expanded","true");
   syncOptSegs(false);restartStag(d);if(id==="dlgRoom")renderRoomPanel(true);
-  if(!still)d.animate(openFrames(d),{duration:narrowMQ.matches?560:480,easing:narrowMQ.matches?"cubic-bezier(.2,1.1,.3,1)":"cubic-bezier(.34,1.36,.64,1)"});
+  if(!still)d.animate(openFrames(d),{duration:narrowMQ.matches||landMQ.matches?520:480,easing:narrowMQ.matches||landMQ.matches?"cubic-bezier(.2,1.1,.3,1)":"cubic-bezier(.34,1.36,.64,1)"});
   setTimeout(()=>{if(openDlg===d)d.focus({preventScroll:true})},20);
 }
 function closeDialog(instant){
@@ -4785,7 +4897,9 @@ addEventListener("scroll",()=>{if(scrollX||scrollY)scrollTo(0,0)},{passive:true}
 function placeAll(){placeThumb($("tabs"),false);document.querySelectorAll(".seg[data-opt]").forEach(s=>placeThumb(s,false))}
 addEventListener("resize",placeAll);
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(placeAll);
-narrowMQ.addEventListener?.("change",()=>{if(openDlg)closeDialog(true);placeAll()});
+narrowMQ.addEventListener?.("change",()=>{if(openDlg)closeDialog(true);pickClose(false);placeAll()});
+/* turning the phone closes whatever is open, the computer picker too, so nothing keeps the old shape */
+landMQ.addEventListener?.("change",()=>{if(openDlg)closeDialog(true);pickClose(false);placeAll()});
 
 /* ---------- Boot ---------- */
 const roomParam=cleanCode(qs.get("room")||"");
@@ -5153,7 +5267,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·0436";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·0537";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
