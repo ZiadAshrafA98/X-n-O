@@ -1369,7 +1369,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·0429</p>
+  <p class="build-tag">Version 2026.11.25·0436</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2316,7 +2316,10 @@ let score=store.get("xo.score",{X:0,O:0});
    you play; Same device keeps its own X and O score. Online, the room's. */
 function loadScore(){
   if(mode==="ai"){let s=store.get("xo.score.ai",null);
-    if(!s){const l=store.get("xo.score",{X:0,O:0});s={me:l[opt.youAre]|0,ai:l[other(opt.youAre)]|0}}
+    /* the computer's score starts at 0 : 0 and is saved straight away. It used to be
+       borrowed from the Same device score and never saved, so every switch between
+       X and O borrowed it again, the other way round, and the two numbers traded places */
+    if(!s){s={me:0,ai:0};store.set("xo.score.ai",s)}
     score={[opt.youAre]:s.me|0,[other(opt.youAre)]:s.ai|0}}
   else if(mode==="local")score=store.get("xo.score",{X:0,O:0});
 }
@@ -5150,7 +5153,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·0429";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·0436";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
