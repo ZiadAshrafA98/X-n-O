@@ -1549,7 +1549,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·2210</p>
+  <p class="build-tag">Version 2026.11.25·2219</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -4397,7 +4397,9 @@ function meParts(){
    rather than running across the screen to a seat that is no longer yours. */
 function morphAbort(){
   const st=morph;if(!st)return;
-  st.parts.forEach(el=>{el.getAnimations().forEach(a=>{try{a.commitStyles()}catch(e){}a.cancel()});el.animate([{opacity:1},{opacity:0}],{duration:160,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
+  /* each piece fades on from where it already is: a piece half gone (the join card) never pops back first */
+  st.parts.forEach(el=>{const o=getComputedStyle(el).opacity;el.getAnimations().forEach(a=>{try{a.commitStyles()}catch(e){}a.cancel()});
+    el.animate([{opacity:o},{opacity:0}],{duration:Math.round(160*Math.min(1,+o||0))+1,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
   st.hidden.forEach(el=>el.style.visibility="");if(st.cardHidden)$("roomCard").style.opacity="";
   st.hidden=[];st.cardHidden=false;morph=null;
   setTimeout(()=>st.parts.forEach(el=>el.remove()),170);
@@ -5377,7 +5379,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·2210";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·2219";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
