@@ -1,6 +1,6 @@
 # X n O
 
-Tic-tac-toe where each player keeps only 3 marks. When you place your 4th mark, your oldest one disappears.
+Tic-tac-toe where each player keeps only 3 marks. Once all three are down, each turn you pick one of your marks and move it to any empty cell. The older rule, where your oldest mark disappears when you place a 4th, is still in Settings.
 
 Play at https://ziadashrafa98.github.io/X-n-O/
 
