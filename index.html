@@ -1323,7 +1323,13 @@ a.sh-act{text-decoration:none}
   .app[data-mode="online"] .card .pulse{min-height:22px}
   .app[data-mode="online"] .card .note:empty{display:none}
   /* "Play a friend" and "Your room" lie sideways: the two seats on the left, the code and buttons stacked on the right */
-  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .card.room{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;row-gap:8px;align-items:center}
+  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .card.room{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:16px;row-gap:0;align-items:center}
+  /* spacing comes from the parts themselves, so rows with nothing in them add no space;
+     and the card never scrolls: it is sized to what it holds */
+  .app[data-mode="online"] .card.room>.card-head{margin-bottom:10px}
+  .app[data-mode="online"] .card.room>:is(.code-row,.qr-wrap,#rcPeople):not([hidden]){margin-bottom:8px}
+  .app[data-mode="online"] .card.room>.pulse{margin-top:10px}
+  .app[data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .card{overflow:visible;max-height:none}
   .app[data-mode="online"] .card.room>*{grid-column:2}
   .app[data-mode="online"] .card.room>.card-head{grid-column:1/-1}
   .app[data-mode="online"] .card.room>.seats{grid-column:1;grid-row:2/span 4;align-self:center}
@@ -1493,7 +1499,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·1104</p>
+  <p class="build-tag">Version 2026.11.25·1931</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5286,7 +5292,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·1104";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·1931";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
