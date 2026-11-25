@@ -834,6 +834,8 @@ button.seatc{touch-action:none}
 .lb-wait i b{width:6px;height:6px;border-radius:9px;background:var(--mute);animation:bounce 1s ease-in-out infinite}
 .lb-wait i b:nth-child(2){animation-delay:.15s}.lb-wait i b:nth-child(3){animation-delay:.3s}
 .lb-empty .btn{height:44px;margin-top:4px}
+/* the stand-in page that folding card copies live in: it only lends them its context */
+.app.morph-host{position:fixed!important;inset:0!important;display:block!important;height:auto!important;padding:0!important;margin:0!important;z-index:40;pointer-events:none;background:none!important;animation:none!important;grid-template:none!important}
 /* ---------- installing the game ---------- */
 .inst-row{display:flex;align-items:center;gap:12px;margin:0 6px 8px;padding:12px;border-radius:18px;background:var(--chip)}
 .inst-row[hidden]{display:none}
@@ -1546,7 +1548,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·2143</p>
+  <p class="build-tag">Version 2026.11.25·2149</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -4391,12 +4393,24 @@ function morphClear(){
 }
 function bgOf(el){const c=getComputedStyle(el);return{backgroundImage:c.backgroundImage,backgroundColor:c.backgroundColor,backgroundSize:c.backgroundSize,backgroundPosition:c.backgroundPosition}}
 function fixedAt(el,r,z){Object.assign(el.style,{position:"fixed",left:r.left+"px",top:r.top+"px",width:r.width+"px",height:r.height+"px",margin:"0",zIndex:String(z||45),pointerEvents:"none"});document.body.appendChild(el);return el}
+/* A copy of an online card keeps the card's own look while it folds away. That
+   look depends on where the card lives (the online screen, and on a phone on its
+   side the compact, sideways card), so the copy goes into a stand-in for the page
+   that carries the same mode and connection state, not loose in the document. */
+function cardHost(){
+  let h=document.getElementById("morphHost");
+  if(!h){h=document.createElement("div");h.id="morphHost";h.className="app morph-host";h.setAttribute("aria-hidden","true");document.body.appendChild(h)}
+  h.dataset.mode=app.dataset.mode;h.dataset.net=app.dataset.net;return h;
+}
+function fixedCard(el,r,z){fixedAt(el,r,z);cardHost().appendChild(el);return el}
 /* called before the mode changes: freeze a copy of you where you are */
 function morphStart(){
   morphClear();
-  $("roomCard").style.animation="";$("roomCard").style.transformOrigin="";
-  if(still)return null;
-  const p=meParts();if(!p)return null;
+  const p=still?null:meParts();
+  /* clearing the card's leftover animation restarts its entrance (94% and lower down)
+     for a frame; when the card is about to fold away it is measured as it is and left alone */
+  if(!p||!p.card){$("roomCard").style.animation="";$("roomCard").style.transformOrigin=""}
+  if(!p)return null;
   const st={parts:[],hidden:[],fromOnline:!!p.online};
   if(p.card){
     /* the card shrinks back into the dot; its own dot is left to the stand-in */
@@ -4404,10 +4418,10 @@ function morphStart(){
     g.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));g.removeAttribute("id");
     const go=g.querySelector(".seat-col.mine .orb");if(go)go.style.visibility="hidden";
     const gn=g.querySelector(".seat-name.me");if(gn)gn.style.visibility="hidden";
-    g.style.animation="none";fixedAt(g,r,40);st.parts.push(g);st.card=g;
+    g.style.animation="none";fixedCard(g,r,40);st.parts.push(g);st.card=g;
     const o=p.orb.getBoundingClientRect();st.cardOrigin=[o.left+o.width/2-r.left,o.top+o.height/2-r.top];
     const jc=$("joinCard");if(onScreen(jc)){const jr=jc.getBoundingClientRect(),jg=jc.cloneNode(true);jg.querySelectorAll("[id]").forEach(n=>n.removeAttribute("id"));jg.removeAttribute("id");jg.style.animation="none";
-      fixedAt(jg,jr,44);st.parts.push(jg);jg.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(10px) scale(.94)",filter:"blur(3px)"}],{duration:240,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})}
+      fixedCard(jg,jr,44);st.parts.push(jg);jg.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(10px) scale(.94)",filter:"blur(3px)"}],{duration:240,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})}
   }
   const r=p.orb.getBoundingClientRect(),o=document.createElement("span");
   o.className="orb";Object.assign(o.style,bgOf(p.orb),{boxShadow:"0 10px 30px rgba(0,0,0,.25)"});fixedAt(o,r,46);st.parts.push(o);st.orb=o;st.orbFrom=r;
@@ -5341,7 +5355,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·2143";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·2149";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
