@@ -50,7 +50,8 @@
   --hair:rgba(255,255,255,.07); --thumb:#2a2a2d; --primary:#f5f5f5; --primary-ink:#0d0d0d; --scrim:rgba(8,8,9,.55);
   --x:#ff7a5c; --o:#5aa2ff; --ai:#a78bfa; --friend:#2dd4bf; --green:#3ecf7a; --amber:#f5b546; --red:#e5484d;
   --g-local:rgba(255,122,92,.13); --g-ai:rgba(167,139,250,.16); --g-online:rgba(94,234,212,.12);
-  --float:0 0 0 1px var(--hair),0 2px 6px rgba(0,0,0,.2),0 24px 64px rgba(0,0,0,.5);
+  /* several soft layers instead of one wide blur: the fade is even, so it never shows rings */
+  --float:0 0 0 1px var(--hair),0 1px 2px rgba(0,0,0,.16),0 4px 10px rgba(0,0,0,.14),0 12px 28px rgba(0,0,0,.16),0 22px 46px rgba(0,0,0,.24);
   --raise:inset 0 0 0 1px rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.4);
   --out:cubic-bezier(.22,1,.36,1); --spring:cubic-bezier(.34,1.56,.64,1); --spring-soft:cubic-bezier(.34,1.36,.64,1);
   --sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -64,13 +65,15 @@
   --hair:rgba(0,0,0,.08); --thumb:#ffffff; --primary:#0d0d0d; --primary-ink:#ffffff; --scrim:rgba(20,20,24,.28);
   --x:#e0533d; --o:#2f6fdb; --ai:#7c5ce6; --friend:#0f9e8a; --green:#1f9d55; --amber:#c98a14; --red:#d93c41;
   --g-local:rgba(255,122,92,.16); --g-ai:rgba(167,139,250,.2); --g-online:rgba(45,212,191,.16);
-  --float:0 0 0 1px var(--hair),0 2px 6px rgba(0,0,0,.05),0 24px 64px rgba(0,0,0,.12);
+  --float:0 0 0 1px var(--hair),0 1px 2px rgba(0,0,0,.04),0 4px 10px rgba(0,0,0,.04),0 12px 28px rgba(0,0,0,.05),0 22px 46px rgba(0,0,0,.07);
   --raise:inset 0 0 0 1px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.08);
   color-scheme:light;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{margin:0;height:100%}
+/* a still, invisible layer of single-shade specks over everything: it breaks the steps a soft shadow shows on dark colours (banding), so fades look smooth. Drawn once, never repainted. */
+.dither{position:fixed;inset:0;z-index:300;pointer-events:none;background-repeat:repeat;contain:strict}
 /* one screen: the page itself never scrolls, even when a sheet is parked below it */
 html,body{overflow:hidden;overflow:clip;overscroll-behavior:none}
 /* no double-tap zoom: taps land at once, as in an app */
@@ -280,7 +283,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .orb.o{background:radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)}
 .orb.ai{background:radial-gradient(circle at 32% 30%,#ddd2ff,#a78bfa 45%,#5b21b6)}
 .orb.friend{background:radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e)}
-.player.on .orb{box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--ring,rgba(255,122,92,.6)),0 12px 40px var(--ring-glow,rgba(255,122,92,.3))}
+.player.on .orb{box-shadow:0 0 0 4px var(--bg),0 0 0 6px var(--ring,rgba(255,122,92,.6)),0 6px 16px color-mix(in srgb,var(--ring-glow,rgba(255,122,92,.3)) 55%,transparent),0 12px 32px var(--ring-glow,rgba(255,122,92,.3))}
 .orb.pop{animation:pop .55s var(--spring) both}
 .dots{position:absolute;inset:0;display:none;align-items:center;justify-content:center;gap:4px}
 .dots i{width:5px;height:5px;border-radius:9px;background:#fff;animation:bounce 1s ease-in-out infinite}
@@ -579,8 +582,8 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
    not part of the game, which is the point of a request. */
 .tst{position:fixed;z-index:62;top:max(14px,env(safe-area-inset-top));left:50%;width:min(400px,calc(100vw - 24px));translate:-50% 0;pointer-events:none;transition:height .5s cubic-bezier(.32,.72,0,1)}
 .tst-toast{--kc:var(--faint);position:absolute;left:0;top:0;width:100%;height:128px;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:16px;border-radius:26px;background:var(--slab);color:var(--ink);pointer-events:auto;transform-origin:50% 100%;
-  box-shadow:0 0 0 1px color-mix(in srgb,var(--kc) 35%,var(--hair)),0 2px 6px rgba(0,0,0,.12),0 24px 64px rgba(0,0,0,.35);transition:transform .5s cubic-bezier(.34,1.2,.5,1),opacity .28s ease,background-color .25s ease,translate .24s cubic-bezier(.4,0,1,1)}
-:root[data-theme="light"] .tst-toast{box-shadow:0 0 0 1px color-mix(in srgb,var(--kc) 35%,var(--hair)),0 2px 6px rgba(0,0,0,.05),0 24px 64px rgba(0,0,0,.14)}
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--kc) 35%,var(--hair)),0 1px 2px rgba(0,0,0,.1),0 4px 10px rgba(0,0,0,.1),0 12px 28px rgba(0,0,0,.12),0 22px 46px rgba(0,0,0,.18);transition:transform .5s cubic-bezier(.34,1.2,.5,1),opacity .28s ease,background-color .25s ease,translate .24s cubic-bezier(.4,0,1,1)}
+:root[data-theme="light"] .tst-toast{box-shadow:0 0 0 1px color-mix(in srgb,var(--kc) 35%,var(--hair)),0 1px 2px rgba(0,0,0,.04),0 4px 10px rgba(0,0,0,.04),0 12px 28px rgba(0,0,0,.05),0 22px 46px rgba(0,0,0,.08)}
 .tst-toast[data-kind="again"]{--kc:var(--green)} .tst-toast[data-kind="reset"]{--kc:var(--amber)} .tst-toast[data-kind="rule"]{--kc:var(--o)}
 .tst-toast.enter{opacity:0;transform:translateY(-28px) scale(.94)}
 .tst-toast.leave{opacity:0;translate:0 -16px;transform:scale(.94)!important}
@@ -726,7 +729,7 @@ button.seatc{touch-action:none}
 .seatc.lifted .orb{opacity:.25;scale:.9;transition:opacity .2s,scale .2s}
 .seatc.drop-can{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--friend) 55%,transparent);transition:box-shadow .2s,background-color .2s,scale .2s var(--out)}
 .seatc.drop-on{background:color-mix(in srgb,var(--friend) 18%,var(--chip));box-shadow:inset 0 0 0 2px var(--friend);scale:1.05}
-.seat-ghost{box-shadow:0 14px 30px rgba(0,0,0,.45),0 0 0 2px var(--friend);border-radius:999px}
+.seat-ghost{box-shadow:0 2px 6px rgba(0,0,0,.14),0 6px 14px rgba(0,0,0,.14),0 16px 34px rgba(0,0,0,.24),0 0 0 2px var(--friend);border-radius:999px}
 .seatc .orb{width:36px;height:36px}
 .seatc.big{padding:16px 8px 12px}
 .seatc.big .orb{width:52px;height:52px}
@@ -943,7 +946,7 @@ a.sh-act{text-decoration:none}
 .sharedlg{overflow-x:hidden;width:min(540px,calc(100vw - 48px));padding:16px 18px 20px}
 /* the card sits in its own space so it can tilt toward your pointer or finger */
 .sh-card{display:flex;justify-content:center;padding:18px 0 34px;perspective:900px;touch-action:none;-webkit-user-select:none;user-select:none}
-.sh-tilt{position:relative;width:min(252px,56vw);aspect-ratio:4/5;border-radius:22px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.22,1,.36,1),box-shadow .7s cubic-bezier(.22,1,.36,1);box-shadow:0 18px 44px rgba(0,0,0,.35);will-change:transform}
+.sh-tilt{position:relative;width:min(252px,56vw);aspect-ratio:4/5;border-radius:22px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.22,1,.36,1),box-shadow .7s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 6px rgba(0,0,0,.12),0 8px 18px rgba(0,0,0,.12),0 16px 34px rgba(0,0,0,.2);will-change:transform}
 .sh-tilt.live{transition:transform .12s linear,box-shadow .12s linear}
 .sh-tilt canvas{display:block;width:100%;height:100%;border-radius:inherit}
 .sh-glare{position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,30%),rgba(255,255,255,.28),rgba(255,255,255,0) 55%);opacity:0;transition:opacity .4s;mix-blend-mode:soft-light}
@@ -1579,7 +1582,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·2300</p>
+  <p class="build-tag">Version 2026.11.25·2335</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5424,7 +5427,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·2300";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·2335";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
@@ -5446,6 +5449,18 @@ appSync();
   addEventListener("pageshow",e=>{if(e.persisted)check()});
   addEventListener("online",check);
 })();
+
+/* dither: a small tile of random specks one or two shades lighter or darker, sized to the screen's own pixels */
+(function(){try{
+  const n=128,c=document.createElement("canvas");c.width=c.height=n;const x=c.getContext("2d"),d=x.createImageData(n,n),a=d.data;
+  for(let i=0;i<a.length;i+=4){if(Math.random()<.5){a[i]=a[i+1]=a[i+2]=255;a[i+3]=1+(Math.random()*2|0)}else a[i+3]=2+(Math.random()*2|0)}
+  x.putImageData(d,0,0);
+  c.toBlob(b=>{if(!b)return;const el=document.createElement("div");el.className="dither";el.setAttribute("aria-hidden","true");
+    el.style.backgroundImage=`url(${URL.createObjectURL(b)})`;
+    const fit=()=>{el.style.backgroundSize=n/(devicePixelRatio||1)+"px"};fit();
+    matchMedia(`(resolution:${devicePixelRatio}dppx)`).addEventListener?.("change",fit);
+    document.body.append(el)},"image/png");
+}catch(e){}})();
 })();
 </script>
 </body>
