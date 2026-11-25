@@ -1244,7 +1244,8 @@ a.sh-act{text-decoration:none}
   .app{display:grid;height:100dvh;grid-template-columns:minmax(0,1fr) var(--bs) minmax(0,1fr);grid-template-rows:44px minmax(0,1fr) auto;
     grid-template-areas:"logo status icons" "pl board pr" "tabs board actions";column-gap:20px;row-gap:10px;
     padding:14px max(16px,env(safe-area-inset-right)) 14px max(16px,env(safe-area-inset-left))}
-  .top,.stage{display:contents}
+  /* the page header and stage dissolve into the grid; ".app>" so nothing else named "top" (the podium rows) is caught */
+  .app>.top,.app>.stage{display:contents}
   #logo{grid-area:logo;justify-self:start;align-self:center}
   /* the mode switcher has ONE place and ONE size in every mode, so switching modes never moves it;
      the game's buttons likewise keep the bottom right */
@@ -1273,7 +1274,43 @@ a.sh-act{text-decoration:none}
   .pop,.modal{top:12px!important;bottom:12px!important;right:max(12px,env(safe-area-inset-right))!important;left:auto!important;translate:none!important;
     width:min(420px,calc(100vw - 24px));max-height:none;overflow:auto;border-radius:28px;padding:12px 12px 14px;transform-origin:100% 50%}
   .dlg .grab{display:none}
-  .insight{grid-template-columns:1fr}
+  /* leaderboard: the list takes the panel's remaining height and scrolls inside it */
+  .lbd{display:flex;flex-direction:column}
+  .lbd .lb-sub{font-size:12px;margin:-8px 12px 10px}
+  .lbd .seg{flex:none}
+  .lbd .lb-wrap{flex:1;min-height:0}
+  .lbd .lb-list{height:100%}
+  .lbd .lb-foot{margin-top:8px;flex:none}
+  .lbd .lb-seat{width:120px}
+  .lbd .lb-empty{gap:8px;padding:8px}
+  /* can you win: wider, smaller squares, the words beside them at a readable width */
+  #dlgInsight{width:min(720px,calc(100vw - 24px))}
+  .insight{gap:10px;align-items:stretch}
+  .heat-wrap{flex:none}
+  .heat{grid-template-columns:repeat(3,62px);gap:6px}
+  .heat i{width:62px;height:62px;border-radius:16px;font-size:12px}
+  .ins-side{padding:6px 4px 4px 8px;min-width:260px}
+  .yes{font-size:44px}
+  .ins-sub{font-size:14px}
+  .stats{margin-top:12px}.stat{padding:10px 12px}.stat b{font-size:26px}
+  .ins-rule{padding-top:12px}
+  .ins-rule .rcard{padding:8px 6px}.ins-rule .rcard svg{width:36px;height:36px;margin-bottom:0}.ins-rule .rcard small{display:none}
+  /* made by: the two faces smaller, and the panel scrolls if it must */
+  .about{overflow-y:auto!important}
+  .about .creator{width:min(120px,26vh)}
+  .about .creators{padding:6px 8px 0}
+  /* how it works: four rules in one row, small boards */
+  #dlgRules{width:min(760px,calc(100vw - 24px))}
+  .rules-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+  .rule{min-height:0;padding:14px 6px 12px;gap:10px;border-radius:20px}
+  .mini{grid-template-columns:repeat(3,32px);gap:4px;padding:4px;border-radius:14px}
+  .mini i{width:32px;height:32px;border-radius:9px;font-size:16px}
+  .rule figcaption{font-size:12.5px;gap:6px}
+  /* the coin toss: no Toss button (flick or tap the coin), a smaller coin, everything centred */
+  .lobby .btn.big{display:none}
+  .lobby .xc-stage{--cs:clamp(80px,calc(var(--bs) * .3),118px);height:calc(var(--cs) * 1.6)}
+  .lobby h3{margin:0}
+  .lobby p{margin:0;max-width:92%}
   /* the room panel: wider, in two columns, so it hardly scrolls */
   #dlgRoom{width:min(760px,calc(100vw - 24px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px;align-content:start}
   #dlgRoom>.dlg-head{grid-column:1/-1;grid-row:1}
@@ -1499,7 +1536,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·1931</p>
+  <p class="build-tag">Version 2026.11.25·2047</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -3769,7 +3806,9 @@ function coinIdle(onFlick){
   if(!onFlick)return;
   st.addEventListener("pointerdown",e=>{drag=true;trail=[{y:e.clientY,t:performance.now()}];st.setPointerCapture(e.pointerId);lean(e.clientX,e.clientY)});
   const up=()=>{if(!drag)return;drag=null;const a=trail[0],b=trail[trail.length-1],v=b&&a&&b.t>a.t?(a.y-b.y)/(b.t-a.t):0;
-    if(v>.45){st.classList.remove("can");onFlick()}else home()};
+    /* a quick tap tosses it too, not only an upward flick */
+    const tap=a&&b&&performance.now()-a.t<350&&Math.abs(a.y-b.y)<8;
+    if(v>.45||tap){st.classList.remove("can");onFlick()}else home()};
   st.addEventListener("pointerup",up);st.addEventListener("pointercancel",up);
 }
 /* the toss itself: frontUp says which face ends on top */
@@ -3820,14 +3859,14 @@ function renderLobby(){
   const myFace=me==="O"&&phase!=="lobby"?"o":"";
   if(phase==="lobby"){
     L.innerHTML=`${coinHTML(orbBg(myId),orbBg(partner))}
-      <h3 class="swap">Room ready</h3><p class="swap">Flick the coin up, or tap Toss. Whoever’s face lands up picks X or O and moves first.</p>
+      <h3 class="swap">Room ready</h3><p class="swap">Flick or tap the coin. Whoever’s face lands up picks X or O and moves first.</p>
       <button class="btn primary big" id="tossBtn" type="button"${netShown==="lost"?" disabled":""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Toss the coin</span></button>`;
     const ask=()=>{const b=$("tossBtn");if(!b||b.disabled)return;b.disabled=true;b.classList.add("waiting");b.querySelector(".lbl").textContent="Tossing…";isHost?doToss():publish({t:"tossreq"})};
     $("tossBtn").onclick=ask;coinIdle(netShown==="lost"?null:ask);
     return;
   }
   if(!done){
-    L.innerHTML=`${coinHTML(orbBg(myId),orbBg(partner))}<h3 class="swap">Coin toss</h3><p class="swap">Flick the coin up, or tap Toss. Whoever’s face lands up picks X or O and moves first.</p>
+    L.innerHTML=`${coinHTML(orbBg(myId),orbBg(partner))}<h3 class="swap">Coin toss</h3><p class="swap">Flick or tap the coin. Whoever’s face lands up picks X or O and moves first.</p>
       <button class="btn primary big waiting" type="button" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 10.5h4a1.5 1.5 0 0 1 0 3h-3a1.5 1.5 0 0 0 0 3h4"/></svg><span class="lbl">Tossing…</span></button>`;
     const finish=()=>{tossDone.add(tossId);render()};
     if(still){finish();return}
@@ -5292,7 +5331,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·1931";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.25·2047";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
