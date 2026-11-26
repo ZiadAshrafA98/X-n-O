@@ -1594,7 +1594,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·0121</p>
+  <p class="build-tag">Version 2026.11.26·0134</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1821,14 +1821,14 @@ function pickMove(me,op,rule,level){
 const AINK="#0d0a14",ARIM="#5ad1ff";
 let celN=0;
 function cel(d,c,box,extra,heavy){
-  /* fill, two shade bands across the right of the shape's box, extra detail,
-     rim light, outline, and an optional heavier line on the shadow side */
-  const id="k"+(celN++),[x,w]=box||[0,100],s=w/100;
-  return`<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${c[0]}"/>`+
-    `<g clip-path="url(#${id})"><g transform="translate(${x} 0) scale(${s} 1)"><path d="M58 0C74 22 80 55 72 100H100V0Z" fill="${c[1]}"/><path d="M76 4C88 32 90 70 82 100H100V4Z" fill="${c[2]}"/></g>${extra||""}`+
-    `<path d="${d}" fill="none" stroke="${ARIM}" stroke-width="1.8" transform="translate(-1.9 0)" opacity=".85"/></g>`+
-    `<path d="${d}" fill="none" stroke="${AINK}" stroke-width="2" stroke-linejoin="round"/>`+
-    (heavy?`<path d="${heavy}" fill="none" stroke="${AINK}" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>`:"");
+  /* fill, one shade band across the right of the shape's box, extra detail,
+     a cool rim light on the lit (left) side only, and one even ink outline.
+     (heavy is kept for the call sites but no longer draws a second line) */
+  const id="k"+(celN++),rid="k"+(celN++),[x,w]=box||[0,100],s=w/100;
+  return`<clipPath id="${id}"><path d="${d}"/></clipPath><clipPath id="${rid}"><rect x="${x-6}" y="-10" width="${w*.42+6}" height="120"/></clipPath><path d="${d}" fill="${c[0]}"/>`+
+    `<g clip-path="url(#${id})"><g transform="translate(${x} 0) scale(${s} 1)"><path d="M60 0C75 22 80 55 73 100H100V0Z" fill="${c[1]}"/></g>${extra||""}`+
+    `<path d="${d}" fill="none" stroke="${ARIM}" stroke-width="1.6" transform="translate(-1.7 0)" opacity=".8" clip-path="url(#${rid})"/></g>`+
+    `<path d="${d}" fill="none" stroke="${AINK}" stroke-width="2.2" stroke-linejoin="round"/>`;
 }
 const mirror=d=>d.replace(/([MLHVCSQTA])([^MLHVCSQTAZ]*)/g,(m,c,a)=>{
   const n=a.trim().split(/[\s,]+/).filter(Boolean).map(Number);
@@ -1978,7 +1978,7 @@ const AVATARS={
     const ear="M27 33C24 25 30 19 37 22C41 24 41 30 38 33Z";
     const face="M50 31C65 31 75 42 75 57C75 71 65 82 50 85C35 82 25 71 25 57C25 42 35 31 50 31Z";
     return aBg("#3c6687",mane)+cel(mane,m,[7,86],`<path d="M20 40Q26 30 36 25M16 58Q17 48 21 42M24 76Q19 68 18 62" fill="none" stroke="#e0914a" stroke-width="2.4" stroke-linecap="round" opacity=".7"/><path d="M70 82Q78 76 82 68M79 30Q85 38 86 48" fill="none" stroke="${m[2]}" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>`)+
-      cel(ear,c,[24,17],`<path d="M31 29C30 26 33 24 35 26" fill="none" stroke="${c[2]}" stroke-width="2.2" stroke-linecap="round"/>`)+cel(mirror(ear),c,[59,17])+
+      cel(ear,c,[24,17],`<path d="M31 29C30 26 33 24 35 26" fill="none" stroke="${c[2]}" stroke-width="2.2" stroke-linecap="round"/>`)+cel(mirror(ear),c,[59,17],`<path d="M69 29C70 26 67 24 65 26" fill="none" stroke="${c[2]}" stroke-width="2.2" stroke-linecap="round"/>`)+
       cel(face,c,[25,50],hiStroke("M34 40Q42 34 50 34","#ffd99a",2.8,.75)+hiStroke("M28 54Q28 47 31 43","#ffd99a",1.8,.5)+
         `<path d="M44 34Q50 40 56 34M46 38Q50 42 54 38" fill="none" stroke="${c[1]}" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>`+
         `<path d="M37 70C37 63 63 63 63 70C63 79 57 83 50 83C43 83 37 79 37 70Z" fill="#f4e0b8"/><path d="M50 64C57 64 63 66 63 70C63 79 57 83 50 83Z" fill="#dcc394"/>`,
@@ -2558,7 +2558,6 @@ function cardImg(key,svg){if(!cardImgs[key])cardImgs[key]=loadImg("data:image/sv
 /* an avatar's head alone: no square behind it, no drop shadow */
 function headSVG(k){
   let s=avSVG(k).replace(/^(<svg[^>]*>)<rect width="100" height="100" fill="[^"]*"\/>/,"$1").replace(/<path d="[^"]*" transform="translate\(4 5\)" fill="#000" opacity="\.16"\/>/,"");
-  if(k==="lion")s=s.replace('<path d="M73 33C76 25 70 19 63 22C59 24 59 30 62 33Z" fill="#e6b266"/>','$&<path d="M69 29C70 26 67 24 65 26" fill="none" stroke="#96642c" stroke-width="2.2" stroke-linecap="round"/>');
   return s;
 }
 function headImg(k){return cardImg("h"+k,headSVG(AVATARS[k]?k:"fox"))}
@@ -5744,7 +5743,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·0121";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·0134";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
