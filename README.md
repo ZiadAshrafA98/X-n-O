@@ -2,7 +2,7 @@
 
 Tic-tac-toe where each player keeps only 3 marks. Once all three are down, each turn you pick one of your marks and move it to any empty cell. The older rule, where your oldest mark disappears when you place a 4th, is still in Settings.
 
-Play at https://ziadashrafa98.github.io/X-n-O/
+Play at https://xando.space/
 
 - Same device, against the computer (Easy, Medium, Perfect), or online with a friend through a 5-character room code or link.
 - One screen, no scrolling. Rules, analysis and settings open as pop-ups on desktop and bottom sheets on phones.
