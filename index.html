@@ -658,6 +658,7 @@ button.mark{border:0;background:none;padding:0}
 .made-by{display:block;margin:12px auto 2px;padding:8px 14px;border:0;border-radius:999px;background:none;color:var(--faint);font:500 12px var(--sans);transition:color .2s,background-color .2s}
 .made-by:hover{color:var(--ink);background:var(--chip)}
 .about{width:min(540px,calc(100vw - 48px))}
+.comp{width:min(440px,calc(100vw - 48px))}
 #dlgAbout{overflow:clip}
 .creators{touch-action:none;-webkit-user-select:none;user-select:none}
 /* under a finger the heads track closely; the slow glide is for the mouse */
@@ -1248,6 +1249,36 @@ a.sh-act{text-decoration:none}
 /* small phones against the computer: the row holds a share button too, so New round keeps just its icon */
 @media (max-width:379px){.actions .btn.round{flex:none}.app[data-mode="ai"] .actions #newBtn{flex:0 0 auto;width:60px;padding:0}.app[data-mode="ai"] #newBtn .nb-lbl{display:none}}
 
+
+/* ---------- the computer's file ---------- */
+.player .orb.ai{cursor:pointer}
+.comp{text-align:center}
+.comp .dlg-head{justify-content:space-between}
+.comp-file{display:inline-flex;align-items:center;margin-left:8px;padding:5px 10px;border:1.5px solid color-mix(in srgb,#ff3b78 70%,transparent);border-radius:8px;color:#ff3b78;font:600 11px/1 'Roboto Mono',monospace;letter-spacing:.12em;text-transform:uppercase;transform:rotate(-3deg)}
+.comp-hero{position:relative;display:flex;flex-direction:column;align-items:center;padding-top:4px}
+.comp-face{position:relative;width:min(96px,14dvh);height:min(96px,14dvh);border:0;padding:0;border-radius:50%;background:center/cover;cursor:pointer;box-shadow:0 0 0 4px color-mix(in srgb,#ff3b78 22%,transparent),0 18px 40px rgba(91,33,182,.45);transition:scale .2s var(--out)}
+.comp-face:active{scale:.94}
+/* the slits breathe: a pink glow over where the eyes are */
+.comp-eyes{position:absolute;left:24%;right:24%;top:46%;height:16%;border-radius:40%;background:radial-gradient(closest-side,rgba(255,59,120,.55),transparent);mix-blend-mode:screen;animation:compglow 2.6s ease-in-out infinite;pointer-events:none}
+.comp-face.hit .comp-eyes{animation:comphit .5s ease-out}
+.comp-say{min-height:20px;margin:8px 16px 0;font-size:13.5px;color:var(--mute);font-style:italic;transition:opacity .2s}
+.comp-name{margin:2px 0 0;font-size:24px;font-weight:600;letter-spacing:-.02em}
+.comp-threat{margin:4px 0 0;font-size:13px;color:var(--mute)}
+.comp-threat b{color:#ff3b78;font-weight:600}
+.comp-stats{display:flex;justify-content:center;gap:8px;margin:12px 4px 0}
+.comp-stats div{flex:1;max-width:120px;padding:8px 6px;border-radius:18px;background:var(--chip)}
+.comp-stats b{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.comp-stats span{display:block;font-size:11.5px;color:var(--mute);white-space:nowrap}
+.comp-secret{margin:12px 0 4px;padding:14px 14px 12px;border-radius:22px;background:#0d0b14;color:#f3e8ff;text-align:left}
+.comp-label{display:flex;justify-content:space-between;gap:8px;font:600 10.5px/1.3 'Roboto Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#ff3b78}
+.comp-label i{font-style:normal;color:#8a83b0}
+.comp-type{min-height:4.4em;margin:8px 0 10px;font:500 13px/1.45 'Roboto Mono',monospace}
+.comp-type::after{content:"";display:inline-block;width:.55em;height:1.05em;margin-left:2px;vertical-align:-.15em;background:#ff3b78;animation:compcaret 1s steps(1) infinite}
+.comp-secret .btn{width:100%;height:42px;background:#241f33;color:#f3e8ff}
+@keyframes compglow{0%,100%{opacity:.35}50%{opacity:1}}
+@keyframes comphit{0%{opacity:1;transform:scale(1.6)}100%{opacity:.4;transform:none}}
+@keyframes compcaret{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.comp-eyes,.comp-type::after{animation:none}}
 /* ---------- keyframes ---------- */
 /* strokes stay invisible until they start: a round cap on a zero-length line still shows as a dot */
 @keyframes draw{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
@@ -1620,7 +1651,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·1700</p>
+  <p class="build-tag">Version 2026.11.26·1715</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1728,6 +1759,23 @@ a.sh-act{text-decoration:none}
   <p class="about-lead">Built by two cousins.</p>
   <div class="creators" id="creators"></div>
   <p class="about-foot">© 2026 Ziad Ashraf &amp; Adham Salah</p>
+</section>
+
+<section class="dlg modal comp" id="dlgComputer" role="dialog" aria-modal="true" aria-labelledby="compTitle" tabindex="-1" hidden>
+  <span class="grab" aria-hidden="true"></span>
+  <div class="dlg-head"><span class="comp-file">Classified file</span><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="comp-hero stag">
+    <button class="comp-face" id="compFace" type="button" aria-label="Poke the computer"><span class="comp-eyes" aria-hidden="true"></span></button>
+    <p class="comp-say" id="compSay" aria-live="polite"></p>
+  </div>
+  <h2 class="comp-name stag" id="compTitle">The Computer</h2>
+  <p class="comp-threat stag">Threat level <b id="compThreat"></b></p>
+  <div class="comp-stats stag" id="compStats"></div>
+  <div class="comp-secret stag">
+    <span class="comp-label">Things it would rather you didn’t know <i id="compN"></i></span>
+    <p class="comp-type" id="compType"></p>
+    <button class="btn" id="compNext" type="button">Another secret</button>
+  </div>
 </section>
 
 <section class="dlg modal" id="dlgScan" role="dialog" aria-modal="true" aria-labelledby="scanTitle" tabindex="-1" hidden>
@@ -3305,6 +3353,7 @@ function renderPlayers(){
     orb.style.background=sideAvBg(s);
     el.classList.toggle("mine",mine);
     if(mine){orb.tabIndex=0;orb.setAttribute("role","button");orb.setAttribute("aria-label",sideTarget(s)==="me"?"Edit your profile":"Edit player "+s)}
+    else if(mode==="ai"&&s===aiSide){orb.tabIndex=0;orb.setAttribute("role","button");orb.setAttribute("aria-label","About the computer")}
     else{orb.removeAttribute("tabindex");orb.removeAttribute("role");orb.removeAttribute("aria-label")}
     el.style.setProperty("--ring",`color-mix(in srgb,var(${ringVar[k]}) 60%,transparent)`);
     el.style.setProperty("--ring-glow",`color-mix(in srgb,var(${ringVar[k]}) 30%,transparent)`);
@@ -4690,7 +4739,7 @@ $("avGrid").addEventListener("keydown",e=>{
 $("profName").addEventListener("change",e=>{saveProf(e.target.value,profCur().av);e.target.value=profCur().n});
 $("profName").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();e.target.blur()}});
 for(const s of ["X","O"]){
-  const o=$("p"+s+"orb"),go=()=>{const t=sideTarget(s);if(t)openProfile(t,o)};
+  const o=$("p"+s+"orb"),go=()=>{const t=sideTarget(s);if(t)openProfile(t,o);else if(mode==="ai"&&s===aiSide)openDialog("dlgComputer",o)};
   o.addEventListener("click",go);
   o.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go()}});
 }
@@ -5390,6 +5439,7 @@ function openDialog(id,btn){
   if(id==="dlgInsight")updateInsight(true);
   if(id==="dlgAbout")setTimeout(buildAbout,0);
   if(id==="dlgProfile")buildProfile();
+  if(id==="dlgComputer")buildComputer();
   if(id==="dlgRoom"){$("rpQrWrap").classList.remove("open");$("rpQrBtn").setAttribute("aria-expanded","false");qrSideClose(true);closeSeatMenu(true)}
   pickClose(false);
   d.hidden=false;d.querySelectorAll(".rcards").forEach(c=>placeRThumb(c,true));
@@ -5404,6 +5454,7 @@ function openDialog(id,btn){
 }
 function closeDialog(instant){
   const d=openDlg;if(!d)return;openDlg=null;app.inert=false;
+  if(d.id==="dlgComputer")clearTimeout(compT);
   if(d.id==="dlgRoom")qrSideClose();
   if(d.id==="dlgScan")stopScan();
   const btn=openerBtn;openerBtn=null;if(btn)btn.setAttribute("aria-expanded","false");
@@ -5834,6 +5885,56 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
   addEventListener("keydown",function k(){removeEventListener("keydown",k);exit()});
 })();
 
+
+/* ---------- The computer's file ---------- */
+/* Tap the computer in its seat: its file opens. The threat level follows the
+   level you play it on, the numbers are your own record against it there, and
+   its secrets type out one at a time. Poke its face and it answers back.
+   The numbers in the secrets are the solver's own: 3,602 positions, a draw
+   from the empty board with best play, and a longest forced win of five moves. */
+const COMP_THREAT={easy:"Napping",medium:"Plotting",perfect:"Unbeatable"};
+const COMP_SECRETS=[
+  "It has seen every position this game can reach. All 3,602 of them. It knew how each one ends before you opened the app.",
+  "On Perfect it cannot lose. The best anyone can do is a draw, and it knows that too.",
+  "With best play from both sides, a game from an empty board is a draw. Every win against it on Perfect is impossible. Every win on Easy is a gift.",
+  "On Easy and Medium it makes mistakes on purpose. It calls this “being nice”.",
+  "Its longest trap ends in a win five moves after it springs. It will not tell you when one has started.",
+  "It waits about half a second before every move. It does not need to. It enjoys watching you wait.",
+  "It has never once been tired, hungry or distracted by its phone.",
+  "It has no hands. It moves its marks by will alone.",
+  "Its eyes glow pink because red was already taken.",
+  "Undo works on it. It just quietly stops counting that round toward your record.",
+  "It does not get bored of winning. It checked. Twice.",
+  "When you close Computer mode it does not go away. It waits."
+];
+const COMP_POKES=["Stop poking me.","I felt that. I didn’t, but still.","Bold of you.","Again? Interesting strategy.","I am adding this to your file.","You do know I can see the whole board, right?","Poke me once more and I play Perfect.","…","Fine. One more secret."];
+let compOrder=[],compAt=0,compT=0,compPoke=0;
+function compType(text){
+  const el=$("compType");clearTimeout(compT);
+  if(still){el.textContent=text;return}
+  let i=0;el.textContent="";
+  const step=()=>{i=Math.min(text.length,i+(text[i]===" "?2:1));el.textContent=text.slice(0,i);if(i<text.length)compT=setTimeout(step,text[i-1]==="."?140:18)};
+  compT=setTimeout(step,260);
+}
+function compNext(){
+  if(compAt>=compOrder.length){compOrder=COMP_SECRETS.map((_,i)=>i).sort(()=>Math.random()-.5);compAt=0}
+  const n=compOrder[compAt++];$("compN").textContent=`${n+1} of ${COMP_SECRETS.length}`;compType(COMP_SECRETS[n]);
+}
+function buildComputer(){
+  $("compFace").style.backgroundImage=`url('${aiUri()}')`;
+  $("compThreat").textContent=(COMP_THREAT[opt.level]||"Plotting")+" · "+(LEVEL_NAME[opt.level]||"");
+  const r=recOf(opt.level),lv=LEVEL_NAME[opt.level]||"";
+  $("compStats").innerHTML=`<div><b>${r.w}</b><span>your wins</span></div><div><b>${r.l}</b><span>its wins</span></div><div><b>${r.best}</b><span>best streak</span></div>`;
+  $("compSay").textContent=r.w>r.l?"You again. I have been studying.":r.l?"Back for more?":"So. You want to know about me.";
+  compNext();
+}
+$("compNext").addEventListener("click",compNext);
+$("compFace").addEventListener("click",()=>{
+  const f=$("compFace");f.classList.remove("hit");void f.offsetWidth;f.classList.add("hit");buzz(8);
+  if(!still)f.animate([{transform:"none"},{transform:"rotate(-8deg) scale(1.04)"},{transform:"rotate(6deg)"},{transform:"none"}],{duration:380,easing:"cubic-bezier(.3,1.4,.5,1)"});
+  const line=COMP_POKES[compPoke++%COMP_POKES.length];$("compSay").textContent=line;
+  if(line.startsWith("Fine."))compNext();
+});
 /* build the solver tables while the page is idle, so hints, the computer
    and the analysis never make a press wait */
 /* not while the intro plays: building them takes over a second on a slow
@@ -5935,7 +6036,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·1700";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·1715";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
