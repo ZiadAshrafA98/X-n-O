@@ -1608,7 +1608,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·1618</p>
+  <p class="build-tag">Version 2026.11.26·1620</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -4877,7 +4877,7 @@ function morphLand(st){
   else if(st.name)st.name.animate([{opacity:1},{opacity:0,transform:"scale(.8)"}],{duration:200,fill:"forwards"});
   else if(nr){/* no name on the way in (phone): it rises into place under the dot */
     p.name.style.visibility="";st.hidden=st.hidden.filter(e=>e!==p.name);
-    p.name.animate([{opacity:0,transform:"translateY(6px)"},{opacity:1,transform:"none"}],{duration:380,delay:sheet?D*.35:D*.6,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"})}
+    p.name.animate([{opacity:0,transform:"translateY(6px)"},{opacity:1,transform:"none"}],{duration:sheet?D:380,delay:sheet?30:D*.6,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"})}
   if(card){
     /* the card grows out from behind the dot, on the dot's own curve */
     const cr=card.getBoundingClientRect(),ox=r.left+r.width/2-cr.left,oy=r.top+r.height/2-cr.top;
@@ -4894,9 +4894,11 @@ function morphLand(st){
        frame, and its rows rise in one after another while the sheet is still
        sliding, so the sheet never arrives empty */
     const rc=$("roomCard");rc.style.opacity="";st.cardHidden=false;
+    /* everything starts on the sheet's first frame, a few milliseconds apart,
+       and rides the sheet's own spring: it lags a touch behind, then catches up */
     [...rc.children].forEach((el,i)=>{if(el.classList.contains("seats"))return;
-      el.animate([{opacity:0,transform:"translateY(14px)"},{opacity:1,transform:"none"}],{duration:420,delay:70+i*55,easing:"cubic-bezier(.22,1,.36,1)",fill:"backwards"})});
-    const fr=rc.querySelector(".seat-col:not(.mine)");if(fr)fr.animate([{opacity:0,transform:"scale(.6)"},{opacity:1,transform:"none"}],{duration:460,delay:140,easing:"cubic-bezier(.34,1.3,.6,1)",fill:"backwards"});
+      el.animate([{opacity:0,transform:"translateY(36px) scale(.97)"},{opacity:1,transform:"none"}],{duration:D,delay:i*18,easing:"cubic-bezier(.34,1.25,.64,1)",fill:"backwards"})});
+    const fr=rc.querySelector(".seat-col:not(.mine)");if(fr)fr.animate([{opacity:0,transform:"translateY(24px) scale(.7)"},{opacity:1,transform:"none"}],{duration:D,delay:20,easing:"cubic-bezier(.34,1.36,.64,1)",fill:"backwards"});
   }
   if(st.card){
     /* the old card folds into the dot and travels with it, always behind it */
@@ -5788,7 +5790,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·1618";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·1620";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
