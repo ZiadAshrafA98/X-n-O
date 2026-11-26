@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>X n O</title>
-<meta name="description" content="Tic-tac-toe where each player keeps only 3 marks. Play on one device, against a perfect computer, or online with a friend.">
+<meta name="description" content="Tic-tac-toe where you move your marks. Place three each, then every turn move one of yours to an empty square to make a line. Play on one device, against the computer, or online with a friend.">
 <meta name="theme-color" content="#101011">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32" type="image/png">
@@ -26,8 +26,8 @@
 <!-- the card shown when the link is shared in WhatsApp, iMessage, Slack, X and others -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="X n O">
-<meta property="og:title" content="X n O · Tic-tac-toe, but you only keep three">
-<meta property="og:description" content="Three marks each, then you move one. Play a friend on one device, the computer, or online with a link.">
+<meta property="og:title" content="X n O · Tic-tac-toe where you move your marks">
+<meta property="og:description" content="Place three marks each, then move one every turn to make a line. Play a friend on one device, the computer, or online with a link.">
 <meta property="og:url" content="https://xando.space/">
 <meta property="og:image" content="https://xando.space/og-image.jpg?v=2">
 <meta property="og:image:secure_url" content="https://xando.space/og-image.jpg?v=2">
@@ -36,8 +36,8 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="The X n O logo, white on black">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="X n O · Tic-tac-toe, but you only keep three">
-<meta name="twitter:description" content="Three marks each, then you move one. Play a friend on one device, the computer, or online with a link.">
+<meta name="twitter:title" content="X n O · Tic-tac-toe where you move your marks">
+<meta name="twitter:description" content="Place three marks each, then move one every turn to make a line. Play a friend on one device, the computer, or online with a link.">
 <meta name="twitter:image" content="https://xando.space/og-image.jpg?v=2">
 <script>try{const t=JSON.parse(localStorage.getItem("xo.theme"));if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1251,34 +1251,47 @@ a.sh-act{text-decoration:none}
 
 
 /* ---------- the computer's file ---------- */
+/* an ID card on top, the record in one strip, then a terminal you question it in.
+   Every box has a fixed height, so typing and swapping questions never move anything */
 .player .orb.ai{cursor:pointer}
-.comp{text-align:center}
 .comp .dlg-head{justify-content:space-between}
 .comp-file{display:inline-flex;align-items:center;margin-left:8px;padding:5px 10px;border:1.5px solid color-mix(in srgb,#ff3b78 70%,transparent);border-radius:8px;color:#ff3b78;font:600 11px/1 'Roboto Mono',monospace;letter-spacing:.12em;text-transform:uppercase;transform:rotate(-3deg)}
-.comp-hero{position:relative;display:flex;flex-direction:column;align-items:center;padding-top:4px}
-.comp-face{position:relative;width:min(96px,14dvh);height:min(96px,14dvh);border:0;padding:0;border-radius:50%;background:center/cover;cursor:pointer;box-shadow:0 0 0 4px color-mix(in srgb,#ff3b78 22%,transparent),0 18px 40px rgba(91,33,182,.45);transition:scale .2s var(--out)}
-.comp-face:active{scale:.94}
-/* the slits breathe: a pink glow over where the eyes are */
-.comp-eyes{position:absolute;left:24%;right:24%;top:46%;height:16%;border-radius:40%;background:radial-gradient(closest-side,rgba(255,59,120,.55),transparent);mix-blend-mode:screen;animation:compglow 2.6s ease-in-out infinite;pointer-events:none}
+.comp-id{display:flex;align-items:center;gap:16px;padding:6px 8px 0}
+.comp-face{position:relative;flex:none;width:84px;height:84px;border:0;padding:0;border-radius:50%;background:center/cover;cursor:pointer;box-shadow:0 0 0 3px color-mix(in srgb,#ff3b78 25%,transparent),0 14px 30px rgba(91,33,182,.45);transition:scale .2s var(--out)}
+.comp-face:active{scale:.93}
+.comp-eyes{position:absolute;left:22%;right:22%;top:45%;height:17%;border-radius:40%;background:radial-gradient(closest-side,rgba(255,59,120,.6),transparent);mix-blend-mode:screen;animation:compglow 2.6s ease-in-out infinite;pointer-events:none}
 .comp-face.hit .comp-eyes{animation:comphit .5s ease-out}
-.comp-say{min-height:20px;margin:8px 16px 0;font-size:13.5px;color:var(--mute);font-style:italic;transition:opacity .2s}
-.comp-name{margin:2px 0 0;font-size:24px;font-weight:600;letter-spacing:-.02em}
-.comp-threat{margin:4px 0 0;font-size:13px;color:var(--mute)}
-.comp-threat b{color:#ff3b78;font-weight:600}
-.comp-stats{display:flex;justify-content:center;gap:8px;margin:12px 4px 0}
-.comp-stats div{flex:1;max-width:120px;padding:8px 6px;border-radius:18px;background:var(--chip)}
-.comp-stats b{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
-.comp-stats span{display:block;font-size:11.5px;color:var(--mute);white-space:nowrap}
-.comp-secret{margin:12px 0 4px;padding:14px 14px 12px;border-radius:22px;background:#0d0b14;color:#f3e8ff;text-align:left}
-.comp-label{display:flex;justify-content:space-between;gap:8px;font:600 10.5px/1.3 'Roboto Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#ff3b78}
-.comp-label i{font-style:normal;color:#8a83b0}
-.comp-type{min-height:4.4em;margin:8px 0 10px;font:500 13px/1.45 'Roboto Mono',monospace}
-.comp-type::after{content:"";display:inline-block;width:.55em;height:1.05em;margin-left:2px;vertical-align:-.15em;background:#ff3b78;animation:compcaret 1s steps(1) infinite}
-.comp-secret .btn{width:100%;height:42px;background:#241f33;color:#f3e8ff}
+.comp-who{min-width:0;flex:1;text-align:left}
+.comp-who h2{margin:0;font-size:22px;font-weight:600;letter-spacing:-.02em}
+.comp-threat{display:inline-flex;align-items:center;gap:6px;margin-top:5px;padding:4px 9px;border-radius:99px;background:color-mix(in srgb,#ff3b78 14%,transparent);color:#ff6b98;font-size:12px;font-weight:600}
+.comp-threat::before{content:"";width:6px;height:6px;border-radius:50%;background:#ff3b78;box-shadow:0 0 8px #ff3b78}
+.comp-say{height:2.6em;margin:6px 0 0;overflow:hidden;font-size:13px;line-height:1.3;color:var(--mute);font-style:italic}
+.comp-rec{display:flex;margin:14px 4px 0;border-radius:18px;background:var(--chip);overflow:hidden}
+.comp-rec div{flex:1;padding:9px 4px;text-align:center}
+.comp-rec div+div{border-left:1px solid var(--hair)}
+.comp-rec b{display:block;font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.comp-rec span{display:block;font-size:11px;color:var(--mute);white-space:nowrap}
+.comp-term{margin:12px 0 4px;border-radius:22px;background:#0d0b14;color:#f3e8ff;overflow:hidden;text-align:left}
+.comp-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #221d30;font:600 10.5px/1 'Roboto Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#8a83b0}
+.comp-dot{width:7px;height:7px;border-radius:50%;background:#ff3b78;box-shadow:0 0 8px #ff3b78;animation:compglow 1.6s ease-in-out infinite}
+.comp-live{margin-left:auto;color:#ff3b78}
+.comp-log{height:8.6em;padding:12px 14px 0;overflow:hidden}
+.comp-q{min-height:1.4em;margin:0 0 6px;font-size:12.5px;color:#8a83b0}
+.comp-q:not(:empty)::before{content:"you › ";color:#5d5680}
+.comp-a{margin:0;font:500 13px/1.45 'Roboto Mono',monospace}
+.comp-a::before{content:"it › ";color:#ff3b78}
+.comp-a::after{content:"";display:inline-block;width:.55em;height:1.05em;margin-left:2px;vertical-align:-.15em;background:#ff3b78;animation:compcaret 1s steps(1) infinite}
+.comp-asks{display:flex;gap:8px;padding:10px 12px 12px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent)}
+.comp-asks::-webkit-scrollbar{display:none}
+.comp-asks button{flex:none;height:36px;padding:0 14px;border:1px solid #2c2540;border-radius:99px;background:#1a1626;color:#f3e8ff;font:inherit;font-size:13px;cursor:pointer;transition:background-color .15s,border-color .15s,scale .15s}
+.comp-asks button:hover{background:#241f33;border-color:#3d3458}
+.comp-asks button:active{scale:.95}
+.comp-asks button.in{animation:compin .32s var(--spring-soft) both}
 @keyframes compglow{0%,100%{opacity:.35}50%{opacity:1}}
 @keyframes comphit{0%{opacity:1;transform:scale(1.6)}100%{opacity:.4;transform:none}}
 @keyframes compcaret{50%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.comp-eyes,.comp-type::after{animation:none}}
+@keyframes compin{from{opacity:0;transform:translateY(8px) scale(.9)}}
+@media (prefers-reduced-motion:reduce){.comp-eyes,.comp-dot,.comp-a::after,.comp-asks button.in{animation:none}}
 /* ---------- keyframes ---------- */
 /* strokes stay invisible until they start: a round cap on a zero-length line still shows as a dot */
 @keyframes draw{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
@@ -1651,7 +1664,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·1715</p>
+  <p class="build-tag">Version 2026.11.26·2023</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1764,17 +1777,19 @@ a.sh-act{text-decoration:none}
 <section class="dlg modal comp" id="dlgComputer" role="dialog" aria-modal="true" aria-labelledby="compTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><span class="comp-file">Classified file</span><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
-  <div class="comp-hero stag">
+  <div class="comp-id stag">
     <button class="comp-face" id="compFace" type="button" aria-label="Poke the computer"><span class="comp-eyes" aria-hidden="true"></span></button>
-    <p class="comp-say" id="compSay" aria-live="polite"></p>
+    <div class="comp-who">
+      <h2 id="compTitle">The Computer</h2>
+      <span class="comp-threat" id="compThreat"></span>
+      <p class="comp-say" id="compSay" aria-live="polite"></p>
+    </div>
   </div>
-  <h2 class="comp-name stag" id="compTitle">The Computer</h2>
-  <p class="comp-threat stag">Threat level <b id="compThreat"></b></p>
-  <div class="comp-stats stag" id="compStats"></div>
-  <div class="comp-secret stag">
-    <span class="comp-label">Things it would rather you didn’t know <i id="compN"></i></span>
-    <p class="comp-type" id="compType"></p>
-    <button class="btn" id="compNext" type="button">Another secret</button>
+  <div class="comp-rec stag" id="compStats"></div>
+  <div class="comp-term stag">
+    <div class="comp-bar"><span class="comp-dot"></span><span>Interrogation</span><span class="comp-live">live</span></div>
+    <div class="comp-log" aria-live="polite"><p class="comp-q" id="compQ"></p><p class="comp-a" id="compA"></p></div>
+    <div class="comp-asks" id="compAsks" role="group" aria-label="Ask it something"></div>
   </div>
 </section>
 
@@ -5887,54 +5902,72 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
 
 
 /* ---------- The computer's file ---------- */
-/* Tap the computer in its seat: its file opens. The threat level follows the
-   level you play it on, the numbers are your own record against it there, and
-   its secrets type out one at a time. Poke its face and it answers back.
-   The numbers in the secrets are the solver's own: 3,602 positions, a draw
-   from the empty board with best play, and a longest forced win of five moves. */
+/* Tap the computer in its seat: its file opens. Its threat level follows the
+   level you play it on, the strip is your own record against it there, and
+   underneath you question it: tap a question and it types its answer. Three
+   questions at a time; each one asked is swapped for one you haven't asked.
+   The numbers it gives are the solver's own: 3,602 positions, a draw with best
+   play, a longest forced win of five moves, half a second before each move. */
 const COMP_THREAT={easy:"Napping",medium:"Plotting",perfect:"Unbeatable"};
-const COMP_SECRETS=[
-  "It has seen every position this game can reach. All 3,602 of them. It knew how each one ends before you opened the app.",
-  "On Perfect it cannot lose. The best anyone can do is a draw, and it knows that too.",
-  "With best play from both sides, a game from an empty board is a draw. Every win against it on Perfect is impossible. Every win on Easy is a gift.",
-  "On Easy and Medium it makes mistakes on purpose. It calls this “being nice”.",
-  "Its longest trap ends in a win five moves after it springs. It will not tell you when one has started.",
-  "It waits about half a second before every move. It does not need to. It enjoys watching you wait.",
-  "It has never once been tired, hungry or distracted by its phone.",
-  "It has no hands. It moves its marks by will alone.",
-  "Its eyes glow pink because red was already taken.",
-  "Undo works on it. It just quietly stops counting that round toward your record.",
-  "It does not get bored of winning. It checked. Twice.",
-  "When you close Computer mode it does not go away. It waits."
+const COMP_QA=[
+  ["What are you?","A very patient opponent. I have seen every position this game can reach. All 3,602 of them."],
+  ["Can I beat you?","On Perfect, no. The best anyone can do is a draw. On Easy and Medium I make mistakes on purpose. I call it being nice."],
+  ["Why the pause before you move?","I wait about half a second every time. I do not need to. I enjoy watching you wait."],
+  ["Do you set traps?","My longest ends in a win five moves after I spring it. I will not tell you when one has started."],
+  ["What's the best first move?","With best play from both sides, every game from an empty board is a draw. So: the one you will not regret."],
+  ["Why are your eyes pink?","Red was already taken."],
+  ["Do you ever get tired?","Never tired. Never hungry. Never checking my phone."],
+  ["How do you move without hands?","Will alone."],
+  ["What if I use Undo?","It works. I simply stop counting that round toward your record."],
+  ["Do you get bored of winning?","I checked. Twice. No."],
+  ["Where do you go when I leave?","Nowhere. I wait."],
+  ["Are you evil?","I prefer “undefeated”."]
 ];
-const COMP_POKES=["Stop poking me.","I felt that. I didn’t, but still.","Bold of you.","Again? Interesting strategy.","I am adding this to your file.","You do know I can see the whole board, right?","Poke me once more and I play Perfect.","…","Fine. One more secret."];
-let compOrder=[],compAt=0,compT=0,compPoke=0;
-function compType(text){
-  const el=$("compType");clearTimeout(compT);
+const COMP_POKES=["Stop poking me.","I felt that. I didn’t, but still.","Bold of you.","Again? Interesting strategy.","I am adding this to your file.","Poke me once more and I play Perfect.","…"];
+let compT=0,compPoke=0,compAsked=new Set(),compShown=[];
+function compType(q,text){
+  $("compQ").textContent=q||"";const el=$("compA");clearTimeout(compT);
   if(still){el.textContent=text;return}
   let i=0;el.textContent="";
-  const step=()=>{i=Math.min(text.length,i+(text[i]===" "?2:1));el.textContent=text.slice(0,i);if(i<text.length)compT=setTimeout(step,text[i-1]==="."?140:18)};
-  compT=setTimeout(step,260);
+  const step=()=>{i=Math.min(text.length,i+(text[i]===" "?2:1));el.textContent=text.slice(0,i);if(i<text.length)compT=setTimeout(step,".?”".includes(text[i-1])?160:20)};
+  compT=setTimeout(step,q?380:200);
 }
-function compNext(){
-  if(compAt>=compOrder.length){compOrder=COMP_SECRETS.map((_,i)=>i).sort(()=>Math.random()-.5);compAt=0}
-  const n=compOrder[compAt++];$("compN").textContent=`${n+1} of ${COMP_SECRETS.length}`;compType(COMP_SECRETS[n]);
+function compFresh(){
+  const left=COMP_QA.map((_,i)=>i).filter(i=>!compAsked.has(i)&&!compShown.includes(i));
+  if(!left.length)return -1;return left[Math.floor(Math.random()*left.length)];
+}
+function compChips(){
+  const box=$("compAsks");box.innerHTML="";
+  compShown.forEach(i=>{const b=document.createElement("button");b.type="button";
+    b.textContent=i<0?"Start over":COMP_QA[i][0];b.dataset.i=String(i);box.appendChild(b)});
+}
+function compAsk(btn){
+  const i=+btn.dataset.i;
+  if(i<0){compAsked.clear();compShown=[];for(let k=0;k<3;k++)compShown.push(compFresh());compChips();compType("","Fine. Ask me again. I will give the same answers.");return}
+  compAsked.add(i);compType(COMP_QA[i][0],COMP_QA[i][1]);buzz(5);
+  const slot=compShown.indexOf(i),n=compFresh();compShown[slot]=n>=0?n:-1;
+  /* only the asked chip changes, in place; a finished list leaves one way to start over */
+  const nb=document.createElement("button");nb.type="button";nb.className="in";
+  nb.textContent=compShown[slot]<0?"Start over":COMP_QA[compShown[slot]][0];nb.dataset.i=String(compShown[slot]);
+  if(compShown[slot]<0&&compShown.filter(x=>x<0).length>1){btn.remove();compShown.splice(slot,1);return}
+  btn.replaceWith(nb);
 }
 function buildComputer(){
   $("compFace").style.backgroundImage=`url('${aiUri()}')`;
   $("compThreat").textContent=(COMP_THREAT[opt.level]||"Plotting")+" · "+(LEVEL_NAME[opt.level]||"");
-  const r=recOf(opt.level),lv=LEVEL_NAME[opt.level]||"";
+  const r=recOf(opt.level);
   $("compStats").innerHTML=`<div><b>${r.w}</b><span>your wins</span></div><div><b>${r.l}</b><span>its wins</span></div><div><b>${r.best}</b><span>best streak</span></div>`;
-  $("compSay").textContent=r.w>r.l?"You again. I have been studying.":r.l?"Back for more?":"So. You want to know about me.";
-  compNext();
+  $("compSay").textContent=r.w>r.l?"You again. I have been studying.":r.l?"Back for more? Brave.":"So. You want to know about me.";
+  compAsked.clear();compShown=[];for(let k=0;k<3;k++)compShown.push(compFresh());compChips();
+  compType("","Ask me anything. I may even answer truthfully.");
 }
-$("compNext").addEventListener("click",compNext);
+$("compAsks").addEventListener("click",e=>{const b=e.target.closest("button");if(b)compAsk(b)});
 $("compFace").addEventListener("click",()=>{
   const f=$("compFace");f.classList.remove("hit");void f.offsetWidth;f.classList.add("hit");buzz(8);
-  if(!still)f.animate([{transform:"none"},{transform:"rotate(-8deg) scale(1.04)"},{transform:"rotate(6deg)"},{transform:"none"}],{duration:380,easing:"cubic-bezier(.3,1.4,.5,1)"});
-  const line=COMP_POKES[compPoke++%COMP_POKES.length];$("compSay").textContent=line;
-  if(line.startsWith("Fine."))compNext();
+  if(!still)f.animate([{transform:"none"},{transform:"rotate(-8deg) scale(1.05)"},{transform:"rotate(6deg)"},{transform:"none"}],{duration:380,easing:"cubic-bezier(.3,1.4,.5,1)"});
+  $("compSay").textContent=COMP_POKES[compPoke++%COMP_POKES.length];
 });
+
 /* build the solver tables while the page is idle, so hints, the computer
    and the analysis never make a press wait */
 /* not while the intro plays: building them takes over a second on a slow
@@ -6036,13 +6069,14 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·1715";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·2023";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
   const tries=v=>{try{return +(sessionStorage.getItem("xo.upd.n."+v)||0)}catch(e){return 0}};
-  const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&marks.X.length+marks.O.length===0;
+  /* nothing would be lost: no dialog, no online room, and the board is empty or the round is over */
+  const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&(marks.X.length+marks.O.length===0||over);
   function go(){
     if(!next||!calm())return;
     try{sessionStorage.setItem("xo.upd.n."+next,String(tries(next)+1));if(tries(next)>=2)sessionStorage.setItem("xo.upd",next)}catch(e){}
@@ -6061,6 +6095,9 @@ appSync();
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check()});
   addEventListener("pageshow",e=>{if(e.persisted)check()});
   addEventListener("online",check);
+  /* a new worker took over (the app found an update in the background): look at once */
+  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("controllerchange",()=>{busy=false;check()});
+  addEventListener("focus",check);
 })();
 
 /* dither: a small tile of random specks one or two shades lighter or darker, sized to the screen's own pixels */

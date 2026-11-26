@@ -2,7 +2,7 @@
   "id": "./",
   "name": "X n O",
   "short_name": "X n O",
-  "description": "Tic-tac-toe where each player keeps only three marks, then moves one. Play on one device, the computer, or online.",
+  "description": "Tic-tac-toe where you move your marks: place three each, then move one every turn to make a line. Play on one device, the computer, or online.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

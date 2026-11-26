@@ -1,6 +1,6 @@
 # X n O
 
-Tic-tac-toe where each player keeps only 3 marks. Once all three are down, each turn you pick one of your marks and move it to any empty cell. The older rule, where your oldest mark disappears when you place a 4th, is still in Settings.
+Tic-tac-toe where you move your marks. Each player places 3 marks; once all three are down, each turn you pick one of your marks and move it to any empty cell. The older rule, where your oldest mark disappears when you place a 4th, is still in Settings.
 
 Play at https://xando.space/
 
