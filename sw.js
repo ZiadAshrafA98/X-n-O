@@ -4,7 +4,7 @@
    instead, and Same device and Computer play as usual. Everything else the
    game is made of is kept from install and served from here. Fonts are kept
    the first time they load. Online play still needs the internet. */
-const V="2026.11.26·1620",CACHE="xno-"+V,FONTS="xno-fonts";
+const V="2026.11.26·1629",CACHE="xno-"+V,FONTS="xno-fonts";
 const CORE=["./","site.webmanifest","mqtt.min.js","qr.js","jsqr.js","wave.js","favicon.svg","favicon-32.png","apple-touch-icon.png","icon-192.png","icon-512.png","icon-maskable-512.png"];
 
 self.addEventListener("install",e=>{
@@ -29,7 +29,14 @@ self.addEventListener("fetch",e=>{
   if(u.pathname.endsWith("/version.json"))return;
   /* the page: network first, the saved copy when offline */
   if(r.mode==="navigate"||u.pathname.endsWith("/")||u.pathname.endsWith("/index.html")){
-    e.respondWith(fetch(r).then(res=>{if(res.ok){const cp=res.clone();caches.open(CACHE).then(c=>c.put("./",cp))}return res})
+    /* straight from the server, never the browser's own page cache (which
+       GitHub lets keep a page for ten minutes). If the address has moved (the
+       game moved to its own domain) the app follows it there, rather than
+       mistaking the redirect for being offline and showing an old copy */
+    e.respondWith(fetch(u.href,{cache:"no-cache",credentials:"same-origin",redirect:"manual"}).then(res=>{
+      /* a moved page comes back as a redirect the browser itself then follows */
+      if(res.type==="opaqueredirect")return r.mode==="navigate"?res:fetch(r);
+      if(res.ok){const cp=res.clone();caches.open(CACHE).then(c=>c.put("./",cp))}return res})
       .catch(()=>caches.match("./",{ignoreSearch:true}).then(m=>m||caches.match(r,{ignoreSearch:true}))));
     return;
   }

@@ -1608,7 +1608,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·1620</p>
+  <p class="build-tag">Version 2026.11.26·1629</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5704,7 +5704,9 @@ if(document.getElementById("splash"))addEventListener("xo:splashdone",warmSolver
    from the network whenever there is one, so updates arrive as before. */
 function isApp(){return matchMedia("(display-mode: standalone)").matches||navigator.standalone===true}
 document.documentElement.classList.toggle("is-app",isApp());
-if("serviceWorker" in navigator&&!qs.has("nosw"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+/* updateViaCache "none": the worker file itself is always fetched fresh, so a new build's worker is found at once */
+var swReg=null;
+if("serviceWorker" in navigator&&!qs.has("nosw"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(r=>{swReg=r}).catch(()=>{}));
 
 /* Installing. Chrome and Edge offer their own small install bar, which is
    left alone; the same offer is kept for the button in Settings. Where a
@@ -5790,24 +5792,28 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·1620";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·1629";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
+  /* at most two tries per build, so a slow mirror can never loop it */
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
+  const tries=v=>{try{return +(sessionStorage.getItem("xo.upd.n."+v)||0)}catch(e){return 0}};
   const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&marks.X.length+marks.O.length===0;
   function go(){
     if(!next||!calm())return;
-    try{sessionStorage.setItem("xo.upd",next)}catch(e){}
+    try{sessionStorage.setItem("xo.upd.n."+next,String(tries(next)+1));if(tries(next)>=2)sessionStorage.setItem("xo.upd",next)}catch(e){}
     const u=new URL(location.href);u.searchParams.set("v",next);location.replace(u.toString());
   }
   function check(){
     if(busy||document.visibilityState==="hidden")return;busy=true;
+    /* an app left in memory: ask for the new worker too, so the next open is already fresh */
+    try{if(swReg)swReg.update().catch(()=>{})}catch(e){}
     fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
       /* only ever forward, and only once per build, so a slow mirror can never loop it */
       if(j&&typeof j.v==="string"&&j.v>BUILD&&tried()!==j.v){next=j.v;go()}
     }).catch(()=>{}).finally(()=>{busy=false});
   }
-  setTimeout(check,4000);setInterval(check,600000);setInterval(go,1500);
+  setTimeout(check,1200);setInterval(check,300000);setInterval(go,1500);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check()});
   addEventListener("pageshow",e=>{if(e.persisted)check()});
   addEventListener("online",check);
