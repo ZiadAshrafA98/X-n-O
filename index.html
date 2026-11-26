@@ -956,6 +956,7 @@ a.sh-act{text-decoration:none}
 .sh-tilt{position:relative;width:min(252px,56vw);aspect-ratio:4/5;border-radius:22px;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.22,1,.36,1),box-shadow .7s cubic-bezier(.22,1,.36,1);box-shadow:0 2px 6px rgba(0,0,0,.16),0 8px 18px rgba(0,0,0,.2);will-change:transform}
 .sh-tilt.live{transition:transform .12s linear,box-shadow .12s linear}
 .sh-tilt canvas{display:block;width:100%;height:100%;border-radius:inherit}
+.sh-tilt .sh-next{position:absolute;inset:0;pointer-events:none}
 .sh-glare{position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--gx,50%) var(--gy,30%),rgba(255,255,255,.28),rgba(255,255,255,0) 55%);opacity:0;transition:opacity .4s;mix-blend-mode:soft-light}
 .sh-tilt.live .sh-glare{opacity:1}
 .sh-themes{display:flex;justify-content:center;gap:12px;padding:0 0 22px}
@@ -1590,7 +1591,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.25·2358</p>
+  <p class="build-tag">Version 2026.11.26·0013</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2262,55 +2263,60 @@ async function openShare(level,btn){
   shareLevel=level||opt.level;
   $("shThemes").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===shareTheme)));
   openDialog("dlgShare",btn);
-  burnTok++;await drawShareCard($("shareCanvas"));
+  burnTok++;if(cardWaveCtl)cardWaveCtl.reset();await drawShareCard($("shareCanvas"));
+  /* the wave gets ready while the card is on show, so the very first change already plays it */
+  if(!still)requestAnimationFrame(()=>cardWave());
   /* a phone that can hand a picture to other apps gets one big Share button */
   let canFiles=false;try{const f=new File([new Blob(["x"],{type:"image/png"})],"a.png",{type:"image/png"});canFiles=!!(navigator.canShare&&navigator.canShare({files:[f]}))}catch(e){}
   setShareLinks();shareFiles=canFiles;$("shNative").hidden=!canFiles;$("shCopyImg").hidden=canFiles||!(navigator.clipboard&&window.ClipboardItem);
 }
 function shToast(t){toast(t)}
-$("shThemes").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;shareTheme=b.dataset.t;store.set("xo.shareTheme",shareTheme);
+$("shThemes").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;
+  /* the style already showing: nothing to change, so nothing plays */
+  if(b.dataset.t===shareTheme)return;
+  shareTheme=b.dataset.t;store.set("xo.shareTheme",shareTheme);
   $("shThemes").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
-  const cv=$("shareCanvas");if(still){await drawShareCard(cv);return}
-  /* the new style is drawn aside, then burns its way up through the old one */
-  const tok=++burnTok,nc=document.createElement("canvas");nc.width=cv.width;nc.height=cv.height;
-  await drawShareCard(nc);if(tok===burnTok)burnSwap(cv,nc,tok)});
-/* The style change: a hot, wavy front sweeps up from the bottom. Below it is
-   the new card; just above it the old card shimmers in the heat and scorches;
-   the front itself glows in the result wave's colours and throws a few
-   embers. About half a second. Everything is drawn on the card's own canvas. */
-let burnTok=0;
-function burnSwap(cv,nc,tok){
-  const g=cv.getContext("2d"),W=cv.width,H=cv.height,old=document.createElement("canvas");old.width=W;old.height=H;old.getContext("2d").drawImage(cv,0,0);
-  const D=560,A=30,A2=12,top=-A-A2-90,bot=H+A+A2+40,ph=Math.random()*6.28,t0=performance.now();
-  const ease=t=>t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;
-  const front=(x,b,t)=>b+A*Math.sin(x*.0062+ph+t*7)+A2*Math.sin(x*.017-ph*1.7-t*11);
-  const embers=Array.from({length:26},()=>({x:Math.random()*W,d:Math.random(),v:.5+Math.random(),s:2+Math.random()*4,c:Math.random()}));
-  const pal=["255,201,21","255,176,122","235,100,160","180,40,230","126,196,255"];
-  const path=(b,t,close)=>{g.beginPath();g.moveTo(-10,front(-10,b,t));for(let x=0;x<=W+20;x+=24)g.lineTo(x,front(x,b,t));if(close){g.lineTo(W+20,H+10);g.lineTo(-10,H+10);g.closePath()}};
-  const frame=now=>{
-    if(tok!==burnTok)return;
-    const t=Math.min(1,(now-t0)/D),b=bot+(top-bot)*ease(t);
-    g.globalCompositeOperation="source-over";g.globalAlpha=1;g.drawImage(old,0,0);
-    g.save();path(b,t,true);g.clip();g.drawImage(nc,0,0);g.restore();
-    /* heat shimmer in a band around the front */
-    for(let y=Math.max(0,b-150|0);y<Math.min(H,b+60);y+=6){const f=1-Math.abs(y-(b-40))/110;if(f<=0)continue;
-      g.drawImage(cv,0,y,W,6,Math.sin(y*.05+t*40)*9*f,y,W,6)}
-    /* scorch: a dark soft edge on the old side */
-    g.save();g.translate(0,-16);path(b,t);g.lineJoin="round";g.strokeStyle="rgba(10,6,4,.32)";g.lineWidth=34;g.stroke();g.restore();
-    /* the glowing rim */
-    const lg=g.createLinearGradient(0,0,W,0);pal.forEach((c,i)=>lg.addColorStop(i/(pal.length-1),`rgb(${c})`));
-    g.globalCompositeOperation="lighter";g.lineJoin="round";path(b,t);
-    g.globalAlpha=.16;g.strokeStyle=lg;g.lineWidth=60;g.stroke();
-    g.globalAlpha=.34;g.lineWidth=22;g.stroke();
-    g.globalAlpha=.9;g.strokeStyle="rgba(255,244,230,1)";g.lineWidth=3.5;g.stroke();
-    /* embers rise off the front and fade */
-    for(const e of embers){const life=(t*1.6-e.d*.6);if(life<=0||life>1)continue;const y0=front(e.x,b,t),y=y0-life*140*e.v,x=e.x+Math.sin(life*6+e.c*9)*14;
-      g.globalAlpha=(1-life)*.9;g.fillStyle=`rgb(${pal[(e.c*pal.length)|0]})`;g.beginPath();g.arc(x,y,e.s*(1-life*.5),0,6.283);g.fill()}
-    g.globalCompositeOperation="source-over";g.globalAlpha=1;
-    if(t<1)requestAnimationFrame(frame);else g.drawImage(nc,0,0);
-  };
-  requestAnimationFrame(frame);
+  const cv=$("shareCanvas"),tok=++burnTok;
+  if(still||!cardWave()){await drawShareCard(cv);return}
+  /* a run still going lands at once, then the new style is drawn aside and the wave carries the card into it */
+  cardSettle();const nx=$("shareNext");await drawShareCard(nx);if(tok!==burnTok)return;
+  /* both pictures are handed to the wave before its clock starts, so it never skips ahead */
+  nx.dataset.v=String(Date.now());try{await cardWaveCtl.prepare()}catch(e){}if(tok!==burnTok)return;
+  /* it opens from the bottom-right corner, so the ring sweeps across the card on a diagonal */
+  const t=$("shTilt"),w=t.offsetWidth,hh=t.offsetHeight;cardWaveCtl.play({source:{x:w*.86-29,y:hh*.9-29,w:58,h:58}});
+});
+/* The style change uses the board's own result wave: the same glowing,
+   lens-bending ring, opening from the card's bottom-right corner so it sweeps
+   across on a diagonal, and tuned to be quick. Both pictures come straight
+   from the two card canvases, so it needs no page snapshot. */
+let burnTok=0,cardWaveCtl=null;
+function cardWave(){
+  if(cardWaveCtl)return cardWaveCtl;if(!waveMod)return null;
+  const tilt=$("shTilt"),a=$("shareCanvas");let b=$("shareNext");
+  if(!b){b=document.createElement("canvas");b.id="shareNext";b.className="sh-next";b.width=a.width;b.height=a.height;b.setAttribute("aria-hidden","true");b.style.opacity="0";a.after(b)}
+  try{
+    cardWaveCtl=new waveMod.WaveController(tilt,a,b);
+    cardWaveCtl.update({type:"center",palette:"colorful",revealed:false,
+      waveStyle:{anticipation:.04,travel:1.5,linger:-.4,rimFade:1.05,hairlineLinger:.35,hairlineFade:.8,particleLife:1.15,particleCount:70},
+      capture:({slot,width,height,scale})=>{const src=slot==="content"?a:b,c=document.createElement("canvas");c.width=Math.max(1,Math.round(width*scale));c.height=Math.max(1,Math.round(height*scale));
+        const g=c.getContext("2d");g.imageSmoothingQuality="high";g.drawImage(src,0,0,c.width,c.height);return c},
+      onFinish:done=>{if(done)cardSettle()}});
+    /* the first frame a phone draws with a new effect is slow while it sets it up, which would make
+       the first change jump: so one frame at the very start (nothing shows yet) is drawn now, unseen */
+    const ctl=cardWaveCtl,warmTok=burnTok;
+    setTimeout(async()=>{if(ctl!==cardWaveCtl||burnTok!==warmTok)return;
+      try{b.getContext("2d").drawImage(a,0,0);b.dataset.v=String(Date.now());await ctl.prepare();if(burnTok!==warmTok)return;
+        const gl=[...tilt.querySelectorAll("canvas[data-dw-skip]")][0];if(gl)gl.style.visibility="hidden";
+        ctl.update({...ctl.opts,scrub:.35});
+        requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>{ctl.update({...ctl.opts,scrub:null});ctl.reset();if(gl)gl.style.visibility=""})));
+      }catch(e){}},300);
+  }catch(e){cardWaveCtl=null}
+  return cardWaveCtl;
 }
+/* the new picture becomes the card, and the wave rests with nothing to show */
+function cardSettle(){const a=$("shareCanvas"),b=$("shareNext");if(!cardWaveCtl||!b)return;
+  if(cardWaveCtl.debug.progress>0){a.getContext("2d").drawImage(b,0,0)}
+  cardWaveCtl.reset();a.dataset.v=b.dataset.v=String(Date.now())}
 /* Getting the picture into an app. A phone can hand a picture to any app
    through its own share menu, so every app button opens that menu with the
    picture and message attached. On a computer no chat or social site
@@ -4851,8 +4857,9 @@ addEventListener("beforeunload",e=>{if(leaveCost()){e.preventDefault();e.returnV
    Without WebGL 2 or with reduced motion the library crossfades. If the module
    fails to load, the result simply appears. */
 const boardWrap=$("boardWrap"),resultEl=$("result");
-let wave=null,waveShown=false,reviewing=false,waveTimer=null;
+let waveMod=null,wave=null,waveShown=false,reviewing=false,waveTimer=null;
 import("./wave.js").then(m=>{
+  waveMod=m;
   try{wave=new m.WaveController(boardWrap,boardEl,resultEl);wave.update({type:"center",palette:"colorful",revealed:waveShown,onFinish:focusResult})}
   catch(e){wave=null}
 }).catch(()=>{});
@@ -5474,7 +5481,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.25·2358";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·0013";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
