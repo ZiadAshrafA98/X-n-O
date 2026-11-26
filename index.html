@@ -1594,7 +1594,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·0134</p>
+  <p class="build-tag">Version 2026.11.26·0139</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1822,12 +1822,12 @@ const AINK="#0d0a14",ARIM="#5ad1ff";
 let celN=0;
 function cel(d,c,box,extra,heavy){
   /* fill, one shade band across the right of the shape's box, extra detail,
-     a cool rim light on the lit (left) side only, and one even ink outline.
+     the cool rim light, and one even ink outline.
      (heavy is kept for the call sites but no longer draws a second line) */
-  const id="k"+(celN++),rid="k"+(celN++),[x,w]=box||[0,100],s=w/100;
-  return`<clipPath id="${id}"><path d="${d}"/></clipPath><clipPath id="${rid}"><rect x="${x-6}" y="-10" width="${w*.42+6}" height="120"/></clipPath><path d="${d}" fill="${c[0]}"/>`+
+  const id="k"+(celN++),[x,w]=box||[0,100],s=w/100;
+  return`<clipPath id="${id}"><path d="${d}"/></clipPath><path d="${d}" fill="${c[0]}"/>`+
     `<g clip-path="url(#${id})"><g transform="translate(${x} 0) scale(${s} 1)"><path d="M60 0C75 22 80 55 73 100H100V0Z" fill="${c[1]}"/></g>${extra||""}`+
-    `<path d="${d}" fill="none" stroke="${ARIM}" stroke-width="1.6" transform="translate(-1.7 0)" opacity=".8" clip-path="url(#${rid})"/></g>`+
+    `<path d="${d}" fill="none" stroke="${ARIM}" stroke-width="1.8" transform="translate(-1.9 0)" opacity=".85"/></g>`+
     `<path d="${d}" fill="none" stroke="${AINK}" stroke-width="2.2" stroke-linejoin="round"/>`;
 }
 const mirror=d=>d.replace(/([MLHVCSQTA])([^MLHVCSQTAZ]*)/g,(m,c,a)=>{
@@ -1860,7 +1860,7 @@ const AVATARS={
     const bump=(x)=>`M${x-15} 40C${x-15} 30 ${x-8} 22 ${x} 22C${x+8} 22 ${x+15} 30 ${x+15} 40C${x+15} 47 ${x+8} 51 ${x} 51C${x-8} 51 ${x-15} 47 ${x-15} 40Z`;
     return aBg("#b44a4f",head+bump(35)+bump(65))+
       cel(head,c,[9,82],
-        `<path d="M20 74C30 84 70 84 80 74C76 84 64 88 50 88C36 88 24 84 20 74Z" fill="#cfe39a"/><path d="M50 79C62 79 72 77 80 74C76 84 64 88 50 88Z" fill="#a9c477"/>`+
+        `<path d="M20 74C30 84 70 84 80 74C76 84 64 88 50 88C36 88 24 84 20 74Z" fill="#cfe39a"/>`+
         hiStroke("M22 56Q28 48 38 46","#c4ef8f",2.6,.6)+
         `<circle cx="26" cy="66" r="1.2" fill="${c[2]}" opacity=".7"/><circle cx="30" cy="70" r="1" fill="${c[2]}" opacity=".6"/><circle cx="76" cy="64" r="1.4" fill="${c[2]}" opacity=".8"/><circle cx="72" cy="69" r="1" fill="${c[2]}" opacity=".7"/>`,
         "M89 58C93 71 84 83 68 86C62 87.5 56 88 50 88")+
@@ -1869,8 +1869,7 @@ const AVATARS={
       aEye(35,38,{iris:"#e8b52c",r:8,lid:.4,lidColor:c[0]})+aEye(65,38,{iris:"#e8b52c",r:8,lid:.4,lidColor:c[1]})+
       `<path d="M26 29.5L43 31.5M74 29.5L57 31.5" stroke="#2d5a1c" stroke-width="2.2" stroke-linecap="round"/>`+
       `<ellipse cx="45.5" cy="60" rx="1.3" ry="1" fill="${AINK}"/><ellipse cx="54.5" cy="60" rx="1.3" ry="1" fill="${AINK}"/>`+
-      `<path d="M24 67Q50 77 76 67" fill="none" stroke="${AINK}" stroke-width="2.2" stroke-linecap="round"/><path d="M22.5 64.5Q23 67.5 25.5 68M77.5 64.5Q77 67.5 74.5 68" fill="none" stroke="${AINK}" stroke-width="1.6" stroke-linecap="round"/>`+
-      `<path d="M36 72Q50 76 64 72" fill="none" stroke="${c[2]}" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>`}},
+      `<path d="M24 67Q50 77 76 67" fill="none" stroke="${AINK}" stroke-width="2.2" stroke-linecap="round"/>`}},
   fox:{name:"Fox",art:()=>{
     const c=["#e9823a","#bd5a26","#8a3b19"],hi="#ffc48a";
     const ear="M21 48C17 34 18 20 22 8C31 14 40 23 46 32Z",inn="M25 40C23 31 23 22 25 15C30 20 35 25 39 31Z";
@@ -1945,15 +1944,14 @@ const AVATARS={
     const mask="M17 47C29 41 42 44 50 49C58 44 71 41 83 47C84 58 76 64 65 63C58 62 54 59 50 56C46 59 42 62 35 63C24 64 16 58 17 47Z";
     const slit=cx=>`M${cx-7.5} 53Q${cx} 47.5 ${cx+7.5} 52Q${cx} 57 ${cx-7.5} 53Z`;
     return aBg("#d8a92f",head)+cel(ear,c,[13,10])+cel(mirror(ear),c,[77,10])+
-      cel(head,c,[21,58],hiStroke("M37 66Q43 77 50 79","#ad6f46",4,.45)+`<ellipse cx="33" cy="70" rx="4" ry="2" fill="${hi}" opacity=".35"/>`+hiStroke("M51 57L50 70",hi,2,.55),
+      cel(head,c,[21,58],"",
         "M79 53L79 60C79 72 72 81 62 86")+
       cel(hair,["#242038","#17142a","#0c0a18"],[15,69],hiStroke("M28 26Q40 16 56 17","#7c74b4",2.6,.85)+hiStroke("M34 33Q45 26 58 28","#5a5390",1.6,.8)+hiStroke("M62 22Q72 26 76 34","#5a5390",1.6,.7))+
       cel(mask,["#d63f45","#a92d36","#7a1d26"],[16,68],hiStroke("M24 46Q32 43 40 45","#ff8e8e",2,.7))+
       `<path d="${slit(36)}" fill="#f6f4fb" stroke="${AINK}" stroke-width="1.7"/><path d="${slit(64)}" fill="#dcd8e6" stroke="${AINK}" stroke-width="1.7"/>`+
       `<path d="M28 45.5L43 48.5M72 45.5L57 48.5" stroke="${AINK}" stroke-width="2.2" stroke-linecap="round"/>`+
       `<path d="M51 58C52 64 54 68 56 70C54 72.5 50 73 47 71.5" fill="none" stroke="${AINK}" stroke-width="1.6" stroke-linecap="round"/>`+
-      `<path d="M41 77Q50 79.5 59 76" fill="none" stroke="${AINK}" stroke-width="2.1" stroke-linecap="round"/><path d="M44 80.5Q50 82 56 80" fill="none" stroke="#ad6f46" stroke-width="1.8" stroke-linecap="round"/>`+
-      `<path d="M50 84.5V87" stroke="${AINK}" stroke-width="1.3" stroke-linecap="round" opacity=".6"/>`}},
+      `<path d="M41 77Q50 79.5 59 76" fill="none" stroke="${AINK}" stroke-width="2.1" stroke-linecap="round"/>`}},
   cat:{name:"Cat",art:()=>{
     const c=["#a69dbb","#7b7193","#564c6e"];
     const ear="M18 44L22 10L45 28Z",inn="M23 37L25 18L38 29Z";
@@ -1977,11 +1975,10 @@ const AVATARS={
       let d="M"+P(-Math.PI/2,38);for(let i=1;i<=n;i++){const a0=-Math.PI/2+(i-.5)/n*Math.PI*2,a1=-Math.PI/2+i/n*Math.PI*2;d+=` Q${P(a0,48)} ${P(a1,38)}`}return d+"Z"})();
     const ear="M27 33C24 25 30 19 37 22C41 24 41 30 38 33Z";
     const face="M50 31C65 31 75 42 75 57C75 71 65 82 50 85C35 82 25 71 25 57C25 42 35 31 50 31Z";
-    return aBg("#3c6687",mane)+cel(mane,m,[7,86],`<path d="M20 40Q26 30 36 25M16 58Q17 48 21 42M24 76Q19 68 18 62" fill="none" stroke="#e0914a" stroke-width="2.4" stroke-linecap="round" opacity=".7"/><path d="M70 82Q78 76 82 68M79 30Q85 38 86 48" fill="none" stroke="${m[2]}" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>`)+
+    return aBg("#3c6687",mane)+cel(mane,m,[7,86])+
       cel(ear,c,[24,17],`<path d="M31 29C30 26 33 24 35 26" fill="none" stroke="${c[2]}" stroke-width="2.2" stroke-linecap="round"/>`)+cel(mirror(ear),c,[59,17],`<path d="M69 29C70 26 67 24 65 26" fill="none" stroke="${c[2]}" stroke-width="2.2" stroke-linecap="round"/>`)+
       cel(face,c,[25,50],hiStroke("M34 40Q42 34 50 34","#ffd99a",2.8,.75)+hiStroke("M28 54Q28 47 31 43","#ffd99a",1.8,.5)+
-        `<path d="M44 34Q50 40 56 34M46 38Q50 42 54 38" fill="none" stroke="${c[1]}" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>`+
-        `<path d="M37 70C37 63 63 63 63 70C63 79 57 83 50 83C43 83 37 79 37 70Z" fill="#f4e0b8"/><path d="M50 64C57 64 63 66 63 70C63 79 57 83 50 83Z" fill="#dcc394"/>`,
+        `<path d="M37 70C37 63 63 63 63 70C63 79 57 83 50 83C43 83 37 79 37 70Z" fill="#f4e0b8"/>`,
         "M75 57C75 71 65 82 50 85")+
       aEye(39,55,{iris:"#d99a1e",lid:.36,lidColor:c[0]})+aEye(61,55,{iris:"#d99a1e",lid:.36,lidColor:c[1]})+
       `<path d="M30 48.5L45 51L44 52.5L30 50.5Z" fill="#5a3214"/><path d="M70 48.5L55 51L56 52.5L70 50.5Z" fill="#4a280f"/>`+
@@ -5743,7 +5740,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·0134";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·0139";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
