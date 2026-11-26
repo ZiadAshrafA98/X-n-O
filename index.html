@@ -189,6 +189,18 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .cell.sel .mk{animation:pickup .32s var(--spring) both;color:inherit}
 .cell.sel.X .mk{color:var(--x)} .cell.sel.O .mk{color:var(--o)}
 @keyframes pickup{from{transform:none}to{transform:translateY(-6%) scale(1.12);filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}}
+.board{touch-action:none}
+.cell.dragging .mk{opacity:.22;animation:none;transform:none}
+.cell.dest.over{background:color-mix(in srgb,currentColor 0%,var(--tile-2))}
+.cell.dest.over::after{opacity:1;scale:2.2}
+.drag-mk{position:fixed;left:0;top:0;z-index:60;font-weight:600;line-height:1;pointer-events:none;will-change:transform;filter:drop-shadow(0 12px 14px rgba(0,0,0,.35))}
+.coach-ghost{position:fixed;left:0;top:0;z-index:5;font-weight:600;line-height:1;pointer-events:none;opacity:0;will-change:transform,opacity}
+/* the note that teaches the move: it sits on the board's top edge, out of the way of the squares' centres */
+.coach{position:fixed;z-index:25;transform:translate(-50%,calc(-100% - 8px)) scale(.92);opacity:0;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 14px 9px;border-radius:16px;background:var(--slab);box-shadow:var(--float);text-align:center;max-width:min(300px,calc(100vw - 150px));transition:opacity .25s var(--out),transform .35s var(--spring-soft)}
+.coach.on{opacity:1;transform:translate(-50%,calc(-100% - 8px))}
+.coach b{font-size:14px;font-weight:600}
+.coach span{font-size:12.5px;line-height:1.3;color:var(--mute)}
+.coach::after{content:"";position:absolute;left:50%;bottom:-6px;width:12px;height:12px;margin-left:-6px;background:inherit;transform:rotate(45deg);border-radius:2px}
 .cell.dest::after{content:"";position:absolute;width:12%;aspect-ratio:1;border-radius:50%;background:var(--faint);opacity:.55;animation:destin .3s var(--out) both}
 .cell.dest:not(:disabled):hover::after{opacity:.9;scale:1.3}
 @keyframes destin{from{opacity:0;scale:.3}}
@@ -1608,7 +1620,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.26·1629</p>
+  <p class="build-tag">Version 2026.11.26·1655</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -2851,6 +2863,8 @@ let mode="local",rule=RULES.includes(opt.rule)?opt.rule:"M";
 let marks={X:[],O:[]},turn="X",starter="X",over=false,winCells=null,history=[];
 /* under the move rule, the mark you have picked up (a cell), or -1 */
 let sel=-1;
+/* a drag in progress, the drop that just landed, and the click a drag leaves behind */
+let drag=null,dropAt=null,dragEat=false;
 const moving=()=>rule==="M"&&marks[turn].length===3;
 let score=store.get("xo.score",{X:0,O:0});
 /* Against the computer the score is yours and the computer's, whichever mark
@@ -2952,7 +2966,7 @@ for(let i=0;i<9;i++){
   const age=document.createElement("span");age.className="age";
   const hint=document.createElement("span");hint.className="hint";hint.hidden=true;
   b.append(mk,age,hint);b._mk=mk;b._age=age;b._hint=hint;
-  b.addEventListener("click",()=>onCell(i));boardEl.appendChild(b);cells.push(b);
+  b.addEventListener("click",()=>{if(dragEat){dragEat=false;return}onCell(i)});boardEl.appendChild(b);cells.push(b);
 }
 /* A mark lands: it drops from a little above with a turn on it and overshoots
    on the way to rest, so placing reads as a token being put down. */
@@ -3001,6 +3015,7 @@ function onCell(c){
     if(marks[turn].includes(c)){sel=sel===c?-1:c;buzz(6);render();return}
     if(sel<0)return;
     c=mv(sel,c);
+    coachDone(true);
   }
   if(mode==="online"){if(applyMove(c)){buzz(10);pushState()}return}
   if(applyMove(c)){buzz(10);maybeAI()}
@@ -3010,6 +3025,101 @@ function maybeAI(){
   if(mode!=="ai"||over||turn!==aiSide)return;
   aiTimer=setTimeout(()=>{const c=pickMove(marks[turn],marks[other(turn)],rule,opt.level);applyMove(c)},560);
 }
+
+/* ---------- Moving by drag ---------- */
+/* Under the move rule you can hold one of your marks and drag it: it lifts
+   under your finger, the squares it can go to show a dot, the one under your
+   finger lights up, and letting go there moves it. Let go anywhere else and
+   it flies home. A tap (no drag) still picks up and places as before. */
+function canAct(){return !over&&moving()&&!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(!room||!connOpen||phase!=="play"||turn!==me))}
+function cellAt(x,y){for(let i=0;i<9;i++){const r=cells[i].getBoundingClientRect();if(x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom)return i}return -1}
+function dropLand(to,at){
+  if(still)return;
+  const b=cells[to].getBoundingClientRect(),dx=at.x-(b.left+b.width/2),dy=at.y-(b.top+b.height/2);
+  cells[to].style.zIndex="2";
+  cells[to]._mk.animate([{transform:`translate(${dx}px,${dy}px) scale(1.25)`},{transform:"translateY(3%) scale(.94)",offset:.7},{transform:"none"}],{duration:300,easing:"cubic-bezier(.3,1.2,.5,1)"}).onfinish=()=>{cells[to].style.zIndex=""};
+}
+boardEl.addEventListener("pointerdown",e=>{
+  if(drag||e.button>0)return;
+  const i=cellAt(e.clientX,e.clientY);
+  if(i<0||!canAct()||!marks[turn].includes(i))return;
+  drag={id:e.pointerId,from:i,x0:e.clientX,y0:e.clientY,on:false,float:null,over:-1};
+});
+function dragStart(e){
+  const d=drag;d.on=true;sel=d.from;buzz(6);coachDone(false);render();
+  const src=cells[d.from],mk=src._mk,cs=getComputedStyle(mk),f=document.createElement("span");
+  f.className="drag-mk "+turn;f.textContent=turn;f.style.fontSize=cs.fontSize;f.style.color=cs.color;
+  document.body.appendChild(f);d.float=f;d.w=f.offsetWidth;d.h=f.offsetHeight;
+  src.classList.add("dragging");try{src.setPointerCapture(e.pointerId)}catch(err){}
+  dragMove(e);
+}
+function dragMove(e){
+  const d=drag;d.x=e.clientX;d.y=e.clientY;
+  d.float.style.transform=`translate(${d.x-d.w/2}px,${d.y-d.h*.62}px) scale(1.25)`;
+  const i=cellAt(d.x,d.y),ok=i>=0&&cells[i].classList.contains("dest");
+  const want=ok?i:-1;
+  if(want!==d.over){if(d.over>=0)cells[d.over].classList.remove("over");if(want>=0){cells[want].classList.add("over");buzz(4)}d.over=want}
+}
+addEventListener("pointermove",e=>{
+  const d=drag;if(!d||d.id!==e.pointerId)return;
+  if(!d.on){if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<8)return;if(!canAct()){drag=null;return}dragStart(e);return}
+  e.preventDefault();dragMove(e);
+},{passive:false});
+function dragEnd(e,cancel){
+  const d=drag;if(!d||d.id!==e.pointerId)return;drag=null;
+  if(!d.on)return;
+  dragEat=true;setTimeout(()=>{dragEat=false},0);
+  const src=cells[d.from];if(d.over>=0)cells[d.over].classList.remove("over");
+  const to=!cancel&&d.over>=0&&canAct()&&sel===d.from?d.over:-1;
+  if(to>=0){
+    d.float.remove();src.classList.remove("dragging");
+    dropAt={to,x:d.x,y:d.y};onCell(to);if(dropAt)dropAt=null;
+    return;
+  }
+  /* no square: the mark flies home and is put down again */
+  const r=src.getBoundingClientRect(),hx=r.left+r.width/2-d.w/2,hy=r.top+r.height/2-d.h/2;
+  const go=still?{finished:Promise.resolve()}:d.float.animate([{transform:d.float.style.transform},{transform:`translate(${hx}px,${hy}px) scale(1)`}],{duration:260,easing:"cubic-bezier(.3,1.2,.5,1)",fill:"forwards"});
+  go.finished.then(()=>{d.float.remove();src.classList.remove("dragging")});
+  sel=-1;render();
+}
+addEventListener("pointerup",e=>dragEnd(e,false));
+addEventListener("pointercancel",e=>dragEnd(e,true));
+
+/* ---------- Teaching the move ---------- */
+/* People expect plain noughts and crosses, so the first few times the move
+   phase comes round on your turn, a note over the board says what to do and
+   a faint copy of one of your marks glides to an empty square, on a loop,
+   until you pick one up. It stops for good after three moves made. */
+const coachEl=document.createElement("div");coachEl.className="coach";coachEl.setAttribute("role","status");
+coachEl.innerHTML='<b>Now move one</b><span>Drag one of your marks to an empty square</span>';document.body.appendChild(coachEl);
+const ghostEl=document.createElement("span");ghostEl.className="coach-ghost";ghostEl.setAttribute("aria-hidden","true");document.body.appendChild(ghostEl);
+let coachOn=false,ghostAnim=null,coachKey="";
+const taught=()=>{try{return +(localStorage.getItem("xo.moved")||0)}catch(e){return 0}};
+function coachDone(moved){
+  if(moved)try{localStorage.setItem("xo.moved",String(taught()+1))}catch(e){}
+  if(!coachOn)return;coachOn=false;coachEl.classList.remove("on");
+  if(ghostAnim){ghostAnim.cancel();ghostAnim=null}ghostEl.style.opacity="0";
+}
+function coachUpdate(){
+  let busy=false;try{busy=!!morph}catch(e){}
+  const want=canAct()&&sel<0&&!drag&&taught()<3&&!busy;
+  if(!want){coachDone(false);return}
+  const key=turn+marks.X.join()+marks.O.join();if(coachOn&&key===coachKey)return;coachKey=key;
+  const br=boardEl.getBoundingClientRect();if(!br.width)return;
+  coachEl.style.left=(br.left+br.width/2)+"px";coachEl.style.top=br.top+"px";
+  coachOn=true;requestAnimationFrame(()=>coachEl.classList.add("on"));
+  if(still)return;
+  /* the demonstration: your first mark glides to the nearest empty square */
+  const from=marks[turn][0],empty=[0,1,2,3,4,5,6,7,8].filter(c=>!marks.X.includes(c)&&!marks.O.includes(c));
+  const to=empty.sort((a,b)=>Math.hypot(a%3-from%3,(a/3|0)-(from/3|0))-Math.hypot(b%3-from%3,(b/3|0)-(from/3|0)))[0];
+  if(to==null)return;
+  const a=cells[from].getBoundingClientRect(),b=cells[to].getBoundingClientRect(),mk=cells[from]._mk,cs=getComputedStyle(mk);
+  ghostEl.textContent=turn;ghostEl.style.fontSize=cs.fontSize;ghostEl.style.color=cs.color;
+  const w=ghostEl.offsetWidth,h=ghostEl.offsetHeight,P=(r,s)=>`translate(${r.left+r.width/2-w/2}px,${r.top+r.height/2-h/2}px) scale(${s})`;
+  if(ghostAnim)ghostAnim.cancel();
+  ghostAnim=ghostEl.animate([{transform:P(a,1),opacity:0},{transform:P(a,1.15),opacity:.55,offset:.18},{transform:P(b,1.15),opacity:.55,offset:.62},{transform:P(b,1),opacity:0,offset:.8},{transform:P(b,1),opacity:0}],{duration:2200,delay:500,iterations:Infinity,easing:"cubic-bezier(.45,0,.25,1)"});
+}
+addEventListener("resize",()=>{if(coachOn){coachKey="";coachOn=false;coachUpdate()}});
 
 /* ---------- Rendering ---------- */
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
@@ -3082,7 +3192,8 @@ function renderBoard(){
     b.disabled=!myTurnOK||!tap.has(i);
     b.setAttribute("aria-label",`Cell ${i+1}: ${side||"empty"}${old?", fades next":""}${sel===i?", picked up":""}${sel>=0&&!side&&tap.has(i)?", move here":""}`);
   }
-  slides.forEach(([f,t])=>slideMark(f,t));
+  slides.forEach(([f,t])=>{if(dropAt&&dropAt.to===t)dropLand(t,dropAt);else slideMark(f,t)});dropAt=null;
+  coachUpdate();
 }
 
 let lastStatus="";
@@ -3094,7 +3205,7 @@ function setStatus(dot,html,busy){
 }
 function renderStatus(){
   const sideVar=s=>s==="X"?"var(--x)":"var(--o)";
-  const mvSub=rule==="M"&&marks[turn].length===3?`<span class="sub">${sel>=0?"tap where it goes":"pick a mark to move"}</span>`:"";
+  const mvSub=rule==="M"&&marks[turn].length===3?`<span class="sub">${sel>=0?"drop it on an empty square":"drag a mark to move it"}</span>`:"";
   if(flashMsg)return setStatus(flashDot,flashMsg);
   if(mode==="online"&&inReq)return setStatus("var(--amber)","Friend is asking",true);
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
@@ -5792,7 +5903,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.26·1629";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.26·1655";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
