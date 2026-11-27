@@ -1295,6 +1295,21 @@ a.sh-act{text-decoration:none}
 @keyframes compcaret{50%{opacity:0}}
 @keyframes compin{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){.comp-eyes,.comp-dot,.comp-log .typing::after,.comp-asks button.in{animation:none}}
+
+/* the file's cyber trim: brackets hugging the corners, traces along the edges, a faint dot texture.
+   It draws itself in when the file opens, breathes slowly while open, and pulls back in as it closes */
+.cyber{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:4}
+.cyber .tr{fill:none;stroke:#ff3b78;stroke-width:1.5;stroke-linecap:round}
+.cyber .nd{fill:#ff3b78}
+.cyber .glow{filter:drop-shadow(0 0 3px rgba(255,59,120,.8))}
+.cyber .tex{opacity:0}
+.cyber.live .glow{animation:cyb 6s ease-in-out infinite}
+.cyber .sp{fill:none;stroke:#ffd0de;stroke-width:2;stroke-linecap:round;stroke-dasharray:.14 1;stroke-dashoffset:1.14;opacity:0;filter:drop-shadow(0 0 4px #ff3b78)}
+.cyber.live .sp{animation:cyp 9s cubic-bezier(.45,0,.25,1) infinite}
+.cyber.live .sp+.sp{animation-delay:-4.5s}
+@keyframes cyb{0%,100%{opacity:.85}50%{opacity:.3}}
+@keyframes cyp{0%{stroke-dashoffset:1.14;opacity:0}8%{opacity:.9}55%{opacity:.9}62%,100%{stroke-dashoffset:0;opacity:0}}
+@media (prefers-reduced-motion:reduce){.cyber.live .glow,.cyber.live .sp{animation:none}}
 /* ---------- keyframes ---------- */
 /* strokes stay invisible until they start: a round cap on a zero-length line still shows as a dot */
 @keyframes draw{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
@@ -1667,7 +1682,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.27·1534</p>
+  <p class="build-tag">Version 2026.11.27·1619</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5502,7 +5517,7 @@ function openDialog(id,btn){
   if(id==="dlgInsight")updateInsight(true);
   if(id==="dlgAbout")setTimeout(buildAbout,0);
   if(id==="dlgProfile")buildProfile();
-  if(id==="dlgComputer")buildComputer();
+  if(id==="dlgComputer"){buildComputer();requestAnimationFrame(()=>cyberIn(d))}
   if(id==="dlgRoom"){$("rpQrWrap").classList.remove("open");$("rpQrBtn").setAttribute("aria-expanded","false");qrSideClose(true);closeSeatMenu(true)}
   pickClose(false);
   d.hidden=false;d.querySelectorAll(".rcards").forEach(c=>placeRThumb(c,true));
@@ -5517,7 +5532,7 @@ function openDialog(id,btn){
 }
 function closeDialog(instant){
   const d=openDlg;if(!d)return;openDlg=null;app.inert=false;
-  if(d.id==="dlgComputer")clearTimeout(compT);
+  if(d.id==="dlgComputer"){clearTimeout(compT);cyberOut(d,instant?0:(narrowMQ.matches?240:170))}
   if(d.id==="dlgRoom")qrSideClose();
   if(d.id==="dlgScan")stopScan();
   const btn=openerBtn;openerBtn=null;if(btn)btn.setAttribute("aria-expanded","false");
@@ -5950,6 +5965,48 @@ logo.addEventListener("pointerdown",()=>{logo.classList.remove("intro");void log
 })();
 
 
+
+/* ---------- the file's cyber trim ---------- */
+const NS="http://www.w3.org/2000/svg";
+function cyberBuild(d){
+  d.querySelector(".cyber")?.remove();
+  const w=d.clientWidth,h=Math.max(d.clientHeight,d.scrollHeight),cs=getComputedStyle(d);
+  const rt=parseFloat(cs.borderTopLeftRadius)||0,rb=parseFloat(cs.borderBottomLeftRadius)||0,i=5,a=30;
+  const s=document.createElementNS(NS,"svg");s.setAttribute("class","cyber");s.setAttribute("width",w);s.setAttribute("height",h);s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("aria-hidden","true");
+  const id="cy"+Math.random().toString(36).slice(2,7);
+  const corner=(sx,sy)=>{const r=Math.max(0,(sy>0?rt:rb)-i),x0=sx>0?i:w-i,y0=sy>0?i:h-i,cx=x0+sx*r,cy=y0+sy*r;
+    return r>2?`M${x0} ${cy+sy*a}V${cy}A${r} ${r} 0 0 ${sx*sy>0?1:0} ${cx} ${y0}H${cx+sx*a}`:`M${x0} ${y0+sy*a}V${y0}H${x0+sx*a}`};
+  const trace=(sx,sy)=>{const r=Math.max(0,(sy>0?rt:rb)-i),x0=sx>0?i:w-i,y=sy>0?i:h-i;
+    return{d:`M${x0+sx*(r+a+10)} ${y}H${x0+sx*(r+a+58)}L${x0+sx*(r+a+64)} ${y+sy*6}H${x0+sx*(r+a+92)}`,nx:x0+sx*(r+a+92),ny:y+sy*6}};
+  let paths="",nodes="";const T=[];
+  for(const sy of [1,-1])for(const sx of [1,-1]){paths+=`<path class="tr c" pathLength="1" d="${corner(sx,sy)}"/>`;const t=trace(sx,sy);T.push(t);paths+=`<path class="tr t" pathLength="1" d="${t.d}"/>`;nodes+=`<circle class="nd" cx="${t.nx}" cy="${t.ny}" r="2"/>`}
+  s.innerHTML=`<defs><clipPath id="${id}c"><rect width="${w}" height="${h}" rx="${rt}"/></clipPath><pattern id="${id}p" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#ff3b78"/></pattern>`+
+    `<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".22" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".6"/></linearGradient><mask id="${id}m"><rect width="${w}" height="${h}" fill="url(#${id}g)"/></mask></defs>`+
+    `<g clip-path="url(#${id}c)"><rect class="tex" width="${w}" height="${h}" fill="url(#${id}p)" mask="url(#${id}m)"/></g><g class="glow">${paths}${nodes}</g>`+
+    `<path class="sp" pathLength="1" d="${T[0].d}"/><path class="sp" pathLength="1" d="${T[1].d}"/>`;
+  d.appendChild(s);return s;
+}
+function cyberIn(d){
+  const s=cyberBuild(d);
+  const C=[...s.querySelectorAll(".tr.c")],Tr=[...s.querySelectorAll(".tr.t")],N=[...s.querySelectorAll(".nd")],tex=s.querySelector(".tex");
+  if(still){tex.style.opacity=".09";s.classList.add("live");return}
+  /* the brackets wrap round their corners, then the traces run out along the edges and their dots light */
+  const set=(el,v)=>{el.style.strokeDasharray="1 1";el.style.strokeDashoffset=String(v)};
+  C.forEach(p=>set(p,1));Tr.forEach(p=>set(p,1));N.forEach(n=>{n.style.transformBox="fill-box";n.style.transformOrigin="center";n.style.transform="scale(0)"});
+  C.forEach((p,k)=>p.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:760,delay:200+k*70,easing:"cubic-bezier(.65,0,.35,1)",fill:"forwards"}));
+  Tr.forEach((p,k)=>p.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:620,delay:640+k*70,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"}));
+  N.forEach((n,k)=>n.animate([{transform:"scale(0)"},{transform:"scale(1.8)",offset:.6},{transform:"scale(1)"}],{duration:420,delay:1120+k*70,easing:"ease-out",fill:"forwards"}));
+  tex.animate([{opacity:0},{opacity:.09}],{duration:1400,delay:400,easing:"ease-out",fill:"forwards"});
+  s.querySelector(".glow").animate([{opacity:.3},{opacity:1},{opacity:.85}],{duration:1600,delay:200,easing:"ease-out"});
+  setTimeout(()=>{if(s.isConnected)s.classList.add("live")},1700);
+}
+function cyberOut(d,ms){
+  const s=d.querySelector(".cyber");if(!s||still)return;s.classList.remove("live");
+  s.querySelectorAll(".tr").forEach(p=>{p.getAnimations().forEach(a=>a.cancel());p.style.strokeDasharray="1 1";
+    p.animate([{strokeDashoffset:0},{strokeDashoffset:1}],{duration:ms,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
+  s.querySelectorAll(".nd").forEach(n=>{n.getAnimations().forEach(a=>a.cancel());n.animate([{transform:"scale(1)",opacity:1},{transform:"scale(0)",opacity:0}],{duration:ms*.6,fill:"forwards"})});
+  s.querySelector(".tex").animate([{opacity:.09},{opacity:0}],{duration:ms,fill:"forwards"});
+}
 /* ---------- The computer's file ---------- */
 /* Tap the computer in its seat: its file opens. Its threat level follows the
    level you play it on, the strip is your own record against it there, and
@@ -6132,7 +6189,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·1534";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.27·1619";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
