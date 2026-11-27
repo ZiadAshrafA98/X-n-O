@@ -1691,7 +1691,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.27·1658</p>
+  <p class="build-tag">Version 2026.11.27·1700</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -6036,22 +6036,22 @@ function cyberIn(d){
   if(lab){lab.style.opacity="0";lab.animate([{opacity:0,letterSpacing:".6em"},{opacity:.5,letterSpacing:".18em"}],{duration:900,delay:1200,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"})}
   /* complete: everything flares bright at once, dims back, then settles into the slow breathing */
   const glow=s.querySelector(".glow"),halo=s.querySelector(".halo");
-  glow.animate([{opacity:1},{opacity:1,offset:.25},{opacity:.85}],{duration:1400,delay:1600,easing:"ease-in-out",fill:"backwards"});
+  glow.animate([{opacity:1},{opacity:1,offset:.55},{opacity:.85}],{duration:2700,delay:1600,easing:"cubic-bezier(.45,0,.55,1)",fill:"backwards"});
   halo.querySelectorAll(".tr").forEach(p=>{const w0=p.classList.contains("hv")?7:5;
-    p.animate([{strokeOpacity:.16,strokeWidth:w0},{strokeOpacity:.9,strokeWidth:w0+4,offset:.16},{strokeOpacity:.16,strokeWidth:w0}],{duration:1600,delay:1600,easing:"cubic-bezier(.22,1,.36,1)"})});
+    p.animate([{strokeOpacity:.16,strokeWidth:w0},{strokeOpacity:.75,strokeWidth:w0+5,offset:.2},{strokeOpacity:.75,strokeWidth:w0+5,offset:.55},{strokeOpacity:.16,strokeWidth:w0}],{duration:2700,delay:1600,easing:"cubic-bezier(.45,0,.55,1)"})});
   /* a wide bloom behind the flare, so it reads as light rather than thicker lines */
   const bloom=halo.cloneNode(true);bloom.setAttribute("class","bloom");halo.parentNode.insertBefore(bloom,halo);
   /* soft, so it reads as light; the blur lives only as long as the flash */
   const fid=s.querySelector("clipPath").id.replace(/c$/,"b");const fl=document.createElementNS(NS,"filter");fl.id=fid;fl.setAttribute("x","-50%");fl.setAttribute("y","-50%");fl.setAttribute("width","200%");fl.setAttribute("height","200%");
-  fl.innerHTML='<feGaussianBlur stdDeviation="9"/>';s.querySelector("defs").appendChild(fl);bloom.setAttribute("filter",`url(#${fid})`);
-  bloom.querySelectorAll(".tr").forEach(p=>{p.style.strokeDasharray="none";p.style.strokeDashoffset="0";p.style.opacity="1";p.style.strokeOpacity="0";p.animate([{strokeOpacity:0,strokeWidth:10},{strokeOpacity:1,strokeWidth:30,offset:.16},{strokeOpacity:0,strokeWidth:16}],{duration:1900,delay:1600,easing:"cubic-bezier(.22,1,.36,1)"})});
+  fl.innerHTML='<feGaussianBlur stdDeviation="14"/>';s.querySelector("defs").appendChild(fl);bloom.setAttribute("filter",`url(#${fid})`);
+  bloom.querySelectorAll(".tr").forEach(p=>{p.style.strokeDasharray="none";p.style.strokeDashoffset="0";p.style.opacity="1";p.style.strokeOpacity="0";p.animate([{strokeOpacity:0,strokeWidth:14},{strokeOpacity:.85,strokeWidth:40,offset:.2},{strokeOpacity:.85,strokeWidth:40,offset:.55},{strokeOpacity:0,strokeWidth:24}],{duration:2700,delay:1600,easing:"cubic-bezier(.45,0,.55,1)"})});
   /* the white-hot core of the flash, right on the lines */
   const core=halo.cloneNode(true);core.setAttribute("class","bloom");halo.parentNode.appendChild(core);
-  core.querySelectorAll(".tr").forEach(p=>{p.style.strokeDasharray="none";p.style.strokeDashoffset="0";p.style.opacity="1";p.style.stroke="#fff";p.style.strokeOpacity="0";p.animate([{strokeOpacity:0,strokeWidth:2},{strokeOpacity:1,strokeWidth:5,offset:.14},{strokeOpacity:0,strokeWidth:2,offset:.6},{strokeOpacity:0}],{duration:1500,delay:1600,easing:"ease-out"})});
-  setTimeout(()=>{bloom.remove();core.remove();fl.remove()},3600);
-  N.forEach(n=>n.animate([{opacity:1},{opacity:1,filter:"brightness(2.4)",offset:.16},{opacity:1}],{duration:1100,delay:1600}));
-  s.querySelectorAll(":scope > .glow > .tr").forEach(p=>p.animate([{stroke:"#ff3b78"},{stroke:"#ffffff",offset:.15},{stroke:"#ffb3c9",offset:.4},{stroke:"#ff3b78"}],{duration:1400,delay:1600,easing:"ease-out",composite:"replace"}));
-  setTimeout(()=>{if(s.isConnected)s.classList.add("live")},3000);
+  core.querySelectorAll(".tr").forEach(p=>{p.style.strokeDasharray="none";p.style.strokeDashoffset="0";p.style.opacity="1";p.style.stroke="#fff";p.style.strokeOpacity="0";p.animate([{strokeOpacity:0,strokeWidth:2},{strokeOpacity:.8,strokeWidth:4,offset:.2},{strokeOpacity:.8,strokeWidth:4,offset:.5},{strokeOpacity:0,strokeWidth:2,offset:.8},{strokeOpacity:0}],{duration:2700,delay:1600,easing:"cubic-bezier(.45,0,.55,1)"})});
+  setTimeout(()=>{bloom.remove();core.remove();fl.remove()},4400);
+  N.forEach(n=>n.animate([{filter:"brightness(1)"},{filter:"brightness(2.2)",offset:.2},{filter:"brightness(2.2)",offset:.55},{filter:"brightness(1)"}],{duration:2700,delay:1600}));
+  s.querySelectorAll(":scope > .glow > .tr").forEach(p=>p.animate([{stroke:"#ff3b78"},{stroke:"#ffe4ec",offset:.2},{stroke:"#ffe4ec",offset:.5},{stroke:"#ff3b78"}],{duration:2700,delay:1600,easing:"cubic-bezier(.45,0,.55,1)",composite:"replace"}));
+  setTimeout(()=>{if(s.isConnected)s.classList.add("live")},4300);
 }
 function cyberOut(d,ms){
   const s=d.querySelector(".cyber");if(!s||still)return;s.classList.remove("live","talk");
@@ -6244,7 +6244,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·1658";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.27·1700";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
