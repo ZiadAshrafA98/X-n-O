@@ -1301,15 +1301,24 @@ a.sh-act{text-decoration:none}
 .cyber{position:absolute;left:0;top:0;pointer-events:none;overflow:visible;z-index:4}
 .cyber .tr{fill:none;stroke:#ff3b78;stroke-width:1.5;stroke-linecap:round}
 .cyber .nd{fill:#ff3b78}
-.cyber .glow{filter:drop-shadow(0 0 3px rgba(255,59,120,.8))}
+.cyber .hv{stroke-width:3}
+.cyber .k{stroke-opacity:.75}
+.cyber .w{stroke-opacity:.8}
+.cyber .lab{font:600 7px/1 'Roboto Mono',monospace;letter-spacing:.18em;fill:#ff3b78;opacity:0}
+.cyber .wsp{fill:none;stroke:#ffd0de;stroke-width:2.2;stroke-linecap:round;stroke-dasharray:.06 1;stroke-dashoffset:1.06;opacity:0}
+.cyber.talk .wsp{animation:cyw 1.1s linear infinite}
+.cyber.talk .wsp+.wsp{animation-delay:-.55s}
+@keyframes cyw{0%{stroke-dashoffset:1.06;opacity:0}10%,85%{opacity:1}100%{stroke-dashoffset:0;opacity:0}}
+.cyber .glow{will-change:opacity}
+.cyber .halo .tr{stroke-width:5;stroke-opacity:.16}.cyber .halo .hv{stroke-width:7}
 .cyber .tex{opacity:0}
 .cyber.live .glow{animation:cyb 6s ease-in-out infinite}
-.cyber .sp{fill:none;stroke:#ffd0de;stroke-width:2;stroke-linecap:round;stroke-dasharray:.14 1;stroke-dashoffset:1.14;opacity:0;filter:drop-shadow(0 0 4px #ff3b78)}
+.cyber .sp{fill:none;stroke:#ffd0de;stroke-width:2;stroke-linecap:round;stroke-dasharray:.14 1;stroke-dashoffset:1.14;opacity:0}
 .cyber.live .sp{animation:cyp 9s cubic-bezier(.45,0,.25,1) infinite}
 .cyber.live .sp+.sp{animation-delay:-4.5s}
 @keyframes cyb{0%,100%{opacity:.85}50%{opacity:.3}}
 @keyframes cyp{0%{stroke-dashoffset:1.14;opacity:0}8%{opacity:.9}55%{opacity:.9}62%,100%{stroke-dashoffset:0;opacity:0}}
-@media (prefers-reduced-motion:reduce){.cyber.live .glow,.cyber.live .sp{animation:none}}
+@media (prefers-reduced-motion:reduce){.cyber.live .glow,.cyber.live .sp,.cyber.talk .wsp{animation:none}}
 /* ---------- keyframes ---------- */
 /* strokes stay invisible until they start: a round cap on a zero-length line still shows as a dot */
 @keyframes draw{0%{stroke-dashoffset:1;opacity:0}1%{opacity:1}100%{stroke-dashoffset:0;opacity:1}}
@@ -1682,7 +1691,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.27·1619</p>
+  <p class="build-tag">Version 2026.11.27·1647</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5974,22 +5983,45 @@ function cyberBuild(d){
   const rt=parseFloat(cs.borderTopLeftRadius)||0,rb=parseFloat(cs.borderBottomLeftRadius)||0,i=5,a=30;
   const s=document.createElementNS(NS,"svg");s.setAttribute("class","cyber");s.setAttribute("width",w);s.setAttribute("height",h);s.setAttribute("viewBox",`0 0 ${w} ${h}`);s.setAttribute("aria-hidden","true");
   const id="cy"+Math.random().toString(36).slice(2,7);
+  /* corner brackets: a hairline hugging the corner, a heavier stub where it turns onto the edge, and two dashes trailing off */
   const corner=(sx,sy)=>{const r=Math.max(0,(sy>0?rt:rb)-i),x0=sx>0?i:w-i,y0=sy>0?i:h-i,cx=x0+sx*r,cy=y0+sy*r;
-    return r>2?`M${x0} ${cy+sy*a}V${cy}A${r} ${r} 0 0 ${sx*sy>0?1:0} ${cx} ${y0}H${cx+sx*a}`:`M${x0} ${y0+sy*a}V${y0}H${x0+sx*a}`};
+    const arc=r>2?`M${x0} ${cy+sy*a}V${cy}A${r} ${r} 0 0 ${sx*sy>0?1:0} ${cx} ${y0}H${cx+sx*a}`:`M${x0} ${y0+sy*a}V${y0}H${x0+sx*a}`;
+    const stub=`M${x0} ${cy+sy*(a-10)}V${cy+sy*a}`,dash=`M${cx+sx*(a+5)} ${y0}h${sx*4}M${cx+sx*(a+12)} ${y0}h${sx*2}`;
+    return{arc,stub,dash}};
   const trace=(sx,sy)=>{const r=Math.max(0,(sy>0?rt:rb)-i),x0=sx>0?i:w-i,y=sy>0?i:h-i;
-    return{d:`M${x0+sx*(r+a+10)} ${y}H${x0+sx*(r+a+58)}L${x0+sx*(r+a+64)} ${y+sy*6}H${x0+sx*(r+a+92)}`,nx:x0+sx*(r+a+92),ny:y+sy*6}};
-  let paths="",nodes="";const T=[];
-  for(const sy of [1,-1])for(const sx of [1,-1]){paths+=`<path class="tr c" pathLength="1" d="${corner(sx,sy)}"/>`;const t=trace(sx,sy);T.push(t);paths+=`<path class="tr t" pathLength="1" d="${t.d}"/>`;nodes+=`<circle class="nd" cx="${t.nx}" cy="${t.ny}" r="2"/>`}
+    return{d:`M${x0+sx*(r+a+22)} ${y}H${x0+sx*(r+a+62)}L${x0+sx*(r+a+68)} ${y+sy*6}H${x0+sx*(r+a+96)}`,nx:x0+sx*(r+a+96),ny:y+sy*6}};
+  let paths="",heavy="",nodes="";const T=[];
+  for(const sy of [1,-1])for(const sx of [1,-1]){const c=corner(sx,sy);paths+=`<path class="tr c" pathLength="1" d="${c.arc}"/><path class="tr t" pathLength="1" d="${c.dash}"/>`;heavy+=`<path class="tr hv" pathLength="1" d="${c.stub}"/>`;
+    const t=trace(sx,sy);T.push(t);paths+=`<path class="tr t" pathLength="1" d="${t.d}"/>`;nodes+=`<circle class="nd" cx="${t.nx}" cy="${t.ny}" r="2"/>`}
+  /* the cable: from the computer's face, out to the margin and down into the terminal's status light */
+  const face=$("compFace"),term=d.querySelector(".comp-term"),bar=d.querySelector(".comp-bar");let wire="",ticks="",label="";
+  if(face&&term&&face.offsetWidth){
+    /* measured on screen, then undone of any scale the opening animation has on the sheet */
+    /* laid-out positions, so the slide-in of each row and the sheet's own opening move change nothing */
+    const at=el=>{let x=0,y=0,e=el;while(e&&e!==d){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}
+      if(e!==d){const D=d.getBoundingClientRect(),r=el.getBoundingClientRect();return{x:r.left-D.left,y:r.top-D.top,w:el.offsetWidth,h:el.offsetHeight}}
+      return{x,y,w:el.offsetWidth,h:el.offsetHeight}};
+    const F=at(face),Tm=at(term);
+    const fx=F.x,fy=F.y+F.h/2,tx=Tm.x,ty=Tm.y,by=ty+(bar?bar.offsetHeight/2:16),mx=Math.max(7,tx-6);
+    const wd=`M${fx-3} ${fy}H${mx+6}L${mx} ${fy+6}V${by-6}L${mx+6} ${by}H${tx+8}`;
+    wire=`<path class="tr w" pathLength="1" d="${wd}"/><circle class="nd" cx="${fx-3}" cy="${fy}" r="2.2"/><circle class="nd" cx="${tx+8}" cy="${by}" r="2.2"/><path class="wsp" pathLength="1" d="${wd}"/><path class="wsp" pathLength="1" d="${wd}"/>`;
+    /* the terminal's mounting ticks */
+    const L=tx-3,R=tx+Tm.w+3,Tt=ty-3,B=ty+Tm.h+3,k=9;
+    ticks=[[L,Tt,1,1],[R,Tt,-1,1],[L,B,1,-1],[R,B,-1,-1]].map(([x,y,sx,sy])=>`<path class="tr k" pathLength="1" d="M${x} ${y+sy*k}V${y}H${x+sx*k}"/>`).join("");
+    /* a system label running down the right margin */
+    const lx=w-7,ly=ty-14;
+    label=`<text class="lab" x="${lx}" y="${ly}" transform="rotate(-90 ${lx} ${ly})">AI·CORE // 3602</text>`;
+  }
   s.innerHTML=`<defs><clipPath id="${id}c"><rect width="${w}" height="${h}" rx="${rt}"/></clipPath><pattern id="${id}p" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#ff3b78"/></pattern>`+
     `<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".22" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".6"/></linearGradient><mask id="${id}m"><rect width="${w}" height="${h}" fill="url(#${id}g)"/></mask></defs>`+
-    `<g clip-path="url(#${id}c)"><rect class="tex" width="${w}" height="${h}" fill="url(#${id}p)" mask="url(#${id}m)"/></g><g class="glow">${paths}${nodes}</g>`+
+    `<g clip-path="url(#${id}c)"><rect class="tex" width="${w}" height="${h}" fill="url(#${id}p)" mask="url(#${id}m)"/></g><g class="glow"><g class="halo">${paths}${heavy}</g>${paths}${heavy}${nodes}</g>${ticks}${wire}${label}`+
     `<path class="sp" pathLength="1" d="${T[0].d}"/><path class="sp" pathLength="1" d="${T[1].d}"/>`;
   d.appendChild(s);return s;
 }
 function cyberIn(d){
   const s=cyberBuild(d);
-  const C=[...s.querySelectorAll(".tr.c")],Tr=[...s.querySelectorAll(".tr.t")],N=[...s.querySelectorAll(".nd")],tex=s.querySelector(".tex");
-  if(still){tex.style.opacity=".09";s.classList.add("live");return}
+  const C=[...s.querySelectorAll(".tr.c,.tr.hv")],Tr=[...s.querySelectorAll(".tr.t")],N=[...s.querySelectorAll(".nd")],tex=s.querySelector(".tex"),W=[...s.querySelectorAll(".tr.w")],K=[...s.querySelectorAll(".tr.k")],lab=s.querySelector(".lab");
+  if(still){tex.style.opacity=".09";if(lab)lab.style.opacity=".5";s.classList.add("live");return}
   /* the brackets wrap round their corners, then the traces run out along the edges and their dots light */
   const set=(el,v)=>{el.style.strokeDasharray="1 1";el.style.strokeDashoffset=String(v)};
   C.forEach(p=>set(p,1));Tr.forEach(p=>set(p,1));N.forEach(n=>{n.style.transformBox="fill-box";n.style.transformOrigin="center";n.style.transform="scale(0)"});
@@ -5997,15 +6029,20 @@ function cyberIn(d){
   Tr.forEach((p,k)=>p.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:620,delay:640+k*70,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"}));
   N.forEach((n,k)=>n.animate([{transform:"scale(0)"},{transform:"scale(1.8)",offset:.6},{transform:"scale(1)"}],{duration:420,delay:1120+k*70,easing:"ease-out",fill:"forwards"}));
   tex.animate([{opacity:0},{opacity:.09}],{duration:1400,delay:400,easing:"ease-out",fill:"forwards"});
+  /* the cable runs from the face down into the terminal, the terminal's ticks clip on, the label fades up */
+  W.forEach(p=>{set(p,1);p.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:700,delay:520,easing:"cubic-bezier(.65,0,.35,1)",fill:"forwards"})});
+  K.forEach((p,k)=>{set(p,1);p.animate([{strokeDashoffset:1},{strokeDashoffset:0}],{duration:360,delay:1000+k*60,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"})});
+  if(lab){lab.style.opacity="0";lab.animate([{opacity:0,letterSpacing:".6em"},{opacity:.5,letterSpacing:".18em"}],{duration:900,delay:1200,easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"})}
   s.querySelector(".glow").animate([{opacity:.3},{opacity:1},{opacity:.85}],{duration:1600,delay:200,easing:"ease-out"});
   setTimeout(()=>{if(s.isConnected)s.classList.add("live")},1700);
 }
 function cyberOut(d,ms){
-  const s=d.querySelector(".cyber");if(!s||still)return;s.classList.remove("live");
+  const s=d.querySelector(".cyber");if(!s||still)return;s.classList.remove("live","talk");
   s.querySelectorAll(".tr").forEach(p=>{p.getAnimations().forEach(a=>a.cancel());p.style.strokeDasharray="1 1";
     p.animate([{strokeDashoffset:0},{strokeDashoffset:1}],{duration:ms,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
   s.querySelectorAll(".nd").forEach(n=>{n.getAnimations().forEach(a=>a.cancel());n.animate([{transform:"scale(1)",opacity:1},{transform:"scale(0)",opacity:0}],{duration:ms*.6,fill:"forwards"})});
   s.querySelector(".tex").animate([{opacity:.09},{opacity:0}],{duration:ms,fill:"forwards"});
+  const lab=s.querySelector(".lab");if(lab){lab.getAnimations().forEach(a=>a.cancel());lab.animate([{opacity:.5},{opacity:0}],{duration:ms*.6,fill:"forwards"})}
 }
 /* ---------- The computer's file ---------- */
 /* Tap the computer in its seat: its file opens. Its threat level follows the
@@ -6043,9 +6080,10 @@ function compLine(cls,text,done){
     if(i<text.length)compT=setTimeout(step,cls==="a"&&".?”".includes(text[i-1])?170:speed);else fin()};
   compT=setTimeout(step,cls==="a"?320:60);
 }
+function cyberTalk(on){const s=$("dlgComputer").querySelector(".cyber");if(s)s.classList.toggle("talk",on)}
 function compSay2(q,a){
   compBusy=true;$("compAsks").querySelectorAll("button").forEach(b=>b.disabled=true);
-  const after=()=>compLine("a",a,()=>{compBusy=false;$("compAsks").querySelectorAll("button").forEach(b=>b.disabled=false)});
+  const after=()=>{cyberTalk(true);compLine("a",a,()=>{cyberTalk(false);compBusy=false;$("compAsks").querySelectorAll("button").forEach(b=>b.disabled=false)})};
   if(q)compLine("q",q,after);else after();
 }
 function compFresh(){
@@ -6189,7 +6227,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·1619";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.27·1647";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
