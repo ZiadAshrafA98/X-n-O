@@ -963,6 +963,38 @@ body>canvas{z-index:57!important}
 @keyframes dueBreath{0%,100%{opacity:1}50%{opacity:.45}}
 @keyframes dueTick{0%,100%{transform:none}50%{transform:rotate(18deg)}}
 @media (prefers-reduced-motion:reduce){.upd-card *{animation:none!important}}
+/* ---------- learn to play ---------- */
+.learn{width:min(440px,calc(100vw - 48px))}
+.learn-dots{display:flex;justify-content:center;gap:6px;margin:-4px 0 12px}
+.learn-dots i{width:6px;height:6px;border-radius:99px;background:var(--chip-2);transition:width .35s cubic-bezier(.22,1,.36,1),background-color .3s}
+.learn-dots i.past{background:color-mix(in srgb,var(--green) 55%,var(--chip-2))}
+.learn-dots i.on{width:20px;background:var(--green)}
+.learn-say{margin:0 auto 14px;max-width:340px;min-height:58px;text-align:center;display:flex;flex-direction:column;gap:4px}
+.learn-say b{font-size:18px;font-weight:600;letter-spacing:-.01em}
+.learn-say span{font-size:14px;line-height:1.4;color:var(--mute)}
+.learn-board{--bs:min(300px,calc(100vw - 72px),calc(100dvh - 330px));width:var(--bs);height:var(--bs);margin:0 auto}
+.learn-board .cell.goal{box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--green) 70%,transparent);animation:duepulse 1.4s ease-in-out infinite}
+.learn-board .cell:disabled{cursor:default}
+.learn-foot{display:flex;justify-content:center;gap:10px;margin:16px 0 4px}
+.learn-foot .btn{min-width:120px}
+.learn-play{display:flex;align-items:center;gap:8px;margin:14px auto 0}
+.learn-play svg,.learn-offer .lo-ic svg{width:16px;height:16px}
+/* the offer, above the controls */
+.learn-offer{position:fixed;z-index:40;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);width:min(400px,calc(100vw - 24px));transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;padding:8px 8px 8px 9px;border-radius:22px;background:var(--slab-2);box-shadow:0 1px 2px rgba(0,0,0,.25),0 10px 28px -6px rgba(0,0,0,.45);
+  animation:loIn .55s cubic-bezier(.22,1.2,.36,1) both}
+.learn-offer[hidden]{display:none}
+.learn-offer.out{animation:loOut .26s cubic-bezier(.4,0,1,1) both}
+.learn-offer .lo-ic{width:38px;height:38px;flex:none;border-radius:13px;display:grid;place-items:center;background:var(--ink);color:var(--bg)}
+.learn-offer .inst-t{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.3}
+.learn-offer .inst-t b{font-size:14px;font-weight:600}
+.learn-offer .inst-t span{font-size:12px;color:var(--mute)}
+.learn-offer .btn{height:36px;padding:0 16px;font-size:13px;flex:none}
+.learn-offer .sq{flex:none;width:32px;height:32px;border-radius:99px;display:grid;place-items:center;background:none;border:0;color:var(--mute);cursor:pointer}
+.learn-offer .sq svg{width:17px;height:17px}
+@keyframes loIn{from{opacity:0;transform:translate(-50%,120%)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes loOut{to{opacity:0;transform:translate(-50%,60%)}}
+@media (prefers-reduced-motion:reduce){.learn-offer{animation:none}}
 /* ---------- the version card in Settings ---------- */
 .upd-row{display:flex;align-items:center;gap:12px;margin:10px 6px 2px;}
 .upd-row[data-s="ready"],.upd-row[data-s="going"]{margin:0 6px 8px}
@@ -1796,7 +1828,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2346</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2354</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -1805,8 +1837,25 @@ a.sh-act{text-decoration:none}
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="rulesTitle">How it works</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="rules-grid" id="rulesGrid"></div>
+  <button class="btn learn-play" id="lrPlay" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>Play the tutorial</button>
   <button class="made-by" id="madeBy" type="button">Made by Ziad &amp; Adham</button>
 </section>
+
+<section class="dlg modal learn" id="dlgLearn" role="dialog" aria-modal="true" aria-labelledby="learnTitle" tabindex="-1" data-nofoot hidden>
+  <span class="grab" aria-hidden="true"></span>
+  <div class="dlg-head"><h2 id="learnTitle">Learn to play</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="learn-dots" id="lnDots" aria-hidden="true"></div>
+  <p class="learn-say" id="lnSay" aria-live="polite"><b id="lnT"></b><span id="lnS"></span></p>
+  <div class="board learn-board" id="lnBoard" role="grid" aria-label="Practice board"></div>
+  <div class="learn-foot"><button class="btn" id="lnSkip" type="button">Skip</button><button class="btn primary" id="lnNext" type="button" hidden>Play now</button></div>
+</section>
+
+<div class="learn-offer" id="learnOffer" role="status" hidden>
+  <span class="lo-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 5.5v13l10.5-6.5z"/></svg></span>
+  <span class="inst-t"><b id="loT">New here?</b><span id="loS">Learn to play in 30 seconds</span></span>
+  <button class="btn primary" id="loGo" type="button">Start</button>
+  <button class="sq" id="loX" type="button" aria-label="Not now"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+</div>
 
 <section class="dlg modal" id="dlgInsight" role="dialog" aria-modal="true" aria-labelledby="insTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
@@ -3487,15 +3536,25 @@ function coachDone(moved){
   if(!coachOn)return;coachOn=false;coachEl.classList.remove("on");
   if(ghostAnim){ghostAnim.cancel();ghostAnim=null}ghostEl.style.opacity="0";
 }
+/* the first two times one of your marks has stayed too long, the same note
+   says why that one has to move */
+const dueTaught=()=>{try{return +(localStorage.getItem("xo.dueT")||0)}catch(e){return 0}};
+const COACH_MOVE='<b>Now move one</b><span>Drag one of your marks to an empty square</span>';
 function coachUpdate(){
   let busy=false;try{busy=!!morph}catch(e){}
-  const want=canAct()&&sel<0&&!drag&&taught()<3&&!busy;
+  const free=canAct()&&sel<0&&!drag&&!busy;
+  const dueNow=free&&stayOn()&&overdue()&&dueTaught()<2;
+  const want=dueNow||(free&&taught()<3);
   if(!want){coachDone(false);return}
-  const key=turn+marks.X.join()+marks.O.join();if(coachOn&&key===coachKey)return;coachKey=key;
+  const key=turn+marks.X.join()+marks.O.join()+(dueNow?"!":"");if(coachOn&&key===coachKey)return;coachKey=key;
+  const html=dueNow?`<b>Time to move this one</b><span>This ${turn} has stayed ${lim} turns, so it moves first</span>`:COACH_MOVE;
+  if(coachEl.innerHTML!==html)coachEl.innerHTML=html;
+  if(dueNow)try{localStorage.setItem("xo.dueT",String(dueTaught()+1))}catch(e){}
   const br=boardEl.getBoundingClientRect();if(!br.width)return;
   coachEl.style.left=(br.left+br.width/2)+"px";coachEl.style.top=br.top+"px";
   coachOn=true;requestAnimationFrame(()=>coachEl.classList.add("on"));
-  if(still)return;
+  if(dueNow&&ghostAnim){ghostAnim.cancel();ghostAnim=null;ghostEl.style.opacity="0"}
+  if(still||dueNow)return;
   /* the demonstration: your first mark glides to the nearest empty square */
   const from=[...movable()][0]??marks[turn][0],empty=[0,1,2,3,4,5,6,7,8].filter(c=>!marks.X.includes(c)&&!marks.O.includes(c));
   const to=empty.sort((a,b)=>Math.hypot(a%3-from%3,(a/3|0)-(from/3|0))-Math.hypot(b%3-from%3,(b/3|0)-(from/3|0)))[0];
@@ -3587,6 +3646,7 @@ function renderBoard(){
   }
   slides.forEach(([f,t])=>{if(dropAt&&dropAt.to===t)dropLand(t,dropAt);else slideMark(f,t)});dropAt=null;
   coachUpdate();
+  if(typeof learnBusy==="function")learnBusy();
 }
 
 let lastStatus="";
@@ -4016,6 +4076,7 @@ function onOpt(k,v){
     if(v===rule)return;
     if(mode==="online"&&room){syncOptSegs(true);closeDialog();request("rule",v);return}
     rule=v;opt.rule=v;saveOpt();syncOptSegs(true);newRound(firstMover());
+    if(mode!=="online"&&typeof learnRule==="function")learnRule(v);
     if(mode==="online"&&room)pushState();
     updateInsight();return;
   }
@@ -5748,6 +5809,200 @@ $("cfNo").addEventListener("click",()=>{leaveNext=null;closeDialog()});
 $("cfYes").addEventListener("click",()=>{const go=leaveNext;leaveNext=null;closeDialog();if(go)setTimeout(go,still?0:120)});
 /* closing the tab mid-game: the browser asks too */
 addEventListener("beforeunload",e=>{if(leaveCost()){e.preventDefault();e.returnValue=""}});
+
+/* ---------- Learn to play ---------- */
+/* A short tutorial on a real little board, in a sheet on a phone and a card
+   on a wide screen. Each step says one thing and waits for you to do it:
+   Move one in four steps (place, move, the stay limit, win) and Oldest fades
+   in two (the fourth mark, win). It is offered once to new players, once the
+   first time Oldest fades is picked, and always from How it works. */
+(function learn(){
+  const dlg=$("dlgLearn"),bd=$("lnBoard"),sayT=$("lnT"),sayS=$("lnS"),dots=$("lnDots"),nextB=$("lnNext"),skipB=$("lnSkip");
+  const LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const wins=a=>LINES.find(l=>l.every(c=>a.includes(c)))||null;
+  const seen=k=>{try{return localStorage.getItem("xo.learn."+k)==="1"}catch(e){return false}};
+  const mark=k=>{try{localStorage.setItem("xo.learn."+k,"1")}catch(e){}};
+  const wait=ms=>new Promise(r=>setTimeout(r,still?0:ms));
+  /* the board: the game's own cells, so it looks and moves like the real one */
+  const cells=[];
+  for(let i=0;i<9;i++){
+    const b=document.createElement("button");b.type="button";b.className="cell";
+    const mk=document.createElement("span");mk.className="mk";const age=document.createElement("span");age.className="age";
+    b.append(mk,age);b._mk=mk;b._age=age;b.addEventListener("click",()=>tap(i));bd.appendChild(b);cells.push(b);
+  }
+  let L=null; // {rule,step,X,O,sel,busy,due,goal,ages}
+  const free=i=>!L.X.includes(i)&&!L.O.includes(i);
+  function draw(){
+    const shown=bd._shown||(bd._shown=Array(9).fill(""));
+    for(let i=0;i<9;i++){
+      const b=cells[i],side=L.X.includes(i)?"X":L.O.includes(i)?"O":"";
+      if(shown[i]!==side){
+        if(shown[i]&&!b._slid)exitMark(b,shown[i]);
+        b._mk.textContent=side;b._mk.className="mk"+(side?" "+side:"");
+        if(side&&!b._slid)landMark(b._mk);
+        shown[i]=side;b._slid=false;
+      }
+      b.classList.toggle("X",side==="X");b.classList.toggle("O",side==="O");
+      const mine=side==="X",moveStep=L.rule==="M"&&L.X.length===3&&!L.done;
+      const canLift=moveStep&&mine&&!L.busy&&(L.due==null||L.due===i);
+      b.classList.toggle("lift",canLift&&L.sel<0);
+      b.classList.toggle("sel",L.sel===i);
+      b.classList.toggle("dest",L.sel>=0&&!side);
+      b.classList.toggle("due",L.due===i&&!L.done);
+      b.classList.toggle("stay",L.due===i&&!L.done);
+      b.classList.toggle("win",!!L.won&&L.won.includes(i));
+      b.classList.toggle("goal",L.goal===i&&!side);
+      /* under Oldest fades the marks are numbered, oldest first */
+      const n=L.rule==="A"&&side?L[side].indexOf(i)+1:0;
+      b._age.textContent=L.due===i&&!L.done?"!":n?String(n):"";
+      b.classList.toggle("old",L.rule==="A"&&mine&&L.X.length===3&&n===1&&!L.done);
+      b.disabled=L.done||L.busy;
+    }
+    dots.querySelectorAll("i").forEach((d,k)=>{d.classList.toggle("on",k===L.step);d.classList.toggle("past",k<L.step)});
+  }
+  function say(t,s){
+    if(sayT.textContent===t&&sayS.textContent===s)return;
+    sayT.textContent=t;sayS.textContent=s;
+    if(!still)$("lnSay").animate([{opacity:0,transform:"translateY(6px)"},{opacity:1,transform:"none"}],{duration:320,easing:"cubic-bezier(.22,1,.36,1)"});
+  }
+  /* a mark slides from one square to another, as in the game */
+  function slide(from,to,side){
+    const a=cells[from].getBoundingClientRect(),b=cells[to].getBoundingClientRect();
+    cells[to]._slid=true;cells[from]._slid=true;
+    const list=L[side];list[list.indexOf(from)]=to;
+    draw();
+    if(still)return;
+    cells[to]._mk.animate([{transform:`translate(${a.left-b.left}px,${a.top-b.top}px) scale(1.15)`},{transform:"translateY(3%) scale(.95)",offset:.75},{transform:"none"}],{duration:380,easing:"cubic-bezier(.3,1.15,.5,1)"});
+  }
+  /* the other side: blocks a line you are about to finish, never wins, and
+     otherwise keeps out of the way */
+  function oTurn(){
+    const empty=[0,1,2,3,4,5,6,7,8].filter(free);
+    const threat=c=>LINES.some(l=>l.includes(c)&&l.filter(x=>L.X.includes(x)).length===2&&l.every(x=>x===c||L.X.includes(x)));
+    if(L.rule==="A"||L.O.length<3){
+      const after=c=>L.rule==="A"&&L.O.length===3?[...L.O.slice(1),c]:[...L.O,c];
+      const ok=empty.filter(c=>!wins(after(c)));
+      const c=ok.find(threat)??ok[Math.floor(Math.random()*ok.length)]??empty[0];
+      if(L.rule==="A"&&L.O.length===3)L.O.shift();
+      L.O.push(c);draw();return;
+    }
+    const moves=[];for(const f of L.O)for(const t of empty)moves.push([f,t]);
+    const ok=moves.filter(([f,t])=>!wins(L.O.map(x=>x===f?t:x)));
+    const m=ok.find(([,t])=>threat(t))??ok[Math.floor(Math.random()*ok.length)]??moves[0];
+    if(m)slide(m[0],m[1],"O");
+  }
+  /* ---- the lessons ---- */
+  const LESSONS={
+    M:[
+      {t:"Place your marks",s:"You're X. Tap any empty square.",start(){L.X=[];L.O=[]}},
+      {t:"Now move one",s:"Out of marks. Tap one of your X, then an empty square.",start(){}},
+      {t:"This one has to go",s:"The glowing X stayed too long (5 turns in a game). Move it first.",preset:true,
+        start(){L.X=[1,3,7];L.O=[0,5,6];L.due=7}},
+      {t:"Line up three",s:"Move one X to finish a line, and win.",preset:true,start(){L.X=[0,1,6];L.O=[3,4,8];L.due=null}}
+    ],
+    A:[
+      {t:"A fourth mark",s:"Tap an empty square. Your oldest X, number 1, fades.",preset:true,start(){L.X=[7,0,5];L.O=[1,4,8]}},
+      {t:"Line up three",s:"Your new X pushes out number 1. Where does it win?",preset:true,start(){L.X=[6,0,1];L.O=[3,4,8]}}
+    ]
+  };
+  /* a lesson with its own board fades the old one out and the new one in */
+  async function go(step){
+    L.step=step;L.sel=-1;L.won=null;L.goal=-1;L.busy=true;L.due=null;
+    const les=LESSONS[L.rule][step];
+    if(les.preset&&bd._shown&&bd._shown.some(Boolean)){
+      draw();await bd.animate([{opacity:1,transform:"none"},{opacity:0,transform:"scale(.96)"}],{duration:still?0:200,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"}).finished.catch(()=>{});
+    }
+    les.start();say(les.t,les.s);
+    if(les.preset){
+      /* the new position is simply there: no landing animation for each mark */
+      for(let i=0;i<9;i++){const side=L.X.includes(i)?"X":L.O.includes(i)?"O":"";cells[i]._mk.textContent=side;cells[i]._mk.className="mk"+(side?" "+side:"");cells[i].querySelectorAll(".ghost").forEach(g=>g.remove())}
+      bd._shown=Array.from({length:9},(_,i)=>L.X.includes(i)?"X":L.O.includes(i)?"O":"");
+      L.busy=false;draw();
+      bd.getAnimations().forEach(a=>a.cancel());
+      if(!still)bd.animate([{opacity:0,transform:"scale(.96)"},{opacity:1,transform:"none"}],{duration:280,easing:"cubic-bezier(.22,1,.36,1)"});
+      return;
+    }
+    L.busy=false;draw();
+  }
+  function finish(){
+    L.done=true;draw();mark(L.rule);buzz([18,40,28]);
+    say("You've got it",L.rule==="M"?"That's the whole game. Place, then move, and line up three.":"That's Oldest fades. Plan which mark leaves next.");
+    nextB.textContent="Play now";nextB.hidden=false;skipB.hidden=true;
+    dots.querySelectorAll("i").forEach(d=>{d.classList.remove("on");d.classList.add("past")});
+  }
+  async function afterYou(){
+    L.busy=true;draw();
+    const w=wins(L.X);
+    const les=L.step,last=LESSONS[L.rule].length-1;
+    if(w&&les!==last){
+      /* a win already, before the lesson was over: that's the point anyway */
+      L.won=w;draw();say("A win!","Three in a line wins. One more thing to see.");await wait(1500);await go(L.step+1);return;
+    }
+    if(les===last){
+      if(w){L.won=w;draw();await wait(500);finish();return}
+      /* not a win: say so, and put the board back */
+      say("Not quite",L.rule==="M"?"Look for the square that finishes a line, then move an X there.":"Remember number 1 leaves. Which square wins with the other two?");
+      await wait(1300);const keep=L.step;await go(keep);
+      L.goal=2;draw();return;
+    }
+    await wait(420);oTurn();await wait(520);
+    if(L.rule==="M"&&L.step===0&&L.X.length<3){L.busy=false;draw();return}
+    await go(L.step+1);
+  }
+  function tap(i){
+    if(!L||L.busy||L.done)return;
+    const placing=L.rule==="A"||L.X.length<3;
+    if(placing){
+      if(!free(i))return;
+      if(L.rule==="A"&&L.X.length===3){exitMark(cells[L.X[0]],"X");cells[L.X[0]]._slid=true;L.X.shift()}
+      L.X.push(i);buzz(8);draw();afterYou();return;
+    }
+    /* moving: pick up one of your X (the glowing one, when there is one), then an empty square */
+    if(L.X.includes(i)){
+      if(L.due!=null&&i!==L.due){cells[L.due].animate([{scale:1},{scale:1.08},{scale:1}],{duration:still?0:300});return}
+      L.sel=L.sel===i?-1:i;buzz(6);draw();return;
+    }
+    if(L.sel<0||!free(i))return;
+    const from=L.sel;L.sel=-1;L.due=null;slide(from,i,"X");buzz(8);afterYou();
+  }
+  function open(rule){
+    L={rule,step:0,X:[],O:[],sel:-1,busy:false,due:null,goal:-1,done:false};
+    dots.innerHTML=LESSONS[rule].map(()=>"<i></i>").join("");
+    $("learnTitle").textContent=rule==="M"?"Learn to play":"Oldest fades";
+    nextB.hidden=true;skipB.hidden=false;bd._shown=null;
+    cells.forEach(b=>{b._mk.textContent="";b._mk.className="mk";b._age.textContent=""});
+    hideOffer();openDialog("dlgLearn");go(0);
+  }
+  skipB.addEventListener("click",()=>{if(L)mark(L.rule);closeDialog()});
+  nextB.addEventListener("click",()=>{
+    closeDialog();
+    /* straight into a real round on the rule you just learned */
+    if(L&&rule!==L.rule&&mode!=="online")try{onOpt("rule",L.rule)}catch(e){}
+  });
+  window.openLearn=open;
+  /* ---- the offer: a small card above the controls ---- */
+  const offer=$("learnOffer");
+  function hideOffer(){if(offer.hidden||offer.classList.contains("out"))return;offer.classList.add("out");setTimeout(()=>{offer.hidden=true;offer.classList.remove("out")},still?0:260)}
+  function showOffer(rule,t,s){
+    if(openDlg||!offer.hidden)return;
+    offer.dataset.rule=rule;$("loT").textContent=t;$("loS").textContent=s;offer.hidden=false;
+  }
+  $("loGo").addEventListener("click",()=>open(offer.dataset.rule||"M"));
+  $("loX").addEventListener("click",()=>{mark("offer."+(offer.dataset.rule||"M"));hideOffer()});
+  /* new here: once, when the game has settled after its intro */
+  const firstLook=()=>setTimeout(()=>{
+    if(seen("M")||seen("offer.M")||roundsDone>0||mode==="online")return;
+    mark("offer.M");showOffer("M","New here?","Learn to play in 30 seconds");
+  },1200);
+  /* (the intro is sometimes skipped without a word, so wait for it to be gone) */
+  const afterIntro=()=>{if(document.getElementById("splash"))setTimeout(afterIntro,300);else firstLook()};
+  afterIntro();
+  /* the first time Oldest fades is picked */
+  window.learnRule=r=>{if(r==="A"&&!seen("A")&&!seen("offer.A")){mark("offer.A");setTimeout(()=>showOffer("A","New rule","See Oldest fades in 15 seconds"),600)}};
+  /* a game started or a dialog opened: the offer steps aside */
+  window.learnBusy=()=>{if(!offer.hidden&&(marks.X.length+marks.O.length>0))hideOffer()};
+  $("lrPlay").addEventListener("click",()=>{closeDialog(true);open(rule==="A"||rule==="B"?"A":"M")});
+})();
 /* ---------- Result wave (distortion-waves, MIT) ---------- */
 /* When a round ends, a colourful ring opens from the winning move and carries
    the board into the result. Play again collapses it back into the board.
@@ -6597,7 +6852,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2346";
+  const BUILD="2026.11.27·2354";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
