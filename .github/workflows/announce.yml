@@ -1,16 +1,17 @@
-# Tells open copies of the game about a new build, on the public relays the
-# game already uses for online play:
-#   xando/v1/soon  the moment it is pushed ("stamp|push time"): the game says
-#                  "Update on its way" and counts down
-#   xando/v1/build once xando.space serves it: the game offers Restart
-# Both are hints. The game re-reads version.json itself before it offers to
-# restart, so a stray message can never load anything.
+# Tells open copies of the game about a new build, with a countdown to when
+# it goes live. The work is in .github/announce.mjs; it publishes on the
+# public relays the game already uses for online play. Both messages are
+# hints: the game re-reads version.json itself before it offers to restart.
 name: Announce new build
 
 on:
   push:
     branches: [main]
     paths: [version.json]
+
+permissions:
+  actions: read
+  contents: read
 
 concurrency:
   group: announce
@@ -22,27 +23,7 @@ jobs:
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - name: Say it is on its way
-        run: |
-          V=$(node -p "require('./version.json').v")
-          # with the push time, so the game can count down to when it goes live
-          T=$(git log -1 --format=%ct)
-          for host in broker.emqx.io broker.hivemq.com; do
-            npx -y mqtt@5.10.1 pub -h "$host" -p 1883 -t xando/v1/soon -m "$V|$T" -r -q 1 || echo "could not reach $host"
-          done
-      - name: Wait for the new build to go live
-        id: live
-        run: |
-          V=$(node -p "require('./version.json').v")
-          echo "want $V"
-          for i in $(seq 1 120); do
-            L=$(curl -fsS -H 'Cache-Control: no-cache' "https://xando.space/version.json?t=$(date +%s%N)" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).v" 2>/dev/null || true)
-            if [ "$L" = "$V" ]; then echo "live after $((i*5))s"; echo "v=$V" >> "$GITHUB_OUTPUT"; exit 0; fi
-            sleep 5
-          done
-          echo "the site never served $V"; exit 1
-      - name: Say it is live
-        run: |
-          for host in broker.emqx.io broker.hivemq.com; do
-            npx -y mqtt@5.10.1 pub -h "$host" -p 1883 -t xando/v1/build -m "${{ steps.live.outputs.v }}" -r -q 1 || echo "could not reach $host"
-          done
+      - run: npm install --no-save --no-audit --no-fund mqtt@5.10.1
+      - run: node .github/announce.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

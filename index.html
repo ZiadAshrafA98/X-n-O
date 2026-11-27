@@ -952,6 +952,11 @@ body>canvas{z-index:57!important}
   background:radial-gradient(closest-side,color-mix(in srgb,var(--green) 34%,transparent),transparent);filter:blur(6px);opacity:0;transition:opacity 2.4s var(--out)}
 .upd-stack.upd-glow::before{opacity:1;transition:opacity .5s var(--out)}
 .upd-card[data-k="going"] .upd-ic svg{animation:spin .8s linear infinite}
+/* past due: the countdown gives way to a soft, breathing "Any second now" */
+.upd-card.due .un-sub{animation:dueBreath 1.6s ease-in-out infinite}
+.upd-card.due .upd-ic svg{animation:dueTick 1.6s ease-in-out infinite}
+@keyframes dueBreath{0%,100%{opacity:1}50%{opacity:.45}}
+@keyframes dueTick{0%,100%{transform:none}50%{transform:rotate(18deg)}}
 @media (prefers-reduced-motion:reduce){.upd-card *{animation:none!important}}
 /* ---------- the version card in Settings ---------- */
 .upd-row{display:flex;align-items:center;gap:12px;margin:10px 6px 2px;}
@@ -1786,7 +1791,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2325</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2330</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6585,7 +6590,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2325";
+  const BUILD="2026.11.27·2330";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6711,8 +6716,10 @@ appSync();
     if(b.dataset.a==="go"){if(next)startRestart()}else dismiss(0,true)});
   /* the countdown on "on its way" */
   const soonText=()=>{const s=Math.ceil((soonEta-Date.now())/1000);return s>0?`Ready in ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`:"Any second now"};
+  /* the server's clock, first thing, so the first countdown is already on time */
+  fetch("version.json?t="+Date.now(),{cache:"no-store",method:"HEAD"}).then(r=>{const d=Date.parse(r.headers.get("date"));if(d)skew=d+500-Date.now()}).catch(()=>{});
   setInterval(()=>{const c=topCard();if(!c||leavingNow)return;
-    if(c.dataset.k==="soon")setText(c,null,soonText());
+    if(c.dataset.k==="soon"){setText(c,null,soonText());c.classList.toggle("due",soonEta<=Date.now())}
     else if(c.dataset.k==="ready"&&!going)setText(c,null,readySub());},250);
   /* swipe it up and away: it follows the finger, stiffly downwards, and goes
      once pushed far or fast enough; otherwise it springs back */
@@ -6828,24 +6835,34 @@ appSync();
   /* two signals: "soon" the moment a build is pushed (it takes GitHub about
      half a minute to put it live), "build" once it is live */
   const ANN="xando/v1/build",SOON="xando/v1/soon";let ann=null,burst=0,burstT=0;
+  /* look again and again until the build shows: every 2 s while it is on
+     its way, every second from 5 s before it is due, every 3 s otherwise */
   function hint(v,ms){
     if(typeof v!=="string"||!(v>BUILD)||v===next)return;
-    burst=Date.now();clearInterval(burstT);check(false);
-    burstT=setInterval(()=>{
-      if(next===v){clearInterval(burstT);return}
-      if(Date.now()-burst>ms){clearInterval(burstT);if(soonV===v&&!next){soonV=null;if(topKind()==="soon")dismiss(0,false)}return}
-      check(false)},ms>100000?2000:3000);
+    burst=Date.now();clearTimeout(burstT);check(false);
+    const tick=()=>{
+      if(next===v)return;
+      if(Date.now()-burst>ms){if(soonV===v&&!next){soonV=null;if(topKind()==="soon")dismiss(0,false)}return}
+      check(false);
+      const near=soonV===v&&soonEta-Date.now()<5000;
+      burstT=setTimeout(tick,near?1000:ms>100000?2000:3000);
+    };
+    burstT=setTimeout(tick,1000);
   }
   /* a new build is on its way: say so now, and turn into Restart once it is live */
   /* the signal is "version|pushed at (seconds)": the build is live about
      45 seconds after the push, which is what the countdown counts down to */
+  /* the signal is "stamp|pushed at|expected live" (server seconds). The
+     announcer re-aims it as the deploy moves on, so later signals for the
+     same build only move the countdown. Server times are put on this
+     phone's clock with the offset measured from the server's Date header. */
   function soonSay(raw){
-    const [v,ts]=String(raw).split("|");
-    if(!v||!(v>BUILD)||next||going||soonV===v)return;
-    soonV=v;const now=Date.now(),t=+ts*1000;
-    /* live about 36 s after the push (measured); the push time is the
-       server's clock, so correct it by how far this phone's clock is off */
-    soonEta=Math.min(now+60000,Math.max(now+3000,t>0?t+37000-skew:now+30000));
+    const [v,ts,es]=String(raw).split("|");
+    if(!v||!(v>BUILD)||next||going)return;
+    const now=Date.now(),t=+ts*1000,e=+es*1000;
+    const eta=Math.min(now+90000,Math.max(now+1000,e>0?e-skew:t>0?t+37000-skew:now+30000));
+    if(soonV===v){soonEta=eta;return}
+    soonV=v;soonEta=eta;
     if(ss.get("xo.upd.soonx")!==v&&!shown())present("soon","Update on its way",soonText());
     hint(v,180000);
   }
