@@ -1635,6 +1635,7 @@ a.sh-act{text-decoration:none}
       </div>
       <button class="btn primary big" id="newBtn" type="button" aria-label="New round" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg><span class="nb-lbl">New round</span></button>
       <button class="btn round" id="shareBtn" type="button" aria-label="Share your record" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><span class="rb-lbl">Share</span></button>
+      <button class="btn round" id="drawBtn" type="button" aria-label="Offer a draw" title="Offer a draw" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9.5h12M6 14.5h12"/></svg></button>
       <button class="btn round" id="undoBtn" type="button" aria-label="Undo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
       <div class="emo" id="emo" hidden>
         <button class="btn round" id="emoBtn" type="button" aria-label="Send a reaction" aria-haspopup="true" aria-expanded="false" aria-controls="emoTray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M8.5 14.5a4.5 4.5 0 0 0 7 0M9 9.5h.01M15 9.5h.01"/></svg></button>
@@ -1707,7 +1708,7 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.27·2057</p>
+  <p class="build-tag">Version 2026.11.27·2110</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -3132,7 +3133,7 @@ let mode="local",rule=RULES.includes(opt.rule)?opt.rule:"M";
 let marks={X:[],O:[]},turn="X",starter="X",over=false,winCells=null,history=[];
 /* a draw by repetition: the same marks on the same squares with the same side to move, three times.
    posLog holds every position of the round (kept apart from history, which online play resets) */
-let drawn=false,posLog=[];
+let drawn=false,drawWhy="",posLog=[];
 /* the stay limit: under the move rule a mark may sit for at most `lim` of its side's
    turns, then it has to move. ages runs alongside marks; lim is this round's limit */
 let ages={X:[],O:[]},lim=5,roomStay="5";
@@ -3145,7 +3146,8 @@ function moveList(){return stayOn()?stayMoves(marks[turn],ages[turn],marks[other
 /* the marks the side to move may pick up now (all three, or only the overdue) */
 function movable(){if(!moving())return new Set();return new Set(moveList().filter(m=>m>=9).map(mvFrom))}
 function overdue(){if(!stayOn()||marks[turn].length<3)return false;return Math.max(...ages[turn])>=lim}
-const posKey=()=>marks.X.join("")+(stayOn()?ages.X.join(""):"")+"|"+marks.O.join("")+(stayOn()?ages.O.join(""):"")+"|"+turn;
+/* a repeat is judged by what you can see: the marks and who is to move, not the stay counts */
+const posKey=()=>marks.X.join("")+"|"+marks.O.join("")+"|"+turn;
 function logPos(){const k=posKey();if(posLog[posLog.length-1]!==k)posLog.push(k)}
 function repeats(){const k=posKey();return posLog.filter(x=>x===k).length}
 /* under the move rule, the mark you have picked up (a cell), or -1 */
@@ -3279,7 +3281,7 @@ function exitMark(b,side){
 function other(s){return s==="X"?"O":"X"}
 function newRound(st){
   recNewRound();
-  marks={X:[],O:[]};ages={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;posLog=[];
+  marks={X:[],O:[]};ages={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;drawWhy="";posLog=[];
   const prevLim=lim;lim=pickLim();
   if(stayOn()&&staySetting()==="r"&&(mode!=="online"||isHost))setTimeout(()=>{try{toast(`This round, a mark can stay ${lim} turns`)}catch(e){}},400);
   turn=starter=st||starter;logPos();render();maybeAI();
@@ -3296,7 +3298,7 @@ function applyMove(c){
   recMove(turn,c);
   if(wl){over=true;winCells=wl;score[turn]++;saveScore();recWin(turn);try{countRound();if(isYou(turn)||mode==="local")buzz([18,40,28])}catch(e){}}
   else{turn=other(turn);posLog.push(posKey());
-    if(repeats()>=3){over=true;drawn=true;recDraw();buzz([12,30,12])}}
+    if(repeats()>=3){over=true;drawn=true;drawWhy="rep";recDraw();buzz([12,30,12])}}
   render();return true;
 }
 function onCell(c){
@@ -3508,7 +3510,7 @@ function renderStatus(){
   if(flashMsg)return setStatus(flashDot,flashMsg);
   if(mode==="online"&&inReq)return setStatus("var(--amber)","Friend is asking",true);
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
-  if(over&&drawn)return setStatus("var(--ink-2)","Draw · same position three times");
+  if(over&&drawn)return setStatus("var(--ink-2)",drawWhy==="agreed"?"Draw · agreed":"Draw · same position three times");
   if(over){
     const w=names[turn];
     setStatus("var(--green)",isYou(turn)?"You win":mode==="ai"&&turn===aiSide?"Computer wins":mode==="online"?`${esc(w)} wins`:hasName(turn)?`${esc(w)} wins`:`${turn} wins`);
@@ -3609,6 +3611,7 @@ function renderNow(){
   app.dataset.phase=mode==="online"&&room?phase:"play";
   renderBoard();renderPlayers();renderNet();renderStatus();renderLobby();renderRequests();renderPick();renderRoomPanel();pulseSync();if(typeof appSync==="function")try{appSync()}catch(e){}
   $("undoBtn").disabled=!canUndo();
+  $("drawBtn").hidden=!canDraw();
   $("newBtn").disabled=!canNew();
   /* buttons still sliding into place carry the same state */
   flyers.forEach((f,k)=>{if("disabled" in f.g)f.g.disabled=k.disabled});
@@ -3619,6 +3622,43 @@ function renderNow(){
 /* a round has started once someone (you, against the computer) has moved */
 function youMoved(){return mode==="ai"?history.some(h=>h.turn!==aiSide):history.length>0}
 function canUndo(){return mode!=="online"&&youMoved()}
+/* ---------- Offering a draw ---------- */
+/* Once all six marks are down and the round is still going, either side can
+   offer a draw: on one device you both confirm, the computer accepts unless
+   it can see a win, and online your friend has to say yes. */
+function canDraw(){
+  if(over||marks.X.length<3||marks.O.length<3)return false;
+  if(mode==="online")return !!room&&role!=="aud"&&phase==="play"&&connOpen;
+  return true;
+}
+function agreeDraw(){
+  if(over)return;over=true;drawn=true;drawWhy="agreed";sel=-1;clearTimeout(aiTimer);
+  recDraw();buzz([12,30,12]);render();
+}
+/* would the computer rather keep playing? only if it can see a win from here */
+function aiWinning(){
+  const me=turn,op=other(turn);
+  let ms;
+  if(stayOn())ms=stayEval(marks[me],ages[me],marks[op],ages[op],lim,10,220);
+  else ms=evalMoves(marks[me],marks[op],rule);
+  return me===aiSide?ms.some(m=>m.v==="W"):ms.length>0&&ms.every(m=>m.v==="L");
+}
+function offerDraw(btn){
+  if(!canDraw())return;
+  if(mode==="online"){request("draw",null,btn);return}
+  if(mode==="ai"){
+    if(aiWinning()){toast("The computer says no. It likes where this is going");buzz([8,40,8]);return}
+    toast("The computer accepts");agreeDraw();return;
+  }
+  /* one device: both of you agree */
+  $("cfWho").innerHTML=`<span class="orb" style="background:${sideAvBg("X")||MARK_BG.X}"></span><span class="orb" style="background:${sideAvBg("O")||MARK_BG.O}"></span>`;
+  $("cfTitle").textContent="Call it a draw?";
+  $("cfBody").innerHTML=`<b>${esc(names.X)}</b> and <b>${esc(names.O)}</b> both agree to end this round level. The score stays as it is.`;
+  $("cfNo").textContent="Keep playing";$("cfYes").textContent="Draw";$("cfYes").className="btn primary";
+  leaveNext=agreeDraw;openDialog("dlgConfirm",btn);
+  setTimeout(()=>{if(openDlg&&openDlg.id==="dlgConfirm")$("cfNo").focus({preventScroll:true})},40);
+}
+$("drawBtn").addEventListener("click",e=>offerDraw(e.currentTarget));
 function canNew(){
   if(mode==="online")return connOpen&&phase==="play"&&(over||marks.X.length+marks.O.length>0);
   return over||youMoved();
@@ -4059,7 +4099,7 @@ function linkFor(c){return location.origin+location.pathname+"?room="+c+(customB
 function liveBrokers(){return clients.filter(c=>c.connected).length}
 function netState(){if(!room)return"idle";if(role==="aud")return connOpen?"live":"lost";if(rejected)return"full";if(connOpen)return"live";if(partner)return"lost";return isHost?"host-wait":"guest-wait"}
 
-function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),aX:ages.X.slice(),aO:ages.O.slice(),lim,stay:roomStay,turn,starter,over,drawn,score:{X:score.X,O:score.O},rule,phase,hostMark,tossWinner,tossId}}
+function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),aX:ages.X.slice(),aO:ages.O.slice(),lim,stay:roomStay,turn,starter,over,drawn,dw:drawWhy,score:{X:score.X,O:score.O},rule,phase,hostMark,tossWinner,tossId}}
 function updateMe(){me=room&&role!=="aud"?(isHost?hostMark:other(hostMark)):null;setOnlineNames()}
 function validCells(a){return Array.isArray(a)&&a.length<=3&&a.every(c=>Number.isInteger(c)&&c>=0&&c<9)&&new Set(a).size===a.length}
 function adopt(s,v){
@@ -4072,7 +4112,7 @@ function adopt(s,v){
   if([4,5,6].includes(s.lim))lim=s.lim;
   const okAges=(a,c)=>Array.isArray(a)&&a.length===c.length&&a.every(x=>Number.isInteger(x)&&x>=0&&x<=6);
   ages={X:okAges(s.aX,marks.X)?s.aX.slice():marks.X.map(()=>0),O:okAges(s.aO,marks.O)?s.aO.slice():marks.O.map(()=>0)};
-  over=!!s.over;drawn=over&&!!s.drawn;winCells=over&&!drawn?winLine(marks[turn]):null;if(over&&!winCells&&!drawn)over=false;
+  over=!!s.over;drawn=over&&!!s.drawn;drawWhy=drawn?(s.dw==="agreed"?"agreed":"rep"):"";winCells=over&&!drawn?winLine(marks[turn]):null;if(over&&!winCells&&!drawn)over=false;
   /* a fresh board restarts the repetition count; otherwise each new position is logged as it arrives */
   if(!marks.X.length&&!marks.O.length)posLog=[];logPos();
   if(s.score&&Number.isInteger(s.score.X)&&Number.isInteger(s.score.O))score={X:s.score.X,O:s.score.O};
@@ -4253,7 +4293,7 @@ function onMessage(m){
   if(isHost&&m.t==="name"){pname.set(m.from,cleanName(m.n)||"Guest");if("av" in m)pav.set(m.from,cleanAv(m.av));pushRoom();updateMe();render();return}
   if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
   if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e,m.from,false);return}
-  if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule","stay"].includes(m.kind)){
+  if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule","stay","draw"].includes(m.kind)){
     if(m.kind==="rule"&&!RULES.includes(m.data))return;
     if(m.kind==="stay"&&!STAYS.includes(m.data))return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
@@ -4685,7 +4725,7 @@ function renderLobby(){
 }
 
 /* ---------- Requests: the other player has to say yes ---------- */
-const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the rule",stay:"wants to change how long a mark can stay"};
+const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the rule",stay:"wants to change how long a mark can stay",draw:"offers a draw"};
 function request(kind,data,src){
   if(!connOpen){toast("Friend is offline");return}
   if(outReq){toast("Still waiting");return}
@@ -4699,6 +4739,7 @@ function performReq(kind,data){
   else if(kind==="reset"){score={X:0,O:0};render()}
   else if(kind==="rule"&&RULES.includes(data)){rule=data;syncOptSegs(true);newRound(starter);updateInsight()}
   else if(kind==="stay"&&STAYS.includes(data)){roomStay=data;newRound(starter);updateInsight()}
+  else if(kind==="draw"&&!over&&marks.X.length===3&&marks.O.length===3)agreeDraw();
 }
 function answer(ok,src){
   const r=inReq;if(!r)return;inReq=null;
@@ -4717,6 +4758,8 @@ const ICONS={
   again:'<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
   reset:'<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>',
   rule:'<path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.5"/><circle cx="10" cy="12" r="2.5"/><circle cx="18" cy="18" r="2.5"/>',
+  draw:'<path d="M6 9.5h12M6 14.5h12"/>',
+  stay:'<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/>',
   out:'<path d="M21 12a9 9 0 1 1-6.2-8.6"/>'
 };
 const svg=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -4725,9 +4768,11 @@ function reqCopy(r,incoming){
   if(incoming){
     if(r.kind==="again")return over?["Rematch?","Your friend wants another round"]:["New round?","Your friend wants to restart"];
     if(r.kind==="reset")return["Reset the score?","Back to 0 : 0"];
+    if(r.kind==="draw")return["Call it a draw?","Your friend offers a draw"];
+    if(r.kind==="stay")return["Change the stay limit?",r.data==="r"?"To random each round":"To "+r.data+" turns"];
     return["Change the rule?","To "+ruleTo];
   }
-  return["Waiting for your friend",r.kind==="again"?(over?"You asked for a rematch":"You asked for a new round"):r.kind==="reset"?"You asked to reset the score":"You asked to change the rule"];
+  return["Waiting for your friend",r.kind==="again"?(over?"You asked for a rematch":"You asked for a new round"):r.kind==="reset"?"You asked to reset the score":r.kind==="draw"?"You offered a draw":r.kind==="stay"?"You asked to change the stay limit":"You asked to change the rule"];
 }
 function makeToast(r,incoming){
   const el=document.createElement("div");el.className="tst-toast enter";
@@ -5561,6 +5606,7 @@ function leaveGuard(btn,proceed){
     $("cfBody").innerHTML=`<b>${who}</b> will be left on their own, and the score you two built goes with it.`;
     $("cfYes").textContent="Leave game";
   }
+  $("cfNo").textContent="Stay";$("cfYes").className="btn danger";
   leaveNext=proceed;
   openDialog("dlgConfirm",btn);
   setTimeout(()=>{if(openDlg&&openDlg.id==="dlgConfirm")$("cfNo").focus({preventScroll:true})},40);
@@ -5591,7 +5637,7 @@ function fillResult(){
     $("resOrb").className="orb draw";$("resOrb").style.background="";
     $("resTitle").innerHTML="Draw";recResultLine();
     const L=mySide()||"X",R=other(L);
-    $("resScore").innerHTML=`Same position three times · ${esc(names[L])} <b>${score[L]}</b> : <b>${score[R]}</b> ${esc(names[R])}`;
+    $("resScore").innerHTML=`${drawWhy==="agreed"?"Agreed":"Same position three times"} · ${esc(names[L])} <b>${score[L]}</b> : <b>${score[R]}</b> ${esc(names[R])}`;
     return;
   }
   const w=names[turn],k=kindOf(turn);
@@ -6410,7 +6456,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·2057";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.27·2110";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
