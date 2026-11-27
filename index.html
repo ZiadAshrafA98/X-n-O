@@ -904,6 +904,30 @@ button.seatc{touch-action:none}
 /* the one-time dot on Settings, pointing at the install row */
 .btn.round.has-dot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:var(--green);box-shadow:0 0 0 2px var(--bg);animation:pop .4s var(--spring) both}
 #btnSettings{position:relative}
+/* ---------- the version card in Settings ---------- */
+.upd-row{display:flex;align-items:center;gap:12px;margin:10px 6px 2px;}
+.upd-row[data-s="ready"],.upd-row[data-s="going"]{margin:0 6px 8px}
+.upd-row{padding:10px 10px 10px 12px;border-radius:18px;background:var(--chip);transition:background .3s var(--out),box-shadow .3s var(--out)}
+.upd-ic{position:relative;width:36px;height:36px;flex:none;border-radius:11px;display:grid;place-items:center;background:var(--bg);color:var(--mute);transition:color .3s var(--out),background .3s var(--out)}
+.upd-ic svg{grid-area:1/1;width:19px;height:19px;transition:opacity .25s var(--out),transform .35s var(--spring)}
+.upd-ic .i-ok,.upd-ic .i-new{opacity:0;transform:scale(.5)}
+.upd-row .inst-t b,.upd-row .inst-t span{transition:opacity .2s var(--out)}
+.upd-row .inst-t span{font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upd-row .btn{height:36px;padding:0 16px;font-size:13px;flex:none;transition:background .25s var(--out),color .25s var(--out),opacity .2s}
+.upd-row[data-s="checking"] .i-sync{animation:spin .9s linear infinite}
+.upd-row[data-s="checking"] .btn{opacity:.55;pointer-events:none}
+.upd-row[data-s="latest"] .upd-ic{color:var(--green)}
+.upd-row[data-s="latest"] .i-sync,.upd-row[data-s="ready"] .i-sync{opacity:0;transform:scale(.5) rotate(-90deg)}
+.upd-row[data-s="latest"] .i-ok{opacity:1;transform:none}
+.upd-row[data-s="ready"]{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent)}
+.upd-row[data-s="ready"] .upd-ic{color:var(--bg);background:var(--green)}
+.upd-row[data-s="ready"] .i-new{opacity:1;transform:none;animation:nudge 1.6s var(--out) .3s infinite}
+.upd-row[data-s="going"] .i-sync{animation:spin .7s linear infinite}
+.upd-row[data-s="going"] .btn{pointer-events:none}
+.upd-row[data-s="offline"] .btn{opacity:.45;pointer-events:none}
+.upd-row .txt-swap{animation:rise .3s var(--out) both}
+@keyframes nudge{0%,60%,100%{transform:none}30%{transform:translateY(2px)}}
+@media (prefers-reduced-motion:reduce){.upd-row *{animation:none!important}}
 .rb-lbl~.has-dot::after{right:10px}
 /* installed: no browser habits */
 .is-app body{-webkit-touch-callout:none}
@@ -1709,7 +1733,11 @@ a.sh-act{text-decoration:none}
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.27·2113</p>
+  <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
+    <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2137</span></span>
+    <button class="btn" id="updBtn" type="button">Check</button>
+  </div>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -5790,7 +5818,7 @@ function openDialog(id,btn){
   setTimeout(()=>{if(openDlg===d)d.focus({preventScroll:true})},20);
 }
 function closeDialog(instant){
-  const d=openDlg;if(!d)return;openDlg=null;app.inert=false;
+  const d=openDlg;if(!d)return;openDlg=null;app.inert=false;if(updReady)try{appSync()}catch(e){}
   if(d.id==="dlgComputer"){clearTimeout(compT);cyberOut(d,instant?0:(narrowMQ.matches?240:170))}
   if(d.id==="dlgRoom")qrSideClose();
   if(d.id==="dlgScan")stopScan();
@@ -6476,9 +6504,10 @@ function badgeSync(){
 }
 /* online with no connection: say so plainly, and that the rest still works */
 
+let updReady=false;
 function appSync(){
   const row=$("instRow");if(row)row.hidden=!installKind();
-  $("btnSettings").classList.toggle("has-dot",!!installKind()&&roundsDone>=2&&!store.get("xo.setSeen",false)&&!openDlg);
+  $("btnSettings").classList.toggle("has-dot",(!!installKind()&&roundsDone>=2&&!store.get("xo.setSeen",false)&&!openDlg)||(updReady&&!(openDlg&&openDlg.id==="dlgSettings")));
   if(mode==="online"&&!room){const n=$("netNote"),t=offlineNote();if(t)net(t);else if(n&&n.textContent.startsWith("You’re offline"))net("")}
   wakeSync();badgeSync();
 }
@@ -6491,12 +6520,25 @@ appSync();
 /* Each build stamps itself and writes the same stamp to version.json. An
    open page (a tab left open, a phone that keeps it in memory, a copy the
    browser kept) asks for that file, never from any cache, when it starts,
-   when you come back to it and every ten minutes. If a newer build is out it
+   when you come back to it and every five minutes. If a newer build is out it
    loads it at the first moment nothing would be lost: no marks on the board,
-   no dialog open and no online room. The reload goes to a fresh address, so
-   no cache can hand back the old page, and that marker is then tidied away. */
+   no dialog open and no online room. Until then the version card in Settings
+   says an update is ready, a dot sits on the Settings button, and one tap
+   restarts into the new build. The reload goes to a fresh address, so no
+   cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·2113";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.27·2137";
+  const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
+  /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
+  const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
+    const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1];return `${+m[3]} ${mo} · ${m[4]}:${m[5]}`};
+  let state="",lastCheck=0;
+  function show(s,title,sub,label,primary){
+    const changed=state!==s;state=s;row.dataset.s=s;
+    if(bT.textContent!==title){bT.textContent=title;if(changed){bT.classList.remove("txt-swap");void bT.offsetWidth;bT.classList.add("txt-swap")}}
+    bS.textContent=sub;btn.textContent=label;btn.className="btn"+(primary?" primary":"");
+  }
+  if(BUILD.startsWith("__")){show("idle","Up to date","Local build","Check");btn.disabled=true;return}
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
@@ -6504,27 +6546,66 @@ appSync();
   const tries=v=>{try{return +(sessionStorage.getItem("xo.upd.n."+v)||0)}catch(e){return 0}};
   /* nothing would be lost: no dialog, no online room, and the board is empty or the round is over */
   const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&(marks.X.length+marks.O.length===0||over);
-  function go(){
-    if(!next||!calm())return;
+  const midGame=()=>!!room||(!over&&marks.X.length+marks.O.length>0);
+  /* a waiting update goes to the top of Settings; otherwise the card closes the list */
+  const home=row.parentNode,anchor=$("instRow");
+  function place(top){const want=top?anchor.nextSibling:null;if(top?row.previousElementSibling!==anchor:row.nextElementSibling)home.insertBefore(row,want)}
+  function paint(){
+    if(state==="checking"||state==="going")return;
+    place(!!next);
+    if(next){show("ready","Update ready",midGame()?"Ends this round":`Version ${pretty(next)}`,"Update and restart",true);return}
+    if(!navigator.onLine){show("offline","You're offline",`Version ${pretty(BUILD)}`,"Check");return}
+    show(state==="latest"?"latest":"idle",state==="latest"?"You're on the latest":"Updates",`Version ${pretty(BUILD)}`,"Check");
+  }
+  function restart(){
+    if(!next)return;
     try{sessionStorage.setItem("xo.upd.n."+next,String(tries(next)+1));if(tries(next)>=2)sessionStorage.setItem("xo.upd",next)}catch(e){}
     const u=new URL(location.href);u.searchParams.set("v",next);location.replace(u.toString());
   }
-  function check(){
-    if(busy||document.visibilityState==="hidden")return;busy=true;
+  function go(){if(next&&tried()!==next&&calm())restart()}
+  function setNext(v){next=v;updReady=!!v;paint();try{appSync()}catch(e){}}
+  /* manual: a tap always looks, and always says what it found */
+  function check(manual){
+    if(busy||(!manual&&document.visibilityState==="hidden"))return Promise.resolve();
+    busy=true;const t0=Date.now();
+    if(manual)show("checking","Checking",`Version ${pretty(BUILD)}`,"Checking");
     /* an app left in memory: ask for the new worker too, so the next open is already fresh */
-    try{if(swReg)swReg.update().catch(()=>{})}catch(e){}
-    fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{
-      /* only ever forward, and only once per build, so a slow mirror can never loop it */
-      if(j&&typeof j.v==="string"&&j.v>BUILD&&tried()!==j.v){next=j.v;go()}
-    }).catch(()=>{}).finally(()=>{busy=false});
+    const sw=(()=>{try{return swReg?swReg.update().catch(()=>{}):Promise.resolve()}catch(e){return Promise.resolve()}})();
+    const got=fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null);
+    return Promise.all([got,sw]).then(([j])=>{
+      lastCheck=Date.now();
+      /* only ever forward: a slow mirror never takes you back */
+      const v=j&&typeof j.v==="string"&&j.v>BUILD?j.v:null;
+      return new Promise(r=>setTimeout(r,manual?Math.max(0,650-(Date.now()-t0)):0)).then(()=>{
+        if(manual&&state==="checking")state=v?"":"latest";
+        setNext(v);
+        if(!manual)go();
+      });
+    }).catch(()=>{if(manual){state="";show("offline",navigator.onLine?"Couldn't check":"You're offline","Try again in a moment","Check");btn.disabled=false}})
+      .finally(()=>{busy=false});
   }
-  setTimeout(check,1200);setInterval(check,300000);setInterval(go,1500);
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check()});
-  addEventListener("pageshow",e=>{if(e.persisted)check()});
-  addEventListener("online",check);
+  btn.addEventListener("click",()=>{
+    if(state==="ready"){
+      show("going","Restarting",`Loading ${pretty(next)}`,"Restarting",true);buzz(10);
+      /* let the new worker settle first, so the fresh page finds fresh files */
+      const sw=swReg&&(swReg.installing||swReg.waiting);
+      const settle=sw?new Promise(r=>{const t=setTimeout(r,2500);sw.addEventListener("statechange",()=>{if(sw.state==="activated"||sw.state==="redundant"){clearTimeout(t);r()}})}):Promise.resolve();
+      settle.then(()=>setTimeout(restart,250));
+      return;
+    }
+    check(true);
+  });
+  /* opening Settings looks again if the last look is over a minute old */
+  $("btnSettings").addEventListener("click",()=>{if(state==="latest"&&Date.now()-lastCheck>60000)state="";paint();if(Date.now()-lastCheck>60000)check(false)});
+  addEventListener("offline",paint);
+  paint();
+  setTimeout(()=>check(false),1200);setInterval(()=>check(false),300000);setInterval(go,1500);
+  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check(false)});
+  addEventListener("pageshow",e=>{if(e.persisted)check(false)});
+  addEventListener("online",()=>{paint();check(false)});
   /* a new worker took over (the app found an update in the background): look at once */
-  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("controllerchange",()=>{busy=false;check()});
-  addEventListener("focus",check);
+  if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("controllerchange",()=>{busy=false;check(false)});
+  addEventListener("focus",()=>check(false));
 })();
 
 /* dither: a small tile of random specks one or two shades lighter or darker, sized to the screen's own pixels */
