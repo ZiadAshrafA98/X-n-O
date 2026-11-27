@@ -1,0 +1,39 @@
+# Tells open copies of the game that a new build is live, so the update
+# notice shows within seconds instead of at the next check.
+# It waits until xando.space actually serves the new version.json, then
+# publishes the build stamp as a retained message on the public relays the
+# game already uses for online play. The game only treats the message as a
+# hint: it re-reads version.json itself before showing anything.
+name: Announce new build
+
+on:
+  push:
+    branches: [main]
+    paths: [version.json]
+
+concurrency:
+  group: announce
+  cancel-in-progress: true
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wait for the new build to go live
+        id: live
+        run: |
+          V=$(node -p "require('./version.json').v")
+          echo "want $V"
+          for i in $(seq 1 120); do
+            L=$(curl -fsS -H 'Cache-Control: no-cache' "https://xando.space/version.json?t=$(date +%s%N)" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).v" 2>/dev/null || true)
+            if [ "$L" = "$V" ]; then echo "live after $((i*5))s"; echo "v=$V" >> "$GITHUB_OUTPUT"; exit 0; fi
+            sleep 5
+          done
+          echo "the site never served $V"; exit 1
+      - name: Announce it
+        run: |
+          for host in broker.emqx.io broker.hivemq.com; do
+            npx -y mqtt@5.10.1 pub -h "$host" -p 1883 -t xando/v1/build -m "${{ steps.live.outputs.v }}" -r -q 1 || echo "could not reach $host"
+          done
