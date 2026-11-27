@@ -1774,7 +1774,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2256</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2259</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6573,7 +6573,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2256";
+  const BUILD="2026.11.27·2259";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6609,12 +6609,13 @@ appSync();
   /* two views laid on each other; the next words go in the hidden one, and a
      green wave out of the icon carries the pill across to them */
   const note=$("updNote"),nRoot=$("unRoot"),nA=$("unA"),nB=$("unB");
-  const ICO={ready:'<path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/>',going:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/>',done:'<path d="m5 12.5 4.5 4.5L19 7.5"/>'};
+  const ICO={ready:'<path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/>',going:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/>',soon:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4.2l2.6 1.8"/>',done:'<path d="m5 12.5 4.5 4.5L19 7.5"/>'};
   const X='<button class="sq" type="button" data-a="x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
   const viewHTML=(k,t,sub)=>`<span class="upd-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${k==="done"?2.6:2.2}" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg></span><span class="inst-t"><b>${t}</b><span class="un-sub">${sub}</span></span>${k==="ready"?'<button class="btn primary" type="button" data-a="go">Restart</button>':""}${k==="going"?"":X}`;
   /* glimm (MIT): a green band sweeps across the pill from the icon side. On
      a change, the new words sit behind the band and the old ones ahead of it,
      so the band itself carries the pill from one to the other. */
+  let soonV=null;
   let nFlip=false,gl=null,glLoad=null,sweep=null,raf=0;
   const front=()=>nFlip?nB:nA,back=()=>nFlip?nA:nB;
   /* only the view in front takes taps */
@@ -6680,7 +6681,7 @@ appSync();
     ripBusy=true;
     const ready=ripple().then(w=>!w?null:Promise.race([Promise.resolve(w.prepare&&w.prepare()).catch(()=>{}),new Promise(r=>setTimeout(r,1400))]).then(()=>w));
     ready.then(w=>{
-      if(note.dataset.k!=="ready"||!next){ripBusy=false;return}
+      if((note.dataset.k==="ready"&&!next)||(note.dataset.k==="soon"&&!soonV)||!["ready","soon"].includes(note.dataset.k)){ripBusy=false;return}
       note.classList.add("arriving");note.hidden=false;
       if(!w){ripBusy=false;return}
       setTimeout(()=>{
@@ -6697,7 +6698,7 @@ appSync();
     if(on){
       if(!note.hidden&&!note.classList.contains("leaving"))return;
       note.classList.remove("leaving");unclip();taps();glimm();
-      if(note.dataset.k==="ready")arrive();else note.hidden=false;
+      if(note.dataset.k==="ready"||note.dataset.k==="soon")arrive();else note.hidden=false;
       return;
     }
     if(note.hidden)return;
@@ -6710,7 +6711,7 @@ appSync();
   }
   nRoot.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;
     if(b.dataset.a==="go"){if(next)startRestart()}
-    else{showNote(false);if(next)ss.set("xo.upd.later",next)}});
+    else{showNote(false);if(next)ss.set("xo.upd.later",next);else if(soonV)ss.set("xo.upd.soonx",soonV)}});
   /* ---- restarting ---- */
   /* the page the server hands out right now: is it the new one yet? */
   const serverHas=v=>fetch("./?fresh="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>t.includes(v)).catch(()=>false);
@@ -6792,18 +6793,30 @@ appSync();
      it listens, and on a signal it looks at version.json at once, then every
      three seconds for a minute and a half, until the new build shows. The
      signal itself is never trusted: only version.json decides. */
-  const ANN="xando/v1/build";let ann=null,burst=0,burstT=0;
-  function hint(v){
+  /* two signals: "soon" the moment a build is pushed (it takes GitHub about
+     half a minute to put it live), "build" once it is live */
+  const ANN="xando/v1/build",SOON="xando/v1/soon";let ann=null,burst=0,burstT=0;
+  function hint(v,ms){
     if(typeof v!=="string"||!(v>BUILD)||v===next)return;
     burst=Date.now();clearInterval(burstT);check(false);
-    burstT=setInterval(()=>{if(next===v||Date.now()-burst>90000){clearInterval(burstT);return}check(false)},3000);
+    burstT=setInterval(()=>{
+      if(next===v){clearInterval(burstT);return}
+      if(Date.now()-burst>ms){clearInterval(burstT);if(soonV===v&&!next){soonV=null;if(!note.hidden&&note.dataset.k==="soon")showNote(false)}return}
+      check(false)},3000);
+  }
+  /* a new build is on its way: say so now, and turn into Restart once it is live */
+  function soonSay(v){
+    if(typeof v!=="string"||!(v>BUILD)||next||going||soonV===v)return;
+    soonV=v;
+    if(note.hidden&&ss.get("xo.upd.soonx")!==v){noteSay("soon","Update on its way","Ready in about half a minute");showNote(true)}
+    hint(v,180000);
   }
   function listen(on){
     if(on&&!ann&&typeof mqtt!=="undefined"&&navigator.onLine){
       ann=BROKERS.slice(0,2).map(url=>{try{
         const c=mqtt.connect(url,{clientId:"xnou_"+Math.random().toString(36).slice(2,10),clean:true,connectTimeout:8000,reconnectPeriod:15000,keepalive:60});
-        c.on("connect",()=>c.subscribe(ANN,{qos:0}));
-        c.on("message",(t,m)=>{try{hint(String(m).trim().slice(0,32))}catch(e){}});
+        c.on("connect",()=>c.subscribe([ANN,SOON],{qos:0}));
+        c.on("message",(t,m)=>{try{const v=String(m).trim().slice(0,32);if(t===SOON)soonSay(v);else hint(v,90000)}catch(e){}});
         c.on("error",()=>{});return c}catch(e){return null}}).filter(Boolean);
     }else if(!on&&ann){const a=ann;ann=null;a.forEach(c=>{try{c.end(true)}catch(e){}})}
   }
