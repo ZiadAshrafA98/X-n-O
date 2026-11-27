@@ -215,6 +215,7 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .tog-in{min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:opacity .3s var(--out)}
 .tog-lbl{font-size:14px;color:var(--ink-2);cursor:pointer;-webkit-user-select:none;user-select:none}
 /* Mark order numbers means nothing under Move one: the row folds away, and the sheet or the pop-up eases to its new height with it */
+:root:not([data-rule="M"]) .group.grp-stay{display:none}
 :root[data-rule="M"] .group.grp-age{grid-template-rows:0fr;padding-top:0;padding-bottom:0;border-top-color:transparent;pointer-events:none}
 :root[data-rule="M"] .grp-age .tog-in{opacity:0}
 :root[data-rule="M"] .grp-age .liq-sw{visibility:hidden}
@@ -272,6 +273,13 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .liq-sw[data-on="true"] .liq-thumb{background:var(--liq-dot)}
 @media (prefers-reduced-motion:reduce){.liq-thumb{transition-duration:160ms}}
 .age{position:absolute;top:10px;right:13px;font:500 11px var(--mono);color:var(--faint);transition:opacity .2s}
+/* the stay limit: marks with two turns or fewer left count down in the corner; the overdue one glows and wiggles alone */
+.cell.stay .age{top:8px;right:10px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:grid;place-items:center;font:600 11px/1 var(--mono);background:var(--chip-2);color:var(--ink-2)}
+.cell.due{background:color-mix(in srgb,currentColor 0%,var(--tile));box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--amber,#f5b546) 70%,transparent);animation:duepulse 1.6s ease-in-out infinite}
+.cell.due .age{background:var(--amber,#f5b546);color:#1a1206}
+.cell.due .mk{animation-duration:1.1s!important}
+@keyframes duepulse{0%,100%{box-shadow:inset 0 0 0 2px color-mix(in srgb,#f5b546 45%,transparent)}50%{box-shadow:inset 0 0 0 2px #f5b546,0 0 18px color-mix(in srgb,#f5b546 35%,transparent)}}
+@media (prefers-reduced-motion:reduce){.cell.due{animation:none}}
 .hint{position:absolute;bottom:9px;left:0;right:0;text-align:center;font:500 10px var(--mono);letter-spacing:.06em;text-transform:uppercase;animation:meta .3s var(--out) both}
 .hint.W{color:var(--green)} .hint.L{color:var(--red)} .hint.D{color:var(--faint)}
 [data-mode="online"]:not([data-net="live"]):not([data-net="lost"]) .board{opacity:.35;transition:opacity .4s var(--out)}
@@ -1620,7 +1628,7 @@ a.sh-act{text-decoration:none}
           <div class="pick-item pick-label" id="pl-first">Who starts</div>
           <div class="pick-item"><div class="seg sm full" data-opt="first" role="group" aria-labelledby="pl-first"><span class="thumb"></span><button type="button" data-v="me">You</button><button type="button" data-v="ai">Computer</button></div></div>
           <div class="pick-item pick-label" id="pl-level">Level</div>
-          <div class="pick-item"><div class="seg sm full" data-opt="level" role="group" aria-labelledby="pl-level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div></div>
+          <div class="pick-item"><div class="seg sm full" data-opt="level" role="group" aria-labelledby="pl-level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Hard</button></div></div>
           <div class="pick-item pick-label">Your record · <span id="recLvl"></span></div>
           <div class="pick-item rec-row"><span class="rec-stat"><b id="recStreak">0</b>streak</span><span class="rec-stat"><b id="recBest">0</b>best</span><span class="rec-stat"><b id="recWins">0</b>wins</span><button class="sq" id="recShare" type="button" aria-label="Share your record"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg></button></div>
         </div>
@@ -1692,12 +1700,14 @@ a.sh-act{text-decoration:none}
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="inst-row stag" id="instRow" hidden><span class="inst-ic" aria-hidden="true"></span><span class="inst-t"><b>Install X n O</b><span>Full screen, and plays offline</span></span><button class="btn primary" id="instBtn" type="button">Install</button></div>
   <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="rcards" role="group" aria-labelledby="gl-rule"></div></div>
-  <div class="group stag tog-row" data-hide="online"><div class="tog-in"><span class="tog-lbl" id="gl-hints">Solver hints</span><button class="liq-sw" type="button" role="switch" data-opt="hints" aria-checked="false" aria-labelledby="gl-hints"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
+  <div class="group stag grp-stay" data-hide="online"><span class="group-label" id="gl-stay">Turns a mark can stay put</span><div class="seg sm full" data-opt="stay" role="group" aria-labelledby="gl-stay"><span class="thumb"></span><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="r">Random</button></div></div>
+  <div class="group stag grp-stay" data-for="online"><span class="group-label" id="gl-stayo">Turns a mark can stay put</span><div class="seg sm full" data-opt="stay" role="group" aria-labelledby="gl-stayo"><span class="thumb"></span><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="r">Random</button><button type="button" data-v="any">Any</button></div></div>
+  <div class="group stag tog-row" data-hide="online"><div class="tog-in"><span class="tog-lbl" id="gl-hints">Hints</span><button class="liq-sw" type="button" role="switch" data-opt="hints" aria-checked="false" aria-labelledby="gl-hints"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag tog-row grp-age"><div class="tog-in"><span class="tog-lbl" id="gl-age">Mark order numbers</span><button class="liq-sw" type="button" role="switch" data-opt="age" aria-checked="false" aria-labelledby="gl-age"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag"><span class="group-label" id="gl-alt">Who starts next round</span><div class="seg sm full" data-opt="alt" role="group" aria-labelledby="gl-alt"><span class="thumb"></span><button type="button" data-v="1">Take turns</button><button type="button" data-v="0">Same player</button></div></div>
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
-  <p class="build-tag">Version 2026.11.27·2014</p>
+  <p class="build-tag">Version 2026.11.27·2057</p>
 </section>
 
 <section class="dlg modal" id="dlgRules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" tabindex="-1" hidden>
@@ -1794,7 +1804,7 @@ a.sh-act{text-decoration:none}
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="lbTitle">Leaderboard</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <p class="lb-sub">Longest winning streaks against the computer. Every game here is replayed to check it was really won.</p>
-  <div class="seg sm full" id="lbLevels" role="group" aria-label="Level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Perfect</button></div>
+  <div class="seg sm full" id="lbLevels" role="group" aria-label="Level"><span class="thumb"></span><button type="button" data-v="easy">Easy</button><button type="button" data-v="medium">Medium</button><button type="button" data-v="perfect">Hard</button></div>
   <div class="lb-wrap"><ol class="lb-list" id="lbList" aria-live="polite"></ol><span class="lb-bar" id="lbBar" aria-hidden="true"><i></i></span></div>
   <p class="lb-foot"><span class="lb-hint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5v.01"/></svg>Your best is added on its own. Undo or hints don’t count.</span></p>
 </section>
@@ -1931,6 +1941,82 @@ function pickMove(me,op,rule,level){
   if(immediate.length)return immediate[0].c;
   // block opponent's immediate win when possible
   const safe=ms.filter(m=>{const nm=place(me,m.c,rule);return !legal(op,nm,rule).some(c=>winLine(place(op,c,rule)))});
+  if(level==="medium")return Math.random()<.6?best():(safe.length?rnd(safe).c:rnd(ms).c);
+  return Math.random()<.5&&safe.length?rnd(safe).c:rnd(ms).c;
+}
+
+/* ---------- The stay limit, and a computer that looks ahead ---------- */
+/* Under the move rule a mark may stay put for at most `lim` of its side's
+   turns; after that it has to move (if two are overdue, one of the oldest).
+   Placing marks doesn't age them. Each side's ages run alongside its cells.
+   With the limit the game has millions of positions (2.5 M at 4, 6.3 M at 5,
+   13.4 M at 6), too many to solve on a phone, so the computer searches a few
+   moves ahead instead: negamax with alpha-beta and a transposition table,
+   deepening until its time is up. */
+const STAY_POS={4:2514362,5:6292850,6:13355906};
+function stayMoves(me,ma,op,lim){
+  const all=legal(me,op,"M");
+  if(me.length<3||!lim)return all;
+  const mx=Math.max(...ma);if(mx<lim)return all;
+  return all.filter(m=>m>=9&&ma[me.indexOf(mvFrom(m))]===mx);
+}
+/* the cells and ages after a move, sorted together; ages stop at the limit */
+function stayPlace(me,ma,m,lim){
+  let pairs;
+  if(m<9)pairs=me.map((c,i)=>[c,ma[i]]).concat([[m,0]]);
+  else{const f=mvFrom(m),t=mvTo(m);pairs=me.map((c,i)=>c===f?[t,0]:[c,Math.min(lim||99,ma[i]+1)])}
+  pairs.sort((a,b)=>a[0]-b[0]);return[pairs.map(p=>p[0]),pairs.map(p=>p[1])];
+}
+const S_WIN=10000;
+/* a quiet position's worth: open two-in-a-rows, the centre */
+function stayEvalPos(me,op){
+  let s=0;
+  for(const L of LINES){let a=0,b=0;for(const c of L){if(me.includes(c))a++;else if(op.includes(c))b++}
+    if(a===2&&!b)s+=6;else if(b===2&&!a)s-=6;else if(a===1&&!b)s+=1;else if(b===1&&!a)s-=1}
+  if(me.includes(4))s+=2;if(op.includes(4))s-=2;
+  return s;
+}
+function stayNegamax(me,ma,op,oa,lim,depth,alpha,beta,ply,S){
+  if(++S.n%2048===0&&performance.now()>S.end)throw S;
+  const ms=stayMoves(me,ma,op,lim);if(!ms.length)return -(S_WIN-ply);
+  for(const m of ms){const [nm]=stayPlace(me,ma,m,lim);if(winLine(nm))return S_WIN-ply-1}
+  if(depth<=0)return stayEvalPos(me,op);
+  const key=me.join("")+ma.join("")+"|"+op.join("")+oa.join("")+"|"+depth,hit=S.tt.get(key);
+  if(hit!==undefined&&hit.lo<=alpha)return alpha;
+  if(hit!==undefined&&hit.v!==undefined)return hit.v;
+  let best=-Infinity,a=alpha;
+  for(const m of ms){const [nm,na]=stayPlace(me,ma,m,lim);
+    const v=-stayNegamax(op,oa,nm,na,lim,depth-1,-beta,-a,ply+1,S);
+    if(v>best)best=v;if(v>a)a=v;if(a>=beta)break}
+  if(best>alpha&&best<beta)S.tt.set(key,{v:best});
+  return best;
+}
+/* every move scored by looking ahead, as {c, v:"W"|"D"|"L", d, s} like the solver's own */
+function stayEval(me,ma,op,oa,lim,maxDepth,ms){
+  const moves=stayMoves(me,ma,op,lim),S={n:0,end:performance.now()+(ms||200),tt:new Map()};
+  let done=moves.map(c=>({c,s:0}));
+  for(let d=1;d<=maxDepth;d++){
+    try{const res=[];
+      for(const c of moves){const [nm,na]=stayPlace(me,ma,c,lim);
+        const s=winLine(nm)?S_WIN-1:-stayNegamax(op,oa,nm,na,lim,d-1,-Infinity,Infinity,1,S);res.push({c,s})}
+      done=res;if(res.every(r=>Math.abs(r.s)>S_WIN-200))break}
+    catch(e){if(e!==S)throw e;break}
+  }
+  return done.map(r=>r.s>S_WIN-200?{c:r.c,v:"W",d:S_WIN-r.s,s:r.s}:r.s<-(S_WIN-200)?{c:r.c,v:"L",d:S_WIN+r.s,s:r.s}:{c:r.c,v:"D",d:99,s:r.s});
+}
+function stayPick(me,ma,op,oa,lim,level){
+  const rnd=a=>a[Math.floor(Math.random()*a.length)];
+  const deep=level==="perfect"?12:level==="medium"?3:1;
+  const ms=stayEval(me,ma,op,oa,lim,deep,level==="perfect"?260:60);
+  const wins=ms.filter(m=>m.v==="W"),draws=ms.filter(m=>m.v==="D"),losses=ms.filter(m=>m.v==="L");
+  const best=()=>{
+    if(wins.length){const md=Math.min(...wins.map(m=>m.d));return rnd(wins.filter(m=>m.d===md)).c}
+    if(draws.length){const top=Math.max(...draws.map(m=>m.s));return rnd(draws.filter(m=>m.s>=top-1)).c}
+    const mx=Math.max(...losses.map(m=>m.d));return rnd(losses.filter(m=>m.d===mx)).c;
+  };
+  if(level==="perfect")return best();
+  const now=wins.filter(m=>m.d===1);if(now.length)return now[0].c;
+  const safe=ms.filter(m=>m.v!=="L"||m.d>2);
   if(level==="medium")return Math.random()<.6?best():(safe.length?rnd(safe).c:rnd(ms).c);
   return Math.random()<.5&&safe.length?rnd(safe).c:rnd(ms).c;
 }
@@ -2275,7 +2361,8 @@ function playSfx(k){
    round only counts if it was played straight: no Undo, no solver hints,
    no changing the level halfway. Walking away from a round you had started
    (New round, or switching modes) counts as a loss. */
-const LEVEL_NAME={easy:"Easy",medium:"Medium",perfect:"Perfect"};
+/* "perfect" stays the saved key so records carry over; with the stay limit the computer looks ahead, so it is called Hard */
+const LEVEL_NAME={easy:"Easy",medium:"Medium",perfect:"Hard"};
 let recs=store.get("xo.rec",null)||{};
 let recRound=null,recLast=null;
 function recOf(l){return recs[l]||{w:0,l:0,cur:0,best:0,fast:0}}
@@ -2283,12 +2370,12 @@ function recSave(){store.set("xo.rec",recs)}
 /* called as each round starts: settle the one before it */
 function recNewRound(){
   if(recRound&&recRound.moved&&!recRound.done&&recRound.clean)recResult(recRound,false);
-  recRound=mode==="ai"?{level:opt.level,clean:true,why:"",moved:false,done:false,mine:0,s:turn,r:rule,m:[]}:null;
+  recRound=mode==="ai"?{level:opt.level,clean:true,why:"",moved:false,done:false,mine:0,s:turn,r:rule,k:rule==="M"?lim:0,m:[]}:null;
   recLast=null;
 }
 function recMove(who,c){
   if(!recRound||mode!=="ai")return;
-  if(!recRound.m.length)recRound.s=who;recRound.m.push(c);recRound.r=rule;
+  if(!recRound.m.length)recRound.s=who;recRound.m.push(c);recRound.r=rule;recRound.k=rule==="M"?lim:0;
   /* picking a level before anyone has moved is fine; changing it mid-game is not */
   if(!recRound.moved&&recRound.mine===0&&opt.level!==recRound.level)recRound.level=opt.level;
   if(opt.hints==="1"){recRound.clean=false;recRound.why="hints were on"}
@@ -2312,7 +2399,7 @@ function recDraw(){
 function recResult(rd,won){
   const r={...recOf(rd.level)},prevBest=r.best,prevFast=r.fast;
   /* each counted win keeps its moves, so anyone can replay it to check it */
-  const game={p:opt.youAre,s:rd.s,r:rd.r,m:rd.m.slice()};
+  const game={p:opt.youAre,s:rd.s,r:rd.r,k:rd.k||0,m:rd.m.slice()};
   if(won){r.w++;r.cur++;r.sg=(r.sg||[]).concat([game]).slice(-60);
     if(r.cur>r.best){r.best=r.cur;r.bg=r.sg.slice(-r.best)}
     if(!r.fast||rd.mine<r.fast){r.fast=rd.mine;r.fg=game}}
@@ -2562,12 +2649,14 @@ function perfectOK(me,op,r,c){
 }
 function replayWin(g,level){
   if(!g||!Array.isArray(g.m)||g.m.length>80||!["X","O"].includes(g.p)||!["X","O"].includes(g.s)||!RULES.includes(g.r))return 0;
-  const mk={X:[],O:[]};let t=g.s,mine=0;
+  /* games under the stay limit replay with it; the computer there looks ahead, so its moves are only checked for being legal */
+  const k=g.r==="M"&&[4,5,6].includes(g.k)?g.k:0;
+  const mk={X:[],O:[]},ag={X:[],O:[]};let t=g.s,mine=0;
   for(let i=0;i<g.m.length;i++){
     const c=g.m[i],me=mk[t],op=mk[other(t)];
-    if(!Number.isInteger(c)||!legal(me,op,g.r).includes(c))return 0;
-    if(t!==g.p&&level==="perfect"&&!perfectOK(me,op,g.r,c))return 0;
-    mk[t]=place(me,c,g.r);if(t===g.p)mine++;
+    if(!Number.isInteger(c)||!(k?stayMoves(me,ag[t],op,k):legal(me,op,g.r)).includes(c))return 0;
+    if(!k&&t!==g.p&&level==="perfect"&&!perfectOK(me,op,g.r,c))return 0;
+    if(k)[mk[t],ag[t]]=stayPlace(me,ag[t],c,k);else mk[t]=place(me,c,g.r);if(t===g.p)mine++;
     if(winLine(mk[t]))return t===g.p&&i===g.m.length-1?mine:0;
     t=other(t);
   }
@@ -2611,7 +2700,7 @@ function rowHTML(r,i){
    for someone, and a button that starts exactly that game. */
 function emptyHTML(){
   const lv=LEVEL_NAME[lbLevel];
-  const note=lbLevel==="perfect"&&rule==="M"?`<small class="lb-hint">Perfect can’t lose on Move one · try Oldest fades</small>`:"";
+  const note="";
   /* your own avatar rises into the empty first place, takes the crown, and steps back to try again */
   return`<li class="lb-empty"><svg class="lb-seat" viewBox="0 0 200 150" aria-hidden="true">
       <defs><clipPath id="lbAvClip"><circle cx="0" cy="0" r="13"/></clipPath></defs>
@@ -2751,7 +2840,7 @@ function cardURL(){return SHARE_URL.replace(/^https?:\/\//,"").replace(/\/$/,"")
 function P(d){return new Path2D(d)}
 /* what the big number counts */
 function cardData(){
-  const r=recOf(shareLevel),lv=LEVEL_NAME[shareLevel]||"Perfect",streak=r.best>1;
+  const r=recOf(shareLevel),lv=LEVEL_NAME[shareLevel]||"Hard",streak=r.best>1;
   const n=streak?r.best:r.fast||r.w,kind=streak?"row":r.fast?"fast":"wins";
   const short=kind==="row"?"in a row":kind==="fast"?(n===1?"move to win":"moves to win"):(n===1?"win":"wins");
   const long=kind==="row"?"wins in a row":short;
@@ -3025,7 +3114,7 @@ async function cardMeltdown(g,D){
 
 const CARD_DRAW={habitat:cardHabitat,pond:cardPond,makers:cardMakers,news:cardNews,collect:cardCollect,wanted:cardWanted,fight:cardFight,editorial:cardEditorial,meltdown:cardMeltdown};
 /* ---------- Options (segmented controls) ---------- */
-const defaults={level:"medium",youAre:"X",first:"me",rule:"M",rv:3,hints:"0",age:"1",alt:"1",sfx:"1"};
+const defaults={level:"medium",youAre:"X",first:"me",rule:"M",rv:3,stay:"5",hints:"0",age:"1",alt:"1",sfx:"1"};
 let opt=store.get("xo.opt",null);
 if(!opt){ // carry over settings from the previous version of the site
   opt={...defaults,hints:store.get("xo.hints",false)?"1":"0",
@@ -3044,7 +3133,19 @@ let marks={X:[],O:[]},turn="X",starter="X",over=false,winCells=null,history=[];
 /* a draw by repetition: the same marks on the same squares with the same side to move, three times.
    posLog holds every position of the round (kept apart from history, which online play resets) */
 let drawn=false,posLog=[];
-const posKey=()=>marks.X.join("")+"|"+marks.O.join("")+"|"+turn;
+/* the stay limit: under the move rule a mark may sit for at most `lim` of its side's
+   turns, then it has to move. ages runs alongside marks; lim is this round's limit */
+let ages={X:[],O:[]},lim=5,roomStay="5";
+const STAYS=["4","5","6","r"];
+const staySetting=()=>mode==="online"?roomStay:(STAYS.includes(opt.stay)?opt.stay:"5");
+function pickLim(){const s=staySetting();return s==="r"?4+Math.floor(Math.random()*3):+s}
+const stayOn=()=>rule==="M";
+/* the moves the side to move may make now */
+function moveList(){return stayOn()?stayMoves(marks[turn],ages[turn],marks[other(turn)],lim):legal(marks[turn],marks[other(turn)],rule)}
+/* the marks the side to move may pick up now (all three, or only the overdue) */
+function movable(){if(!moving())return new Set();return new Set(moveList().filter(m=>m>=9).map(mvFrom))}
+function overdue(){if(!stayOn()||marks[turn].length<3)return false;return Math.max(...ages[turn])>=lim}
+const posKey=()=>marks.X.join("")+(stayOn()?ages.X.join(""):"")+"|"+marks.O.join("")+(stayOn()?ages.O.join(""):"")+"|"+turn;
 function logPos(){const k=posKey();if(posLog[posLog.length-1]!==k)posLog.push(k)}
 function repeats(){const k=posKey();return posLog.filter(x=>x===k).length}
 /* under the move rule, the mark you have picked up (a cell), or -1 */
@@ -3178,15 +3279,19 @@ function exitMark(b,side){
 function other(s){return s==="X"?"O":"X"}
 function newRound(st){
   recNewRound();
-  marks={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;posLog=[];
+  marks={X:[],O:[]};ages={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;posLog=[];
+  const prevLim=lim;lim=pickLim();
+  if(stayOn()&&staySetting()==="r"&&(mode!=="online"||isHost))setTimeout(()=>{try{toast(`This round, a mark can stay ${lim} turns`)}catch(e){}},400);
   turn=starter=st||starter;logPos();render();maybeAI();
 }
 function applyMove(c){
   if(over)return false;
   const opp=marks[other(turn)];
-  if(!legal(marks[turn],opp,rule).includes(c))return false;
-  history.push({X:marks.X.slice(),O:marks.O.slice(),turn});
-  marks[turn]=place(marks[turn],c,rule);sel=-1;
+  if(!moveList().includes(c))return false;
+  history.push({X:marks.X.slice(),O:marks.O.slice(),turn,aX:ages.X.slice(),aO:ages.O.slice()});
+  if(stayOn())[marks[turn],ages[turn]]=stayPlace(marks[turn],ages[turn],c,lim);
+  else marks[turn]=place(marks[turn],c,rule);
+  sel=-1;
   const wl=winLine(marks[turn]);
   recMove(turn,c);
   if(wl){over=true;winCells=wl;score[turn]++;saveScore();recWin(turn);try{countRound();if(isYou(turn)||mode==="local")buzz([18,40,28])}catch(e){}}
@@ -3200,7 +3305,9 @@ function onCell(c){
   if(mode==="online"&&(!room||!connOpen||phase!=="play"||turn!==me))return;
   /* with three marks down: tap one of yours to pick it up, then tap where it goes */
   if(moving()){
-    if(marks[turn].includes(c)){sel=sel===c?-1:c;buzz(6);render();return}
+    if(marks[turn].includes(c)){
+      if(!movable().has(c)){toast(`Your ${turn} that has stayed ${lim} turns moves first`);buzz([8,40,8]);return}
+      sel=sel===c?-1:c;buzz(6);render();return}
     if(sel<0)return;
     c=mv(sel,c);
     coachDone(true);
@@ -3211,7 +3318,7 @@ function onCell(c){
 function maybeAI(){
   clearTimeout(aiTimer);
   if(mode!=="ai"||over||turn!==aiSide)return;
-  aiTimer=setTimeout(()=>{const c=pickMove(marks[turn],marks[other(turn)],rule,opt.level);applyMove(c)},560);
+  aiTimer=setTimeout(()=>{const c=stayOn()?stayPick(marks[turn],ages[turn],marks[other(turn)],ages[other(turn)],lim,opt.level):pickMove(marks[turn],marks[other(turn)],rule,opt.level);applyMove(c)},560);
 }
 
 /* ---------- Moving by drag ---------- */
@@ -3230,7 +3337,7 @@ function dropLand(to,at){
 boardEl.addEventListener("pointerdown",e=>{
   if(drag||e.button>0)return;
   const i=cellAt(e.clientX,e.clientY);
-  if(i<0||!canAct()||!marks[turn].includes(i))return;
+  if(i<0||!canAct()||!movable().has(i))return;
   drag={id:e.pointerId,from:i,x0:e.clientX,y0:e.clientY,on:false,float:null,over:-1};
 });
 function dragStart(e){
@@ -3298,7 +3405,7 @@ function coachUpdate(){
   coachOn=true;requestAnimationFrame(()=>coachEl.classList.add("on"));
   if(still)return;
   /* the demonstration: your first mark glides to the nearest empty square */
-  const from=marks[turn][0],empty=[0,1,2,3,4,5,6,7,8].filter(c=>!marks.X.includes(c)&&!marks.O.includes(c));
+  const from=[...movable()][0]??marks[turn][0],empty=[0,1,2,3,4,5,6,7,8].filter(c=>!marks.X.includes(c)&&!marks.O.includes(c));
   const to=empty.sort((a,b)=>Math.hypot(a%3-from%3,(a/3|0)-(from/3|0))-Math.hypot(b%3-from%3,(b/3|0)-(from/3|0)))[0];
   if(to==null)return;
   const a=cells[from].getBoundingClientRect(),b=cells[to].getBoundingClientRect(),mk=cells[from]._mk,cs=getComputedStyle(mk);
@@ -3335,12 +3442,12 @@ function renderBoard(){
   const myTurnOK=!over&&!(mode==="ai"&&turn===aiSide)&&!(mode==="online"&&(turn!==me||!connOpen||phase!=="play"));
   const mov=!over&&moving();
   if(sel>=0&&(!mov||!myTurnOK||!marks[turn].includes(sel)))sel=-1;
-  const moves=over?[]:legal(marks[turn],marks[other(turn)],rule);
+  const moves=over?[]:moveList(),canLift=mov?movable():new Set(),due=overdue();
   /* the cells you can tap now: empty ones, your own marks to pick up, or where the picked-up mark can go */
   const tap=new Set(mov?(sel>=0?moves.filter(m=>mvFrom(m)===sel).map(mvTo).concat(marks[turn]):marks[turn]):moves);
   const showHints=opt.hints==="1"&&!over&&mode!=="online"&&!(mode==="ai"&&turn===aiSide);
   const hints={};
-  if(showHints)for(const e of evalMoves(marks[turn],marks[other(turn)],rule)){
+  if(showHints)for(const e of (stayOn()?stayEval(marks[turn],ages[turn],marks[other(turn)],ages[other(turn)],lim,6,90):evalMoves(marks[turn],marks[other(turn)],rule))){
     /* moving: before you pick a mark up, each of your marks shows the best it can do; after, each place it can go */
     const at=!mov?e.c:sel>=0?(mvFrom(e.c)===sel?mvTo(e.c):-1):mvFrom(e.c);
     if(at>=0)hints[at]=betterEval(hints[at],e);
@@ -3368,9 +3475,13 @@ function renderBoard(){
     const old=rule!=="M"&&!over&&!!side&&side===turn&&marks[side].length===3&&idx===0;
     b.classList.toggle("old",old);
     b.classList.toggle("sel",sel===i);
-    b.classList.toggle("lift",mov&&myTurnOK&&sel<0&&side===turn);
+    b.classList.toggle("lift",mov&&myTurnOK&&sel<0&&side===turn&&canLift.has(i));
+    /* under the stay limit: the overdue mark glows, and marks near the limit count down */
+    const left=stayOn()&&side&&marks[side].length===3?lim-ages[side][idx]:9;
+    b.classList.toggle("due",!over&&side===turn&&due&&canLift.has(i));
+    b.classList.toggle("stay",!over&&left<=2);
     b.classList.toggle("dest",sel>=0&&!side&&tap.has(i));
-    b._age.textContent=showAge&&side?String(idx+1):"";
+    b._age.textContent=showAge&&side?String(idx+1):(!over&&left<=2?(left<=0?"!":String(left)):"");
     const h=hints[i];
     if(h){const t=h.v==="W"?"win "+Math.ceil(h.d/2):h.v==="L"?"lose":"draw";
       if(b._hint.hidden||b._hint.textContent!==t){b._hint.textContent=t;b._hint.className="hint "+h.v;b._hint.hidden=false}}
@@ -3393,7 +3504,7 @@ function setStatus(dot,html,busy){
 }
 function renderStatus(){
   const sideVar=s=>s==="X"?"var(--x)":"var(--o)";
-  const mvSub=rule==="M"&&marks[turn].length===3?`<span class="sub">${sel>=0?"drop it on an empty square":"drag a mark to move it"}</span>`:"";
+  const mvSub=rule==="M"&&marks[turn].length===3?`<span class="sub">${sel>=0?"drop it on an empty square":overdue()?`this ${turn} has stayed ${lim} turns · move it`:`drag a mark · each stays up to ${lim}`}</span>`:"";
   if(flashMsg)return setStatus(flashDot,flashMsg);
   if(mode==="online"&&inReq)return setStatus("var(--amber)","Friend is asking",true);
   if(mode==="online"&&outReq)return setStatus("var(--friend)","Waiting for friend",true);
@@ -3530,7 +3641,7 @@ $("undoBtn").addEventListener("click",()=>{
   const steps=mode==="ai"&&(over?turn===aiSide:turn!==aiSide)?2:1;
   for(let k=0;k<steps&&history.length;k++){
     if(over&&!drawn){score[turn]--;saveScore()}
-    const h=history.pop();marks={X:h.X,O:h.O};turn=h.turn;over=false;winCells=null;drawn=false;posLog.pop();
+    const h=history.pop();marks={X:h.X,O:h.O};ages={X:h.aX||h.X.map(()=>0),O:h.aO||h.O.map(()=>0)};turn=h.turn;over=false;winCells=null;drawn=false;posLog.pop();
   }
   render();maybeAI();
 });
@@ -3739,6 +3850,12 @@ function onOpt(k,v){
     if(mode==="online"&&room)pushState();
     updateInsight();return;
   }
+  if(k==="stay"){
+    if(opt.stay===v)return;opt.stay=v;saveOpt();syncOptSegs(true);
+    /* in a room both players agree first; Any is only a matchmaking wish */
+    if(mode==="online"&&room){if(v!=="any"&&v!==roomStay){closeDialog();request("stay",v)}return}
+    if(mode!=="online")newRound(firstMover());return;
+  }
   if(opt[k]===v)return;
   /* your score and the computer's trade sides with the marks: the two numbers
      trade elements too, so the number at each seat stays put */
@@ -3942,7 +4059,7 @@ function linkFor(c){return location.origin+location.pathname+"?room="+c+(customB
 function liveBrokers(){return clients.filter(c=>c.connected).length}
 function netState(){if(!room)return"idle";if(role==="aud")return connOpen?"live":"lost";if(rejected)return"full";if(connOpen)return"live";if(partner)return"lost";return isHost?"host-wait":"guest-wait"}
 
-function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),turn,starter,over,drawn,score:{X:score.X,O:score.O},rule,phase,hostMark,tossWinner,tossId}}
+function snapshot(){return{X:marks.X.slice(),O:marks.O.slice(),aX:ages.X.slice(),aO:ages.O.slice(),lim,stay:roomStay,turn,starter,over,drawn,score:{X:score.X,O:score.O},rule,phase,hostMark,tossWinner,tossId}}
 function updateMe(){me=room&&role!=="aud"?(isHost?hostMark:other(hostMark)):null;setOnlineNames()}
 function validCells(a){return Array.isArray(a)&&a.length<=3&&a.every(c=>Number.isInteger(c)&&c>=0&&c<9)&&new Set(a).size===a.length}
 function adopt(s,v){
@@ -3950,6 +4067,11 @@ function adopt(s,v){
   if(s.X.some(c=>s.O.includes(c)))return;
   if(!["X","O"].includes(s.turn)||!["X","O"].includes(s.starter)||!RULES.includes(s.rule))return;
   marks={X:s.X.slice(),O:s.O.slice()};turn=s.turn;starter=s.starter;rule=s.rule;syncOptSegs(true);
+  /* the room's stay limit, this round's limit, and how long each mark has stayed */
+  if(STAYS.includes(s.stay))roomStay=s.stay;
+  if([4,5,6].includes(s.lim))lim=s.lim;
+  const okAges=(a,c)=>Array.isArray(a)&&a.length===c.length&&a.every(x=>Number.isInteger(x)&&x>=0&&x<=6);
+  ages={X:okAges(s.aX,marks.X)?s.aX.slice():marks.X.map(()=>0),O:okAges(s.aO,marks.O)?s.aO.slice():marks.O.map(()=>0)};
   over=!!s.over;drawn=over&&!!s.drawn;winCells=over&&!drawn?winLine(marks[turn]):null;if(over&&!winCells&&!drawn)over=false;
   /* a fresh board restarts the repetition count; otherwise each new position is logged as it arrives */
   if(!marks.X.length&&!marks.O.length)posLog=[];logPos();
@@ -4022,7 +4144,7 @@ function updateNetStatus(){
 function begin(c,host,restore){
   leave(true);
   /* every new room starts on Move one; a guest takes the host's rule anyway */
-  if(!restore){rule="M";syncOptSegs(false)}
+  if(!restore){rule="M";roomStay=mmStay||(STAYS.includes(opt.stay)?opt.stay:"5");mmStay=null;syncOptSegs(false)}
   room=c;isHost=host;phase="lobby";hostMark="X";tossWinner=null;tossId=null;outReq=null;inReq=null;updateMe();
   myId=(restore&&restore.myId)||rid();seq=Math.floor(Math.random()*1e6);seen=new Set();
   if(restore&&typeof restore.partner==="string"){partner=restore.partner;partnerSeen=Date.now()}
@@ -4131,8 +4253,9 @@ function onMessage(m){
   if(isHost&&m.t==="name"){pname.set(m.from,cleanName(m.n)||"Guest");if("av" in m)pav.set(m.from,cleanAv(m.av));pushRoom();updateMe();render();return}
   if(m.t==="tossreq"){if(isHost&&phase==="lobby")doToss();return}
   if(m.t==="emote"&&EMO[m.e]){receiveEmote(m.e,m.from,false);return}
-  if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule"].includes(m.kind)){
+  if(m.t==="req"&&typeof m.rid==="string"&&["again","reset","rule","stay"].includes(m.kind)){
     if(m.kind==="rule"&&!RULES.includes(m.data))return;
+    if(m.kind==="stay"&&!STAYS.includes(m.data))return;
     inReq={rid:m.rid,kind:m.kind,data:m.data};render();return}
   if(m.t==="cancel"&&inReq&&m.rid===inReq.rid){inReq=null;toast("Request withdrawn","friend");render();return}
   if(m.t==="ans"&&outReq&&m.rid===outReq.rid){
@@ -4456,7 +4579,7 @@ function doToss(){
 function choose(mark){
   if(phase!=="toss"||(tossWinner==="host")!==isHost)return;
   hostMark=isHost?mark:other(mark);updateMe();
-  marks={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;posLog=[];starter=turn=mark;phase="play";logPos();
+  marks={X:[],O:[]};ages={X:[],O:[]};lim=pickLim();over=false;winCells=null;history=[];drawn=false;posLog=[];starter=turn=mark;phase="play";logPos();
   pushState();toast(`You're ${mark} · you start`);render();
 }
 const faceStyle=k=>({"":"radial-gradient(circle at 32% 30%,#ffc2a8,#ff7a5c 45%,#c2410c)",o:"radial-gradient(circle at 32% 30%,#b9dcff,#5aa2ff 45%,#1d4ed8)",friend:"radial-gradient(circle at 32% 30%,#ccfbf1,#2dd4bf 45%,#0f766e)"}[k]);
@@ -4562,7 +4685,7 @@ function renderLobby(){
 }
 
 /* ---------- Requests: the other player has to say yes ---------- */
-const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the rule"};
+const REQ_TEXT={again:"wants a new round",reset:"wants to reset the score",rule:"wants to change the rule",stay:"wants to change how long a mark can stay"};
 function request(kind,data,src){
   if(!connOpen){toast("Friend is offline");return}
   if(outReq){toast("Still waiting");return}
@@ -4575,6 +4698,7 @@ function performReq(kind,data){
   if(kind==="again")newRound(over||history.length?nextStarter():starter);
   else if(kind==="reset"){score={X:0,O:0};render()}
   else if(kind==="rule"&&RULES.includes(data)){rule=data;syncOptSegs(true);newRound(starter);updateInsight()}
+  else if(kind==="stay"&&STAYS.includes(data)){roomStay=data;newRound(starter);updateInsight()}
 }
 function answer(ok,src){
   const r=inReq;if(!r)return;inReq=null;
@@ -4761,7 +4885,7 @@ function applyRoom(m){
   updateMe();saveSession();render();
 }
 function kicked(){closeDialog(true);leaveAndReset();toast("The host removed you");}
-function resetToLobby(){phase="lobby";hostMark="X";tossWinner=null;tossId=null;marks={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;posLog=[];turn=starter="X";score={X:0,O:0};outReq=null;inReq=null;updateMe()}
+function resetToLobby(){phase="lobby";hostMark="X";tossWinner=null;tossId=null;marks={X:[],O:[]};ages={X:[],O:[]};over=false;winCells=null;history=[];drawn=false;posLog=[];turn=starter="X";score={X:0,O:0};outReq=null;inReq=null;updateMe()}
 /* a spectator takes the board; the old opponent (if still here) goes to the stands */
 function makeOpponent(id,dropOld){
   if(!isHost||!aud.has(id))return;
@@ -5245,7 +5369,12 @@ function findMatch(){
   mm.seekT=setInterval(mmSeek,MM_SEEK);mm.tickT=setInterval(()=>{if(mm&&mm.phase==="search"){const p=$("rcPill"),t=mmClock();if(p.textContent!==t)p.textContent=t}},1000);
   render();
 }
-function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv,p:pulseId})}
+/* the stay limit you want from a match: 4, 5, 6, Random, or Any (whatever they want) */
+var mmStay=null;
+const myStayWish=()=>STAYS.concat("any").includes(opt.stay)?opt.stay:"5";
+const stayFits=(a,b)=>a===b||a==="any"||b==="any";
+const stayAgree=(a,b)=>a==="any"?(b==="any"?"5":b):a;
+function mmSeek(){if(mm&&mm.phase==="search")mmPublish({t:"seek",n:myName,av:myAv,p:pulseId,st:myStayWish()})}
 function mmStop(){
   if(!mm)return;mmPublish({t:"stop",p:pulseId});clearInterval(mm.seekT);clearInterval(mm.tickT);
   const old=mm.clients;mm=null;setTimeout(()=>old.forEach(c=>{try{c.end(true)}catch(e){}}),400);
@@ -5258,17 +5387,20 @@ function mmOn(m){
   if(mm.phase!=="search")return;
   const now=Date.now();if(mm.pending&&now>mm.pending.until)mm.pending=null;
   const peer={id:m.from,n:cleanName(m.n||"")||"Player",av:cleanAv(m.av)};
+  /* older versions send no wish: they play the default, 5 */
+  const theirs=STAYS.concat("any").includes(m.st)?m.st:"5";
   if(m.t==="seek"){
-    if(!mm.pending&&mm.id<m.from){const r=code();mm.pending={to:m.from,room:r,until:now+MM_OFFER,peer};mmPublish({t:"offer",to:m.from,room:r,n:myName,av:myAv})}
+    if(!mm.pending&&mm.id<m.from&&stayFits(myStayWish(),theirs)){const r=code(),st=stayAgree(myStayWish(),theirs);mm.pending={to:m.from,room:r,until:now+MM_OFFER,peer,st};mmPublish({t:"offer",to:m.from,room:r,n:myName,av:myAv,st})}
     return;
   }
   if(m.t==="offer"&&typeof m.room==="string"&&cleanCode(m.room).length===5){
+    if(!stayFits(myStayWish(),theirs))return;
     /* say yes twice through this search's own connections, which stay open a moment after it ends */
     const r=cleanCode(m.room),st=mm;mmPublish({t:"accept",to:m.from,room:r});
     setTimeout(()=>{const keep=mm;mm=st;mmPublish({t:"accept",to:m.from,room:r});mm=keep},150);
     mmFound(peer,r,false);return;
   }
-  if(m.t==="accept"&&mm.pending&&m.from===mm.pending.to&&m.room===mm.pending.room)mmFound(mm.pending.peer,mm.pending.room,true);
+  if(m.t==="accept"&&mm.pending&&m.from===mm.pending.to&&m.room===mm.pending.room){mmStay=STAYS.includes(mm.pending.st)?mm.pending.st:"5";mmFound(mm.pending.peer,mm.pending.room,true)}
 }
 /* the two of you find each other: their face drops into the empty seat,
    both dots lean in, then you go to your room together */
@@ -5650,12 +5782,12 @@ document.querySelectorAll(".dlg").forEach(d=>{
 /* ---------- Rules: four rules, four small boards ---------- */
 let rulesBuilt=false;
 function buildRules(){
-  if(rulesBuilt===rule)return;rulesBuilt=rule;
+  if(rulesBuilt===rule+lim)return;rulesBuilt=rule+lim;
   const R=rule==="M"?[
     {n:"01",t:"Three in a row wins",m:"XO.OX...X",k:{0:"k-win",4:"k-win",8:"k-win"}},
     {n:"02",t:"Three marks each, never more",m:".X.X.O.OX",k:{},b:"3 / 3"},
-    {n:"03",t:"Then tap a mark to pick it up",m:"XO..X.O.X",k:{0:"k-old"}},
-    {n:"04",t:"And tap any empty cell to move it",m:"XO.XX.O.X",k:{0:"k-gone",3:"k-new"}}
+    {n:"03",t:"Then move one of yours to any empty cell",m:"XO.XX.O.X",k:{0:"k-gone",3:"k-new"}},
+    {n:"04",t:`A mark can stay ${lim} turns, then it must move`,m:"XO..X.O.X",k:{0:"k-old"},b:`${lim} max`}
   ]:[
     {n:"01",t:"Three in a row wins",m:"XO.OX...X",k:{0:"k-win",4:"k-win",8:"k-win"}},
     {n:"02",t:"Three marks each, never more",m:".X.X.O.OX",k:{},b:"3 / 3"},
@@ -5674,7 +5806,8 @@ function countUp(el,to){
   requestAnimationFrame(step);
 }
 function updateInsight(opening){
-  const firsts=evalMoves([],[],rule),{count}=solve(rule);
+  /* under the stay limit the game was solved offline: every opening is a draw with best play */
+  const firsts=stayOn()?[0,1,2,3,4,5,6,7,8].map(c=>({c,v:"D",d:99})):evalMoves([],[],rule),count=stayOn()?STAY_POS[lim]:solve(rule).count;
   const wins=firsts.filter(m=>m.v==="W");
   $("heat").innerHTML=firsts.map((m,i)=>`<i class="${m.v==="W"?"W":""} stag" style="--i:${i}">${m.v==="W"?"Win":"Draw"}${m.v==="W"?`<small>in ${Math.ceil(m.d/2)}</small>`:""}</i>`).join("");
   $("insTitle").textContent=wins.length?"Yes.":"No.";
@@ -6042,7 +6175,7 @@ function cyberBuild(d){
     ticks=[[L,Tt,1,1],[R,Tt,-1,1],[L,B,1,-1],[R,B,-1,-1]].map(([x,y,sx,sy])=>`<path class="tr k" pathLength="1" d="M${x} ${y+sy*k}V${y}H${x+sx*k}"/>`).join("");
     /* a system label running down the right margin */
     const lx=w-7,ly=ty-14;
-    label=`<text class="lab" x="${lx}" y="${ly}" transform="rotate(-90 ${lx} ${ly})">AI·CORE // 3602</text>`;
+    label=`<text class="lab" x="${lx}" y="${ly}" transform="rotate(-90 ${lx} ${ly})">AI·CORE // LOOKAHEAD</text>`;
   }
   s.innerHTML=`<defs><clipPath id="${id}c"><rect width="${w}" height="${h}" rx="${rt}"/></clipPath><pattern id="${id}p" width="12" height="12" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#ff3b78"/></pattern>`+
     `<linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".22" stop-color="#fff" stop-opacity="0"/><stop offset=".85" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity=".6"/></linearGradient><mask id="${id}m"><rect width="${w}" height="${h}" fill="url(#${id}g)"/></mask></defs>`+
@@ -6100,12 +6233,13 @@ function cyberOut(d,ms){
    questions at a time; each one asked is swapped for one you haven't asked.
    The numbers it gives are the solver's own: 3,602 positions, a draw with best
    play, a longest forced win of five moves, half a second before each move. */
-const COMP_THREAT={easy:"Napping",medium:"Plotting",perfect:"Unbeatable"};
+const COMP_THREAT={easy:"Napping",medium:"Plotting",perfect:"Relentless"};
 const COMP_QA=[
-  ["What are you?","A very patient opponent. I have seen every position this game can reach. All 3,602 of them."],
-  ["Can I beat you?","On Perfect, no. The best anyone can do is a draw. On Easy and Medium I make mistakes on purpose. I call it being nice."],
+  ["What are you?","A very patient opponent. This game has millions of positions now. On Hard I look several moves ahead in every one."],
+  ["Can I beat you?","On Hard you will have to see further ahead than I do. On Easy and Medium I make mistakes on purpose. I call it being nice."],
+  ["Why can't a mark stay forever?","A mark may only sit still so many turns. Then it must move. I count. Always."],
   ["Why the pause before you move?","I wait about half a second every time. I do not need to. I enjoy watching you wait."],
-  ["Do you set traps?","My longest ends in a win five moves after I spring it. I will not tell you when one has started."],
+  ["Do you set traps?","Some of mine are twenty moves deep. I will not tell you when one has started."],
   ["What's the best first move?","With best play from both sides, every game from an empty board is a draw. So: the one you will not regret."],
   ["Why are your eyes pink?","Red was already taken."],
   ["Do you ever get tired?","Never tired. Never hungry. Never checking my phone."],
@@ -6115,7 +6249,7 @@ const COMP_QA=[
   ["Where do you go when I leave?","Nowhere. I wait."],
   ["Are you evil?","I prefer “undefeated”."]
 ];
-const COMP_POKES=["Stop poking me.","I felt that. I didn’t, but still.","Bold of you.","Again? Interesting strategy.","I am adding this to your file.","Poke me once more and I play Perfect.","…"];
+const COMP_POKES=["Stop poking me.","I felt that. I didn’t, but still.","Bold of you.","Again? Interesting strategy.","I am adding this to your file.","Poke me once more and I play Hard.","…"];
 let compT=0,compPoke=0,compAsked=new Set(),compShown=[],compBusy=false;
 /* the conversation runs on like a real terminal: your question types out,
    then its answer types under it, and older lines scroll up out of the way */
@@ -6276,7 +6410,7 @@ appSync();
    no dialog open and no online room. The reload goes to a fresh address, so
    no cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·2014";if(BUILD.startsWith("__"))return;
+  const BUILD="2026.11.27·2057";if(BUILD.startsWith("__"))return;
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
   /* at most two tries per build, so a slow mirror can never loop it */
