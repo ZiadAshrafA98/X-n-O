@@ -911,6 +911,20 @@ button.seatc{touch-action:none}
   border-radius:22px;box-shadow:0 1px 2px rgba(0,0,0,.25),0 10px 28px -6px rgba(0,0,0,.45);animation:noteIn .55s var(--spring-soft) both}
 .upd-note[hidden]{display:none}
 .upd-note.leaving{animation:noteOut .26s var(--out) both}
+/* the arrival: the page leans back under a light dim while the band falls */
+.app{transform-origin:50% 0;transition:transform .7s var(--out)}
+.app.upd-lean{transform:scale(.965) translateY(8px)}
+body::after{content:"";position:fixed;inset:0;z-index:58;pointer-events:none;background:#000;opacity:0;transition:opacity .7s var(--out)}
+body.upd-dim::after{opacity:.3}
+:root[data-theme="light"] body.upd-dim::after{opacity:.1}
+.upd-band{position:fixed;inset:0;width:100vw;height:100dvh;z-index:59;pointer-events:none;opacity:0;transition:opacity .2s}
+.upd-band.on{opacity:1}
+.upd-note.arriving{animation:noteDrop .8s var(--out) both}
+@keyframes noteDrop{from{opacity:0;filter:blur(10px);transform:translate(-50%,-26px) scale(1.04)}55%{filter:blur(2px)}to{opacity:1;filter:none;transform:translateX(-50%)}}
+/* a soft green glow stays behind the notice, then fades away */
+.upd-note::before{content:"";position:absolute;z-index:-1;left:50%;top:-40px;width:min(560px,130vw);height:190px;transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--green) 34%,transparent),transparent);filter:blur(6px);opacity:0;transition:opacity 2.4s var(--out)}
+.upd-note.glow::before{opacity:1;transition:opacity .5s var(--out)}
 .un-root{position:relative;display:grid;border-radius:22px;overflow:hidden;isolation:isolate}
 .un-band{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;border-radius:22px}
 .un-view{grid-area:1/1;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 9px;border-radius:22px;
@@ -928,7 +942,7 @@ button.seatc{touch-action:none}
 .un-view .sq svg{width:17px;height:17px}
 @keyframes noteIn{from{opacity:0;transform:translate(-50%,-130%)}to{opacity:1;transform:translateX(-50%)}}
 @keyframes noteOut{to{opacity:0;transform:translate(-50%,-60%) scale(.96)}}
-@media (prefers-reduced-motion:reduce){.upd-note,.upd-note *{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.upd-note,.upd-note *{animation:none!important}.app.upd-lean{transform:none}}
 /* the dot on Settings when an update waits: big enough to hold its arrow */
 .btn.round.has-upd::after{content:"";position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:99px;
   background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11'/%3E%3Cpath d='m7 10.5 5 5 5-5'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E") center/11px no-repeat;
@@ -1766,7 +1780,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2236</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2240</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6565,7 +6579,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2236";
+  const BUILD="2026.11.27·2240";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6612,14 +6626,17 @@ appSync();
   /* only the view in front takes taps */
   const taps=()=>{front().style.pointerEvents="";back().style.pointerEvents="none";back().inert=true;front().inert=false};
   const unclip=()=>{front().style.clipPath="";front().style.opacity="";back().style.clipPath="";back().style.opacity="0"};
+  let gMod=null;
+  const glimmMod=()=>gMod?Promise.resolve(gMod):import("./glimm.js").then(m=>(gMod=m)).catch(()=>null);
+  const GREEN=m=>m.accentChain(["#C2FF3D","#3ecf7a","#00FFA8"]);
   function glimm(){
     if(gl||glLoad)return glLoad||Promise.resolve(gl);
-    glLoad=import("./glimm.js").then(m=>{
+    glLoad=glimmMod().then(m=>{if(!m)return null;
       const c=document.createElement("canvas");c.className="un-band";c.setAttribute("aria-hidden","true");nRoot.appendChild(c);
-      gl=m.createShader({canvas:c,palette:m.accentChain(["#C2FF3D","#3ecf7a","#00FFA8"]),direction:"ltr",bandTight:40,feather:"auto"});
+      gl=m.createShader({canvas:c,palette:GREEN(m),direction:"ltr",bandTight:40,feather:"auto"});
       if(!gl){c.remove();return null}
       gl.play=m.playSweep;return gl;
-    }).catch(()=>null);
+    });
     return glLoad;
   }
   /* where the band's crest is, 0 to 1 across the pill, for a sweep's progress */
@@ -6647,17 +6664,50 @@ appSync();
     return true;
   }
   const subEl=()=>front().querySelector(".un-sub");
+  /* the arrival, after glimm's "wait for banner": the page leans back and
+     dims a touch, a green band falls from the top centre down the whole
+     screen, the notice drops out of a blur as the band passes it, then the
+     page settles and a soft glow stays behind the notice for a while */
+  let page=null,pageBusy=false;
+  function pageBand(){
+    return glimmMod().then(m=>{
+      if(!m)return null;
+      if(page)return page;
+      const c=document.createElement("canvas");c.className="upd-band";c.setAttribute("aria-hidden","true");document.body.appendChild(c);
+      const g=m.createShader({canvas:c,palette:GREEN(m),direction:"ttb",bandTight:26,curve:.22,span:.64,feather:0});
+      if(!g){c.remove();return null}
+      page={g,c,play:m.playSweep};return page;
+    });
+  }
+  function arrive(){
+    const app=$("app");
+    if(still||pageBusy){note.hidden=false;return}
+    pageBusy=true;
+    pageBand().then(pb=>{
+      if(!pb){note.hidden=false;pageBusy=false;return}
+      app.classList.add("upd-lean");document.body.classList.add("upd-dim");
+      setTimeout(()=>{
+        pb.c.classList.add("on");pb.g.setProgress(0);
+        pb.play(pb.g,{sweepMs:1700,outroMs:420,direction:"ttb",bandTight:26,brightness:.95,swellAmount:.7,rippleAmount:.7,waveAmount:.6,easing:"easeInOutCubic",
+          onComplete:()=>{pb.c.classList.remove("on");pageBusy=false}});
+        /* the band reaches the top edge: the notice drops in out of a blur */
+        setTimeout(()=>{note.classList.add("arriving");note.hidden=false;note.classList.add("glow");
+          setTimeout(()=>note.classList.remove("glow"),5200)},300);
+        /* the page lets go as the band runs down past it */
+        setTimeout(()=>{app.classList.remove("upd-lean");document.body.classList.remove("upd-dim")},700);
+      },380);
+    });
+  }
   function showNote(on){
     clearTimeout(note._t);clearTimeout(note._h);
     if(on){
       if(!note.hidden&&!note.classList.contains("leaving"))return;
-      note.classList.remove("leaving");note.hidden=false;unclip();taps();
-      /* it lands, then the band sweeps across it */
-      glimm();setTimeout(()=>{if(!note.hidden&&!note.classList.contains("leaving"))run(false)},still?0:300);
+      note.classList.remove("leaving");unclip();taps();glimm();
+      if(note.dataset.k==="ready")arrive();else note.hidden=false;
       return;
     }
     if(note.hidden)return;
-    note.classList.add("leaving");note._t=setTimeout(()=>{note.hidden=true;note.classList.remove("leaving")},still?0:260);
+    note.classList.remove("arriving");note.classList.add("leaving");note._t=setTimeout(()=>{note.hidden=true;note.classList.remove("leaving")},still?0:260);
   }
   function offer(){
     const sub=midGame()?"Restarting ends this round":"Restart to get it";
