@@ -1786,7 +1786,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2321</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2323</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6585,7 +6585,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2321";
+  const BUILD="2026.11.27·2323";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6672,8 +6672,11 @@ appSync();
       }
       const c=makeCard(k,t,sub);
       if(k==="ready"&&top.dataset.k==="soon"){
-        /* the new card slides over; the old one is pushed back and peeks out below */
-        stack.appendChild(c);cards.push(c);top.inert=true;
+        /* the new card slides over; the old one is pushed back and peeks out
+           below; and the page ripples again, from a fresh picture of it */
+        const w=await pictured();
+        if(!next||topCard()!==top)return;
+        stack.appendChild(c);cards.push(c);top.inert=true;rippleFrom(w);
         top.animate([{transform:"none",opacity:1,filter:"brightness(1)"},{transform:"translateY(13px) scale(.92)",opacity:.95,filter:"brightness(.62)"}],{duration:ms(520),easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"});
         await enter(c);
         while(cards.length>2)cards.shift().remove();
