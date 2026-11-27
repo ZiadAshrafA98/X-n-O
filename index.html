@@ -911,7 +911,10 @@ button.seatc{touch-action:none}
 .upd-note[hidden]{display:none}
 .upd-note.leaving{animation:noteOut .26s var(--out) both}
 .upd-note .upd-ic{color:var(--bg);background:var(--green)}
-.upd-note .upd-ic svg{width:19px;height:19px;animation:updNudge 1.6s var(--out) .6s 3}
+.upd-note .upd-ic svg{grid-area:1/1;width:19px;height:19px;opacity:0;transform:scale(.5);transition:opacity .25s var(--out),transform .35s var(--spring)}
+.upd-note:not([data-k]) .n-new,.upd-note[data-k="ready"] .n-new{opacity:1;transform:none;animation:updNudge 1.6s var(--out) .6s 3}
+.upd-note[data-k="going"] .n-go{opacity:1;transform:none;animation:spin .8s linear infinite}
+.upd-note[data-k="done"] .n-ok{opacity:1;transform:none}
 .upd-note .inst-t b{font-size:14px;font-weight:600}
 .upd-note .inst-t span{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .upd-note .btn{height:36px;padding:0 16px;font-size:13px;flex:none}
@@ -1738,8 +1741,8 @@ a.sh-act{text-decoration:none}
 <p class="sr" id="srLive" aria-live="assertive"></p>
 
 <div class="upd-note" id="updNote" role="status" hidden>
-  <span class="upd-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-  <span class="inst-t"><b>New version ready</b><span id="updNoteS">Takes a second</span></span>
+  <span class="upd-ic" aria-hidden="true"><svg class="n-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg><svg class="n-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.3-5.6"/></svg><svg class="n-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>
+  <span class="inst-t"><b id="updNoteT">New version ready</b><span id="updNoteS">Restart to get it</span></span>
   <button class="btn primary" id="updNoteGo" type="button">Restart</button>
   <button class="sq" id="updNoteX" type="button" aria-label="Later"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
 </div>
@@ -1758,7 +1761,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2209</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2213</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6540,21 +6543,26 @@ matchMedia("(display-mode: standalone)").addEventListener?.("change",()=>{docume
 appSync();
 
 /* ---------- Staying current ---------- */
-/* Each build stamps itself and writes the same stamp to version.json. An
-   open page (a tab left open, a phone that keeps it in memory, a copy the
-   browser kept) asks for that file, never from any cache, when it starts,
-   when you come back to it and every two minutes. If a newer build is out it
-   loads it at the first moment nothing would be lost: no marks on the board,
-   no dialog open and no online room. Until then the version card in Settings
-   says an update is ready, a dot sits on the Settings button, and one tap
-   restarts into the new build. The reload goes to a fresh address, so no
-   cache can hand back the old page, and that marker is then tidied away. */
+/* Each build stamps itself and writes the same stamp to version.json. The
+   game asks for that file, never from any cache, when it opens, when you come
+   back to it, when you open Settings and every two minutes.
+   What happens when a newer build is out:
+   - just opened, or back after a while away, with nothing to lose (no marks,
+     no dialog, no online room): it loads the new build straight away, before
+     you have started anything;
+   - otherwise it never reloads under you. A notice drops in at the top with
+     Restart, the version card in Settings turns green and a dot sits on the
+     Settings button, until you choose.
+   Restarting first makes sure the server already hands out the new page, so
+   it can never bounce back to the old one, then loads it at a fresh address
+   and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2209";
+  const BUILD="2026.11.27·2213";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
     const mo=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2]-1];return `${+m[3]} ${mo} · ${m[4]}:${m[5]}`};
+  const ss={get:k=>{try{return sessionStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v==null?sessionStorage.removeItem(k):sessionStorage.setItem(k,v)}catch(e){}}};
   let state="",lastCheck=0;
   function show(s,title,sub,label,primary){
     const changed=state!==s;state=s;row.dataset.s=s;
@@ -6564,11 +6572,10 @@ appSync();
   if(BUILD.startsWith("__")){show("idle","Up to date","Local build","Check");btn.disabled=true;return}
   try{const u=new URL(location.href);if(u.searchParams.has("v")){u.searchParams.delete("v");window.history.replaceState(window.history.state,"",u)}}catch(e){}
   let next=null,busy=false;
-  /* at most two tries per build, so a slow mirror can never loop it */
-  const tried=()=>{try{return sessionStorage.getItem("xo.upd")}catch(e){return null}};
-  const tries=v=>{try{return +(sessionStorage.getItem("xo.upd.n."+v)||0)}catch(e){return 0}};
-  /* nothing would be lost: no dialog, no online room, and the board is empty or the round is over */
-  const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&(marks.X.length+marks.O.length===0||over);
+  let bootAt=Date.now(),touched=false,hiddenAt=0;
+  addEventListener("pointerdown",()=>{touched=true},{capture:true,passive:true});
+  addEventListener("keydown",()=>{touched=true},{capture:true});
+  const empty=()=>!openDlg&&!room&&!(mm&&mm.phase)&&marks.X.length+marks.O.length===0;
   const midGame=()=>!!room||(!over&&marks.X.length+marks.O.length>0);
   /* a waiting update goes to the top of Settings; otherwise the card closes the list */
   const home=row.parentNode,anchor=$("instRow"),spot=document.createComment("upd");
@@ -6582,33 +6589,62 @@ appSync();
     if(!navigator.onLine){show("offline","You're offline",`Version ${pretty(BUILD)}`,"Check");return}
     show(state==="latest"?"latest":"idle",state==="latest"?"You're on the latest":"Updates",`Version ${pretty(BUILD)}`,"Check");
   }
-  function restart(){
-    if(!next)return;
-    try{sessionStorage.setItem("xo.upd.n."+next,String(tries(next)+1));if(tries(next)>=2)sessionStorage.setItem("xo.upd",next)}catch(e){}
-    const u=new URL(location.href);u.searchParams.set("v",next);location.replace(u.toString());
-  }
-  function go(){if(next&&tried()!==next&&calm())restart()}
-  /* the notice: once per build, it drops in on its own while you play, so
-     you never have to go looking. Restart from it, or close it and the dot on
-     Settings keeps the reminder. */
-  const note=$("updNote");let noted=null;
-  try{noted=sessionStorage.getItem("xo.upd.seen")}catch(e){}
+  /* ---- the notice at the top ---- */
+  const note=$("updNote"),nT=$("updNoteT"),nS=$("updNoteS"),nGo=$("updNoteGo");
+  function noteSay(kind,title,sub){note.dataset.k=kind;nT.textContent=title;nS.textContent=sub;nGo.hidden=kind!=="ready"}
   function showNote(on){
-    if(on===!note.hidden&&!note.classList.contains("leaving"))return;
-    clearTimeout(note._t);
-    if(on){note.classList.remove("leaving");note.hidden=false;$("updNoteS").textContent=midGame()?"Restarting ends this round":"Takes a second";}
-    else{note.classList.add("leaving");note._t=setTimeout(()=>{note.hidden=true;note.classList.remove("leaving")},still?0:260)}
+    clearTimeout(note._t);clearTimeout(note._h);
+    if(on){if(!note.hidden&&!note.classList.contains("leaving"))return;note.classList.remove("leaving");note.hidden=false;return}
+    if(note.hidden)return;
+    note.classList.add("leaving");note._t=setTimeout(()=>{note.hidden=true;note.classList.remove("leaving")},still?0:260);
   }
-  function setNext(v){
+  function offer(){noteSay("ready","New version ready",midGame()?"Restarting ends this round":"Restart to get it");showNote(true)}
+  $("updNoteGo").addEventListener("click",()=>{if(next)startRestart()});
+  $("updNoteX").addEventListener("click",()=>{showNote(false);if(next)ss.set("xo.upd.later",next)});
+  /* ---- restarting ---- */
+  /* the page the server hands out right now: is it the new one yet? */
+  const serverHas=v=>fetch("./?fresh="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.text():"").then(t=>t.includes(v)).catch(()=>false);
+  let going=false;
+  async function startRestart(){
+    if(going||!next)return;going=true;const v=next;
+    show("going","Restarting",`Loading ${pretty(v)}`,"Restarting",true);
+    noteSay("going","Updating",`Loading ${pretty(v)}`);showNote(true);buzz(10);
+    /* a new release takes a minute to reach every server: wait for it rather than reload into the old page */
+    for(let k=0;k<24&&!(await serverHas(v));k++){
+      if(k===1){noteSay("going","Almost there","The new version is still on its way");bS.textContent="Still on its way"}
+      await new Promise(r=>setTimeout(r,5000));
+    }
+    /* let the new offline worker settle too, so the fresh page finds fresh files */
+    const sw=swReg&&(swReg.installing||swReg.waiting);
+    if(sw)await new Promise(r=>{const t=setTimeout(r,2500);sw.addEventListener("statechange",()=>{if(sw.state==="activated"||sw.state==="redundant"){clearTimeout(t);r()}})});
+    reload(v);
+  }
+  function reload(v){
+    ss.set("xo.upd.to",v);
+    const n=+(ss.get("xo.upd.n."+v)||0);ss.set("xo.upd.n."+v,String(n+1));
+    const u=new URL(location.href);u.searchParams.set("v",v);location.replace(u.toString());
+  }
+  /* back from a restart: say so, briefly */
+  const to=ss.get("xo.upd.to");
+  if(to){ss.set("xo.upd.to",null);
+    if(to<=BUILD)setTimeout(()=>{noteSay("done","Updated",`You're on ${pretty(BUILD)}`);showNote(true);note._h=setTimeout(()=>showNote(false),3200)},still?200:900);
+  }
+  /* the quiet path: only right after opening (or coming back), never once you are playing, and twice at most per build */
+  function quietOK(){
+    if(!empty())return false;
+    const fresh=!touched&&Date.now()-bootAt<15000;
+    return fresh&&+(ss.get("xo.upd.n."+next)||0)<2;
+  }
+  function found(v){
+    const isNew=v!==next;
     next=v;updReady=!!v;paint();try{appSync()}catch(e){}
-    /* give the quiet update a moment first: if it can happen now, no notice is needed */
-    if(v&&noted!==v)setTimeout(()=>{if(next===v&&noted!==v&&state!=="going"){noted=v;try{sessionStorage.setItem("xo.upd.seen",v)}catch(e){}showNote(true)}},1800);
+    if(!v||going)return;
+    if(quietOK()){reload(v);return}
+    if(isNew&&ss.get("xo.upd.later")!==v)offer();
   }
-  $("updNoteGo").addEventListener("click",()=>{showNote(false);state="ready";btn.click()});
-  $("updNoteX").addEventListener("click",()=>showNote(false));
   /* manual: a tap always looks, and always says what it found */
   function check(manual){
-    if(busy||(!manual&&document.visibilityState==="hidden"))return Promise.resolve();
+    if(busy||going||(!manual&&document.visibilityState==="hidden"))return Promise.resolve();
     busy=true;const t0=Date.now();
     if(manual)show("checking","Checking",`Version ${pretty(BUILD)}`,"Checking");
     /* an app left in memory: ask for the new worker too, so the next open is already fresh */
@@ -6620,35 +6656,30 @@ appSync();
       const v=j&&typeof j.v==="string"&&j.v>BUILD?j.v:null;
       return new Promise(r=>setTimeout(r,manual?Math.max(0,650-(Date.now()-t0)):0)).then(()=>{
         if(manual&&state==="checking")state=v?"":"latest";
-        setNext(v);
-        if(!manual)go();
+        found(v);
       });
     }).catch(()=>{if(manual){state="";show("offline",navigator.onLine?"Couldn't check":"You're offline","Try again in a moment","Check");btn.disabled=false}})
       .finally(()=>{busy=false});
   }
-  btn.addEventListener("click",()=>{
-    if(state==="ready"){
-      showNote(false);
-      show("going","Restarting",`Loading ${pretty(next)}`,"Restarting",true);buzz(10);
-      /* let the new worker settle first, so the fresh page finds fresh files */
-      const sw=swReg&&(swReg.installing||swReg.waiting);
-      const settle=sw?new Promise(r=>{const t=setTimeout(r,2500);sw.addEventListener("statechange",()=>{if(sw.state==="activated"||sw.state==="redundant"){clearTimeout(t);r()}})}):Promise.resolve();
-      settle.then(()=>setTimeout(restart,250));
-      return;
-    }
-    check(true);
-  });
+  btn.addEventListener("click",()=>{if(state==="ready")startRestart();else if(state!=="going")check(true)});
   /* opening Settings looks again if the last look is over a minute old */
   $("btnSettings").addEventListener("click",()=>{if(state==="latest"&&Date.now()-lastCheck>60000)state="";paint();if(Date.now()-lastCheck>60000)check(false)});
   addEventListener("offline",paint);
   paint();
-  setTimeout(()=>check(false),1200);setInterval(()=>check(false),120000);setInterval(go,1500);
-  document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check(false)});
+  setTimeout(()=>check(false),1200);setInterval(()=>check(false),120000);
+  /* the words follow the board: "ends this round" only while a round is on */
+  setInterval(()=>{if(!next||going)return;paint();if(!note.hidden&&note.dataset.k==="ready")nS.textContent=midGame()?"Restarting ends this round":"Restart to get it"},1500);
+  /* back after half a minute away counts as opening again */
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState==="hidden"){hiddenAt=Date.now();return}
+    if(hiddenAt&&Date.now()-hiddenAt>30000&&!going){touched=false;bootAt=Date.now()}
+    check(false);
+  });
   addEventListener("pageshow",e=>{if(e.persisted)check(false)});
+  addEventListener("focus",()=>check(false));
   addEventListener("online",()=>{paint();check(false)});
   /* a new worker took over (the app found an update in the background): look at once */
   if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("controllerchange",()=>{busy=false;check(false)});
-  addEventListener("focus",()=>check(false));
 })();
 
 /* dither: a small tile of random specks one or two shades lighter or darker, sized to the screen's own pixels */
