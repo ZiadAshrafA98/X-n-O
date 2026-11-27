@@ -42,14 +42,16 @@ const stages = async run => {
     deploying: step && step.started_at ? t(step.started_at) : null, deployed: step && step.completed_at ? t(step.completed_at) : null };
 };
 
-// how long each stretch took in recent deploys (live ~ when the deploy step ends)
+// how long each stretch took in recent deploys (live ~ just before the deploy step ends)
 async function history() {
   const j = await gh(`/actions/runs?status=success&per_page=40`).catch(() => ({ workflow_runs: [] }));
   const runs = j.workflow_runs.filter(r => r.name === "pages build and deployment" && r.head_sha !== SHA).slice(0, 10);
   const all = [], afterBuild = [], afterStart = [];
   for (const r of runs) {
     try { const s = await stages(r); if (!s.deployed) continue;
-      all.push(s.deployed - s.created); if (s.built) afterBuild.push(s.deployed - s.built); if (s.deploying) afterStart.push(s.deployed - s.deploying);
+      // the site starts serving about 3 s before GitHub marks the step done (measured)
+      const at = s.deployed - 3;
+      all.push(at - s.created); if (s.built) afterBuild.push(at - s.built); if (s.deploying) afterStart.push(at - s.deploying);
     } catch {}
   }
   return { all: median(all) ?? 36, afterBuild: median(afterBuild) ?? 14, afterStart: median(afterStart) ?? 7, n: all.length };
