@@ -215,7 +215,12 @@ button{cursor:pointer;-webkit-user-select:none;user-select:none}
 .tog-in{min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:opacity .3s var(--out)}
 .tog-lbl{font-size:14px;color:var(--ink-2);cursor:pointer;-webkit-user-select:none;user-select:none}
 /* Mark order numbers means nothing under Move one: the row folds away, and the sheet or the pop-up eases to its new height with it */
-:root:not([data-rule="M"]) .group.grp-stay{display:none}
+/* the stay rows fold the same way (they only mean something under Move one), so a rule change eases the sheet in one smooth movement */
+.group.grp-stay{display:grid;grid-template-rows:1fr;transition:grid-template-rows .46s cubic-bezier(.32,.72,0,1),padding .46s cubic-bezier(.32,.72,0,1),margin .46s cubic-bezier(.32,.72,0,1)}
+.group.grp-stay .fold-in{min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:10px;transition:opacity .3s var(--out)}
+:root:not([data-rule="M"]) .group.grp-stay{grid-template-rows:0fr;padding-top:0;padding-bottom:0;pointer-events:none}
+:root:not([data-rule="M"]) #dlgSettings .group.grp-stay{margin-top:0}
+:root:not([data-rule="M"]) .group.grp-stay .fold-in{opacity:0}
 :root[data-rule="M"] .group.grp-age{grid-template-rows:0fr;padding-top:0;padding-bottom:0;border-top-color:transparent;pointer-events:none}
 :root[data-rule="M"] .grp-age .tog-in{opacity:0}
 :root[data-rule="M"] .grp-age .liq-sw{visibility:hidden}
@@ -1782,8 +1787,8 @@ a.sh-act{text-decoration:none}
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
   <div class="inst-row stag" id="instRow" hidden><span class="inst-ic" aria-hidden="true"></span><span class="inst-t"><b>Install X n O</b><span>Full screen, and plays offline</span></span><button class="btn primary" id="instBtn" type="button">Install</button></div>
   <div class="group stag"><span class="group-label" id="gl-rule">After three marks</span><div class="rcards" role="group" aria-labelledby="gl-rule"></div></div>
-  <div class="group stag grp-stay" data-hide="online"><span class="group-label" id="gl-stay">Turns a mark can stay put</span><div class="seg sm full" data-opt="stay" role="group" aria-labelledby="gl-stay"><span class="thumb"></span><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="r">Random</button></div></div>
-  <div class="group stag grp-stay" data-for="online"><span class="group-label" id="gl-stayo">Turns a mark can stay put</span><div class="seg sm full" data-opt="stay" role="group" aria-labelledby="gl-stayo"><span class="thumb"></span><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="r">Random</button><button type="button" data-v="any">Any</button></div></div>
+  <div class="group stag grp-stay" data-hide="online"><div class="fold-in"><span class="group-label" id="gl-stay">Turns a mark can stay put</span><div class="seg sm full" data-opt="stay" role="group" aria-labelledby="gl-stay"><span class="thumb"></span><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="r">Random</button></div></div></div>
+  <div class="group stag grp-stay" data-for="online"><div class="fold-in"><span class="group-label" id="gl-stayo">Turns a mark can stay put</span><div class="seg sm full" data-opt="stay" role="group" aria-labelledby="gl-stayo"><span class="thumb"></span><button type="button" data-v="4">4</button><button type="button" data-v="5">5</button><button type="button" data-v="6">6</button><button type="button" data-v="r">Random</button><button type="button" data-v="any">Any</button></div></div></div>
   <div class="group stag tog-row" data-hide="online"><div class="tog-in"><span class="tog-lbl" id="gl-hints">Hints</span><button class="liq-sw" type="button" role="switch" data-opt="hints" aria-checked="false" aria-labelledby="gl-hints"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag tog-row grp-age"><div class="tog-in"><span class="tog-lbl" id="gl-age">Mark order numbers</span><button class="liq-sw" type="button" role="switch" data-opt="age" aria-checked="false" aria-labelledby="gl-age"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
   <div class="group stag tog-row" data-for="online"><div class="tog-in"><span class="tog-lbl" id="gl-sfx">Reaction sounds</span><button class="liq-sw" type="button" role="switch" data-opt="sfx" aria-checked="false" aria-labelledby="gl-sfx"><span class="liq-sw-blobs" aria-hidden="true"><span class="liq-thumb"></span></span></button></div></div>
@@ -1791,7 +1796,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2337</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2346</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6592,7 +6597,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2337";
+  const BUILD="2026.11.27·2346";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6727,7 +6732,9 @@ appSync();
      once pushed far or fast enough; otherwise it springs back */
   (function swipe(){
     let id=null,y0=0,dy=0,on=false,lastY=0,lastT=0,v=0;
-    const set=y=>{stack.style.transform=`translate(-50%,${y}px)`;stack.style.opacity=y<0?String(Math.max(.3,1+y/170)):"1"};
+    /* down it stretches on a rubber band (the further, the stiffer); up it fades as it goes */
+    const set=y=>{stack.style.transform=`translate(-50%,${y}px)${y>0?` scale(${1+y/1600})`:""}`;stack.style.opacity=y<0?String(Math.max(.3,1+y/170)):"1"};
+    const band=d=>d*.6/(1+d/220);
     stack.addEventListener("pointerdown",e=>{
       if(id!==null||leavingNow||topKind()==="going")return;
       id=e.pointerId;y0=lastY=e.clientY;lastT=performance.now();dy=0;v=0;on=false;swiped=false;
@@ -6737,15 +6744,16 @@ appSync();
       const d=e.clientY-y0;
       if(!on){if(Math.abs(d)<6)return;on=true;swiped=true;try{stack.setPointerCapture(id)}catch(_){}}
       const now=performance.now();v=.7*v+.3*((e.clientY-lastY)/Math.max(1,now-lastT));lastY=e.clientY;lastT=now;
-      dy=d<0?d:d*.22;set(dy);
+      dy=d<0?d:band(d);set(dy);
     });
     const end=e=>{
       if(e.pointerId!==id)return;id=null;
       if(!on)return;on=false;
       const h=stack.getBoundingClientRect().height;
       if(dy<-h*.4||v<-.4){buzz(6);dismiss(dy,true)}
-      else{const from=dy;stack.style.transform="";stack.style.opacity="";
-        stack.animate([{transform:`translate(-50%,${from}px)`},{transform:"translate(-50%,0)"}],{duration:ms(420),easing:"cubic-bezier(.2,1.35,.4,1)"})}
+      else{const from=stack.style.transform,op=stack.style.opacity||"1";stack.style.transform="";stack.style.opacity="";
+        /* home on a soft spring, from exactly where it was let go */
+        stack.animate([{transform:from,opacity:op},{transform:"translate(-50%,0)",opacity:1}],{duration:ms(dy>0?560:440),easing:"cubic-bezier(.22,1.28,.36,1)"})}
       setTimeout(()=>{swiped=false},80);
     };
     stack.addEventListener("pointerup",end);stack.addEventListener("pointercancel",end);
