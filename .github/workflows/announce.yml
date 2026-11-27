@@ -1,6 +1,7 @@
 # Tells open copies of the game about a new build, on the public relays the
 # game already uses for online play:
-#   xando/v1/soon  the moment it is pushed: the game says "Update on its way"
+#   xando/v1/soon  the moment it is pushed ("stamp|push time"): the game says
+#                  "Update on its way" and counts down
 #   xando/v1/build once xando.space serves it: the game offers Restart
 # Both are hints. The game re-reads version.json itself before it offers to
 # restart, so a stray message can never load anything.
@@ -24,8 +25,10 @@ jobs:
       - name: Say it is on its way
         run: |
           V=$(node -p "require('./version.json').v")
+          # with the push time, so the game can count down to when it goes live
+          T=$(git log -1 --format=%ct)
           for host in broker.emqx.io broker.hivemq.com; do
-            npx -y mqtt@5.10.1 pub -h "$host" -p 1883 -t xando/v1/soon -m "$V" -r -q 1 || echo "could not reach $host"
+            npx -y mqtt@5.10.1 pub -h "$host" -p 1883 -t xando/v1/soon -m "$V|$T" -r -q 1 || echo "could not reach $host"
           done
       - name: Wait for the new build to go live
         id: live

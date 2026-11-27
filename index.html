@@ -943,6 +943,16 @@ body>canvas{z-index:57!important}
 .btn.round.has-upd::after{content:"";position:absolute;top:-3px;right:-3px;width:18px;height:18px;border-radius:99px;
   background:var(--green) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11'/%3E%3Cpath d='m7 10.5 5 5 5-5'/%3E%3Cpath d='M5 20h14'/%3E%3C/svg%3E") center/11px no-repeat;
   box-shadow:0 0 0 2px var(--bg);animation:pop .45s var(--spring) both}
+/* the update stack: cards laid on each other at the top of the screen */
+.upd-stack{position:fixed;z-index:60;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);width:min(420px,calc(100vw - 24px));transform:translateX(-50%);
+  display:grid;touch-action:none;-webkit-user-select:none;user-select:none}
+.upd-stack:empty{display:none}
+.upd-card{position:relative;transform-origin:50% 100%;box-shadow:0 1px 2px rgba(0,0,0,.25),0 10px 28px -6px rgba(0,0,0,.45);will-change:transform,opacity}
+.upd-stack::before{content:"";position:absolute;z-index:-1;left:50%;top:-40px;width:min(560px,130vw);height:190px;transform:translateX(-50%);pointer-events:none;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--green) 34%,transparent),transparent);filter:blur(6px);opacity:0;transition:opacity 2.4s var(--out)}
+.upd-stack.upd-glow::before{opacity:1;transition:opacity .5s var(--out)}
+.upd-card[data-k="going"] .upd-ic svg{animation:spin .8s linear infinite}
+@media (prefers-reduced-motion:reduce){.upd-card *{animation:none!important}}
 /* ---------- the version card in Settings ---------- */
 .upd-row{display:flex;align-items:center;gap:12px;margin:10px 6px 2px;}
 .upd-row[data-s="ready"],.upd-row[data-s="going"]{margin:0 6px 8px}
@@ -1760,7 +1770,7 @@ a.sh-act{text-decoration:none}
 <div class="scrim" id="scrim" hidden></div>
 <p class="sr" id="srLive" aria-live="assertive"></p>
 
-<div class="upd-note" id="updNote" role="status" aria-live="polite" hidden><div class="un-root" id="unRoot"><div class="un-view" id="unA"></div><div class="un-view" id="unB"></div></div></div>
+<div class="upd-stack" id="updStack" role="status" aria-live="polite"></div>
 
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
@@ -1776,7 +1786,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2307</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2313</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6575,7 +6585,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2307";
+  const BUILD="2026.11.27·2313";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6608,63 +6618,25 @@ appSync();
     show(state==="latest"?"latest":"idle",state==="latest"?"You're on the latest":"Updates",`Version ${pretty(BUILD)}`,"Check");
   }
   /* ---- the notice at the top ---- */
-  /* two views laid on each other; the next words go in the hidden one, and a
-     green wave out of the icon carries the pill across to them */
-  const note=$("updNote"),nRoot=$("unRoot"),nA=$("unA"),nB=$("unB");
+  /* A small stack of cards. Each message is its own card: "on its way"
+     (with a countdown), "ready" (slides in over it and pushes it back, so it
+     peeks out behind), then "updating" and "updated" in place. Every change
+     goes through one queue, so two animations never fight over a card, and
+     a swipe up or the X sends the whole stack away at once. */
+  const stack=$("updStack");
   const ICO={ready:'<path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/>',going:'<path d="M20 12a8 8 0 1 1-2.3-5.6"/>',soon:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4.2l2.6 1.8"/>',done:'<path d="m5 12.5 4.5 4.5L19 7.5"/>'};
   const X='<button class="sq" type="button" data-a="x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
   const viewHTML=(k,t,sub)=>`<span class="upd-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${k==="done"?2.6:2.2}" stroke-linecap="round" stroke-linejoin="round">${ICO[k]}</svg></span><span class="inst-t"><b>${t}</b><span class="un-sub">${sub}</span></span>${k==="ready"?'<button class="btn primary" type="button" data-a="go">Restart</button>':""}${k==="going"?"":X}`;
-  /* glimm (MIT): a green band sweeps across the pill from the icon side. On
-     a change, the new words sit behind the band and the old ones ahead of it,
-     so the band itself carries the pill from one to the other. */
-  let soonV=null;
-  let nFlip=false,gl=null,glLoad=null,sweep=null,raf=0;
-  const front=()=>nFlip?nB:nA,back=()=>nFlip?nA:nB;
-  /* only the view in front takes taps */
-  const taps=()=>{front().style.pointerEvents="";back().style.pointerEvents="none";back().inert=true;front().inert=false};
-  const unclip=()=>{front().style.clipPath="";front().style.opacity="";back().style.clipPath="";back().style.opacity="0"};
-  let gMod=null;
-  const glimmMod=()=>gMod?Promise.resolve(gMod):import("./glimm.js").then(m=>(gMod=m)).catch(()=>null);
-  const GREEN=m=>m.accentChain(["#C2FF3D","#3ecf7a","#00FFA8"]);
-  function glimm(){
-    if(gl||glLoad)return glLoad||Promise.resolve(gl);
-    glLoad=glimmMod().then(m=>{if(!m)return null;
-      const c=document.createElement("canvas");c.className="un-band";c.setAttribute("aria-hidden","true");nRoot.appendChild(c);
-      gl=m.createShader({canvas:c,palette:GREEN(m),direction:"ltr",bandTight:40,feather:"auto"});
-      if(!gl){c.remove();return null}
-      gl.play=m.playSweep;return gl;
-    });
-    return glLoad;
-  }
-  /* where the band's crest is, 0 to 1 across the pill, for a sweep's progress */
-  const crest=p=>Math.min(1,Math.max(0,(p-.2)/.595));
-  function run(swap){
-    return glimm().then(g=>{
-      if(!g||still||note.hidden){if(swap){nFlip=!nFlip;unclip();taps()}return}
-      if(sweep){try{sweep.cancel()}catch(e){}cancelAnimationFrame(raf)}
-      g.setProgress(0);
-      const inn=swap?back():null,out=front();
-      if(swap){inn.style.opacity="1";inn.style.clipPath="inset(0 100% 0 0)";nFlip=!nFlip;taps()}
-      const tick=()=>{
-        if(swap){const x=(crest(g.getProgress())*100).toFixed(2);inn.style.clipPath=`inset(0 ${100-x}% 0 0)`;out.style.clipPath=`inset(0 0 0 ${x}%)`}
-        raf=requestAnimationFrame(tick);
-      };
-      if(swap)tick();
-      sweep=g.play(g,{sweepMs:swap?1050:1250,outroMs:240,direction:"ltr",bandTight:40,brightness:.92,swellAmount:.7,rippleAmount:.6,waveAmount:.5,easing:"easeInOutCubic",
-        onComplete:()=>{cancelAnimationFrame(raf);sweep=null;if(swap){out.style.clipPath="";out.style.opacity="0";inn.style.clipPath=""}}});
-    });
-  }
-  function noteSay(k,t,sub){
-    note.dataset.k=k;
-    if(note.hidden){const f=front();f.dataset.k=k;f.innerHTML=viewHTML(k,t,sub);back().innerHTML="";unclip();taps();return false}
-    const b=back();b.dataset.k=k;b.innerHTML=viewHTML(k,t,sub);run(true);
-    return true;
-  }
-  const subEl=()=>front().querySelector(".un-sub");
-  /* the arrival: the notice slides in, then a green distortion wave rings
-     out from under it and runs down the page, bending the game itself (a
-     picture of it, taken ahead) and leaving it as it was. The notice sits
-     above the wave and is never bent. */
+  let soonV=null,soonEta=0,cards=[],chain=Promise.resolve(),leavingNow=null,autoHide=0;
+  const topCard=()=>cards[cards.length-1]||null;
+  const topKind=()=>{const c=topCard();return c?c.dataset.k:""};
+  const shown=()=>cards.length>0;
+  const queue=f=>(chain=chain.then(f).catch(()=>{}));
+  const ms=n=>still?0:n;
+  function makeCard(k,t,sub){const c=document.createElement("div");c.className="upd-card un-view";c.dataset.k=k;c.innerHTML=viewHTML(k,t,sub);return c}
+  function setText(c,t,sub){if(!c)return;const b=c.querySelector("b"),s=c.querySelector(".un-sub");if(t!=null&&b&&b.textContent!==t)b.textContent=t;if(sub!=null&&s&&s.textContent!==sub)s.textContent=sub}
+  /* the arrival ripple: the page is pictured first (slow on a phone), then
+     the card slides in and the wave rings out from under it as it settles */
   let rip=null,ripLoad=null,ripBusy=false;
   function ripple(){
     if(rip||ripLoad)return ripLoad||Promise.resolve(rip);
@@ -6675,81 +6647,95 @@ appSync();
     }).catch(()=>null);
     return ripLoad;
   }
-  /* in step: the page is pictured first (the slow part on a phone), and only
-     then does the notice slide in, with the wave leaving from under it as it
-     settles. Nothing shows until both are ready, so they never drift apart. */
-  function arrive(){
-    if(still||ripBusy){note.classList.add("arriving");note.hidden=false;return}
-    ripBusy=true;
-    const ready=ripple().then(w=>!w?null:Promise.race([Promise.resolve(w.prepare&&w.prepare()).catch(()=>{}),new Promise(r=>setTimeout(r,1400))]).then(()=>w));
-    ready.then(w=>{
-      if((note.dataset.k==="ready"&&!next)||(note.dataset.k==="soon"&&!soonV)||!["ready","soon"].includes(note.dataset.k)){ripBusy=false;return}
-      note.classList.add("arriving");note.hidden=false;
-      if(!w){ripBusy=false;return}
-      setTimeout(()=>{
-        if(note.hidden){ripBusy=false;return}
-        const r=note.getBoundingClientRect();note.classList.add("upd-glow");
-        try{w.play({source:{x:r.left+r.width*.25,y:r.top+r.height*.4,w:r.width*.5,h:r.height*.6}})}catch(e){}
-        setTimeout(()=>note.classList.remove("upd-glow"),4200);
-        setTimeout(()=>{ripBusy=false},5000);
-      },200);
+  const pictured=()=>still?Promise.resolve(null):ripple().then(w=>!w?null:Promise.race([Promise.resolve(w.prepare&&w.prepare()).catch(()=>{}),new Promise(r=>setTimeout(r,1400))]).then(()=>w));
+  function enter(c){return c.animate([{transform:"translateY(-135%)",opacity:0},{transform:"translateY(3px)",opacity:1,offset:.7},{transform:"none",opacity:1}],{duration:ms(560),easing:"cubic-bezier(.22,1,.36,1)"}).finished.catch(()=>{})}
+  function rippleFrom(w){
+    if(!w||ripBusy)return;ripBusy=true;
+    setTimeout(()=>{
+      if(!shown()){ripBusy=false;return}
+      const r=stack.getBoundingClientRect();stack.classList.add("upd-glow");
+      try{w.play({source:{x:r.left+r.width*.25,y:r.top+r.height*.4,w:r.width*.5,h:r.height*.6}})}catch(e){}
+      setTimeout(()=>stack.classList.remove("upd-glow"),4200);setTimeout(()=>{ripBusy=false},5000);
+    },200);
+  }
+  /* show a message. "ready" over "soon" stacks; "going"/"done" replace in place */
+  function present(k,t,sub){
+    return queue(async()=>{
+      clearTimeout(autoHide);
+      const top=topCard();
+      if(top&&top.dataset.k===k){setText(top,t,sub);return}
+      if(!top){
+        const w=(k==="soon"||k==="ready")?await pictured():null;
+        if(k==="ready"&&!next)return;if(k==="soon"&&(!soonV||next))return;
+        const c=makeCard(k,t,sub);stack.appendChild(c);cards=[c];
+        const e=enter(c);rippleFrom(w);await e;return;
+      }
+      const c=makeCard(k,t,sub);
+      if(k==="ready"&&top.dataset.k==="soon"){
+        /* the new card slides over; the old one is pushed back and peeks out below */
+        stack.appendChild(c);cards.push(c);top.inert=true;
+        top.animate([{transform:"none",opacity:1,filter:"brightness(1)"},{transform:"translateY(13px) scale(.92)",opacity:.95,filter:"brightness(.62)"}],{duration:ms(520),easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"});
+        await enter(c);
+        while(cards.length>2)cards.shift().remove();
+        return;
+      }
+      /* in place: the new words fade up over the old card, and the stack behind folds away */
+      c.style.opacity="0";stack.appendChild(c);
+      const old=cards.slice();cards=[c];
+      c.animate([{opacity:0,transform:"scale(.98)"},{opacity:1,transform:"none"}],{duration:ms(240),easing:"cubic-bezier(.22,1,.36,1)",fill:"forwards"});
+      await Promise.all(old.map(o=>o.animate([{opacity:getComputedStyle(o).opacity},{opacity:0}],{duration:ms(220),fill:"forwards"}).finished.catch(()=>{})));
+      old.forEach(o=>o.remove());c.style.opacity="";
     });
   }
-  function showNote(on){
-    clearTimeout(note._t);clearTimeout(note._h);
-    if(on){
-      if(!note.hidden&&!note.classList.contains("leaving"))return;
-      note.classList.remove("leaving");note.style.cssText="";unclip();taps();glimm();
-      if(note.dataset.k==="ready"||note.dataset.k==="soon")arrive();else note.hidden=false;
-      return;
-    }
-    if(note.hidden)return;
-    note.style.cssText="";note.classList.remove("arriving");note.classList.add("leaving");note._t=setTimeout(()=>{note.hidden=true;note.classList.remove("leaving")},still?0:260);
+  /* send the whole stack away, up and out (from where a drag left it) */
+  function dismiss(fromY,remember){
+    if(!shown()||leavingNow)return leavingNow||Promise.resolve();
+    clearTimeout(autoHide);
+    const list=cards.slice();cards=[];if(remember)later();
+    const h=stack.getBoundingClientRect().bottom+30;
+    const a=stack.animate([{transform:`translate(-50%,${fromY||0}px)`,opacity:stack.style.opacity||1},{transform:`translate(-50%,${-h}px)`,opacity:0}],{duration:ms(fromY?240:300),easing:"cubic-bezier(.4,0,.7,.4)",fill:"forwards"});
+    leavingNow=a.finished.catch(()=>{}).then(()=>{list.forEach(x=>x.remove());stack.style.transform="";stack.style.opacity="";a.cancel();stack.classList.remove("upd-glow");leavingNow=null});
+    chain=chain.then(()=>leavingNow);
+    return leavingNow;
   }
-  function offer(){
-    const sub=midGame()?"Restarting ends this round":"Restart to get it";
-    if(!note.hidden&&note.dataset.k==="ready"){const e=subEl();if(e)e.textContent=sub;return}
-    noteSay("ready","New version ready",sub);showNote(true);
-  }
+  const readySub=()=>midGame()?"Restarting ends this round":"Restart to get it";
+  function offer(){present("ready","New version ready",readySub())}
   /* closed by hand (the X, or a swipe up): remember it for this version */
   const later=()=>{if(next)ss.set("xo.upd.later",next);else if(soonV)ss.set("xo.upd.soonx",soonV)};
   let swiped=false;
-  nRoot.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;
-    if(swiped){swiped=false;return}
-    if(b.dataset.a==="go"){if(next)startRestart()}
-    else{showNote(false);later()}});
-  /* swipe it up and away: it follows the finger, a little stiffly downwards,
-     and goes once it is pushed far or fast enough; otherwise it springs back */
+  stack.addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b||swiped)return;
+    if(b.dataset.a==="go"){if(next)startRestart()}else dismiss(0,true)});
+  /* the countdown on "on its way" */
+  const soonText=()=>{const s=Math.ceil((soonEta-Date.now())/1000);return s>0?`Ready in ${Math.floor(s/60)}:${String(s%60).padStart(2,"0")}`:"Any second now"};
+  setInterval(()=>{const c=topCard();if(!c||leavingNow)return;
+    if(c.dataset.k==="soon")setText(c,null,soonText());
+    else if(c.dataset.k==="ready"&&!going)setText(c,null,readySub());},250);
+  /* swipe it up and away: it follows the finger, stiffly downwards, and goes
+     once pushed far or fast enough; otherwise it springs back */
   (function swipe(){
-    let id=null,y0=0,dy=0,t0=0,on=false,lastY=0,lastT=0,v=0;
-    const set=(y,o)=>{note.style.transform=`translate(-50%,${y}px)`;note.style.opacity=o};
-    note.addEventListener("pointerdown",e=>{
-      if(note.dataset.k==="going"||id!==null||note.classList.contains("leaving"))return;
-      id=e.pointerId;y0=lastY=e.clientY;t0=lastT=performance.now();dy=0;v=0;on=false;swiped=false;
+    let id=null,y0=0,dy=0,on=false,lastY=0,lastT=0,v=0;
+    const set=y=>{stack.style.transform=`translate(-50%,${y}px)`;stack.style.opacity=y<0?String(Math.max(.3,1+y/170)):"1"};
+    stack.addEventListener("pointerdown",e=>{
+      if(id!==null||leavingNow||topKind()==="going")return;
+      id=e.pointerId;y0=lastY=e.clientY;lastT=performance.now();dy=0;v=0;on=false;swiped=false;
     });
-    note.addEventListener("pointermove",e=>{
+    stack.addEventListener("pointermove",e=>{
       if(e.pointerId!==id)return;
       const d=e.clientY-y0;
-      if(!on){if(Math.abs(d)<6)return;on=true;swiped=true;try{note.setPointerCapture(id)}catch(_){}
-        note.style.animation="none";note.style.transition="none";note.classList.add("dragging")}
-      const now=performance.now();v=(e.clientY-lastY)/Math.max(1,now-lastT);lastY=e.clientY;lastT=now;
-      dy=d<0?d:d*.25;set(dy,dy<0?Math.max(.25,1+dy/160):1);
+      if(!on){if(Math.abs(d)<6)return;on=true;swiped=true;try{stack.setPointerCapture(id)}catch(_){}}
+      const now=performance.now();v=.7*v+.3*((e.clientY-lastY)/Math.max(1,now-lastT));lastY=e.clientY;lastT=now;
+      dy=d<0?d:d*.22;set(dy);
     });
     const end=e=>{
       if(e.pointerId!==id)return;id=null;
-      if(!on)return;on=false;note.classList.remove("dragging");
-      const h=note.getBoundingClientRect().height;
-      if(dy<-h*.45||v<-.45){
-        note.style.transition="transform .26s cubic-bezier(.3,.6,.4,1),opacity .22s linear";
-        set(-(note.getBoundingClientRect().bottom+24),0);buzz(6);later();
-        setTimeout(()=>{note.hidden=true;note.style.cssText="";note.classList.remove("arriving","upd-glow")},260);
-      }else{
-        note.style.transition="transform .45s cubic-bezier(.2,1.4,.4,1),opacity .3s var(--out)";set(0,1);
-        setTimeout(()=>{if(!on){note.style.transition="";note.style.transform="";note.style.opacity=""}},460);
-      }
-      setTimeout(()=>{swiped=false},60);
+      if(!on)return;on=false;
+      const h=stack.getBoundingClientRect().height;
+      if(dy<-h*.4||v<-.4){buzz(6);dismiss(dy,true)}
+      else{const from=dy;stack.style.transform="";stack.style.opacity="";
+        stack.animate([{transform:`translate(-50%,${from}px)`},{transform:"translate(-50%,0)"}],{duration:ms(420),easing:"cubic-bezier(.2,1.35,.4,1)"})}
+      setTimeout(()=>{swiped=false},80);
     };
-    note.addEventListener("pointerup",end);note.addEventListener("pointercancel",end);
+    stack.addEventListener("pointerup",end);stack.addEventListener("pointercancel",end);
   })();
   /* ---- restarting ---- */
   /* the page the server hands out right now: is it the new one yet? */
@@ -6758,10 +6744,10 @@ appSync();
   async function startRestart(){
     if(going||!next)return;going=true;const v=next;
     show("going","Restarting",`Loading ${pretty(v)}`,"Restarting",true);
-    if(note.hidden){noteSay("going","Updating",`Loading ${pretty(v)}`);showNote(true)}else noteSay("going","Updating",`Loading ${pretty(v)}`);buzz(10);
+    present("going","Updating",`Loading ${pretty(v)}`);buzz(10);
     /* a new release takes a minute to reach every server: wait for it rather than reload into the old page */
     for(let k=0;k<24&&!(await serverHas(v));k++){
-      if(k===1){const e=subEl();if(e)e.textContent="Almost there · still on its way";bS.textContent="Still on its way"}
+      if(k===1){present("going","Updating","Almost there · still on its way");bS.textContent="Still on its way"}
       await new Promise(r=>setTimeout(r,5000));
     }
     /* let the new offline worker settle too, so the fresh page finds fresh files */
@@ -6777,7 +6763,7 @@ appSync();
   /* back from a restart: say so, briefly */
   const to=ss.get("xo.upd.to");
   if(to){ss.set("xo.upd.to",null);
-    if(to<=BUILD)setTimeout(()=>{noteSay("done","Updated",`You're on ${pretty(BUILD)}`);showNote(true);note._h=setTimeout(()=>showNote(false),3200)},still?200:900);
+    if(to<=BUILD)setTimeout(()=>{present("done","Updated",`You're on ${pretty(BUILD)}`).then(()=>{autoHide=setTimeout(()=>{if(topKind()==="done")dismiss(0,false)},3200)})},still?200:900);
   }
   /* the quiet path: only right after opening (or coming back), never once you are playing, and twice at most per build */
   function quietOK(){
@@ -6820,7 +6806,7 @@ appSync();
   paint();
   setTimeout(()=>check(false),1200);setInterval(()=>check(false),10000);
   /* the words follow the board: "ends this round" only while a round is on */
-  setInterval(()=>{if(!next||going)return;paint();if(!note.hidden&&note.dataset.k==="ready"){const e=subEl();if(e)e.textContent=midGame()?"Restarting ends this round":"Restart to get it"}},1500);
+  setInterval(()=>{if(!next||going)return;paint()},1500);
   /* back after half a minute away counts as opening again */
   document.addEventListener("visibilitychange",()=>{
     if(document.visibilityState==="hidden"){hiddenAt=Date.now();return}
@@ -6840,14 +6826,18 @@ appSync();
     burst=Date.now();clearInterval(burstT);check(false);
     burstT=setInterval(()=>{
       if(next===v){clearInterval(burstT);return}
-      if(Date.now()-burst>ms){clearInterval(burstT);if(soonV===v&&!next){soonV=null;if(!note.hidden&&note.dataset.k==="soon")showNote(false)}return}
+      if(Date.now()-burst>ms){clearInterval(burstT);if(soonV===v&&!next){soonV=null;if(topKind()==="soon")dismiss(0,false)}return}
       check(false)},3000);
   }
   /* a new build is on its way: say so now, and turn into Restart once it is live */
-  function soonSay(v){
-    if(typeof v!=="string"||!(v>BUILD)||next||going||soonV===v)return;
-    soonV=v;
-    if(note.hidden&&ss.get("xo.upd.soonx")!==v){noteSay("soon","Update on its way","Ready in about half a minute");showNote(true)}
+  /* the signal is "version|pushed at (seconds)": the build is live about
+     45 seconds after the push, which is what the countdown counts down to */
+  function soonSay(raw){
+    const [v,ts]=String(raw).split("|");
+    if(!v||!(v>BUILD)||next||going||soonV===v)return;
+    soonV=v;const now=Date.now(),t=+ts*1000;
+    soonEta=Math.min(now+60000,Math.max(now+5000,t>0?t+45000:now+35000));
+    if(ss.get("xo.upd.soonx")!==v&&!shown())present("soon","Update on its way",soonText());
     hint(v,180000);
   }
   function listen(on){
@@ -6855,7 +6845,7 @@ appSync();
       ann=BROKERS.slice(0,2).map(url=>{try{
         const c=mqtt.connect(url,{clientId:"xnou_"+Math.random().toString(36).slice(2,10),clean:true,connectTimeout:8000,reconnectPeriod:15000,keepalive:60});
         c.on("connect",()=>c.subscribe([ANN,SOON],{qos:0}));
-        c.on("message",(t,m)=>{try{const v=String(m).trim().slice(0,32);if(t===SOON)soonSay(v);else hint(v,90000)}catch(e){}});
+        c.on("message",(t,m)=>{try{const v=String(m).trim().slice(0,48);if(t===SOON)soonSay(v);else hint(v.split("|")[0],90000)}catch(e){}});
         c.on("error",()=>{});return c}catch(e){return null}}).filter(Boolean);
     }else if(!on&&ann){const a=ann;ann=null;a.forEach(c=>{try{c.end(true)}catch(e){}})}
   }
