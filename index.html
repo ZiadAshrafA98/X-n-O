@@ -904,6 +904,22 @@ button.seatc{touch-action:none}
 /* the one-time dot on Settings, pointing at the install row */
 .btn.round.has-dot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:var(--green);box-shadow:0 0 0 2px var(--bg);animation:pop .4s var(--spring) both}
 #btnSettings{position:relative}
+/* the notice that drops in when a new version is out */
+.upd-note{position:fixed;z-index:60;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);width:min(420px,calc(100vw - 24px));transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;padding:8px 8px 8px 10px;border-radius:20px;background:var(--slab-2);box-shadow:var(--float),inset 0 0 0 1.5px color-mix(in srgb,var(--green) 45%,transparent);
+  animation:noteIn .5s var(--spring-soft) both}
+.upd-note[hidden]{display:none}
+.upd-note.leaving{animation:noteOut .26s var(--out) both}
+.upd-note .upd-ic{color:var(--bg);background:var(--green)}
+.upd-note .upd-ic svg{width:19px;height:19px;animation:updNudge 1.6s var(--out) .6s 3}
+.upd-note .inst-t b{font-size:14px;font-weight:600}
+.upd-note .inst-t span{font-size:12px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.upd-note .btn{height:36px;padding:0 16px;font-size:13px;flex:none}
+.upd-note .sq{flex:none;width:32px;height:32px;border-radius:99px;display:grid;place-items:center;background:none;border:0;color:var(--mute);cursor:pointer}
+.upd-note .sq svg{width:17px;height:17px}
+@keyframes noteIn{from{opacity:0;transform:translate(-50%,-130%)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes noteOut{to{opacity:0;transform:translate(-50%,-60%) scale(.96)}}
+@media (prefers-reduced-motion:reduce){.upd-note,.upd-note *{animation:none!important}}
 /* ---------- the version card in Settings ---------- */
 .upd-row{display:flex;align-items:center;gap:12px;margin:10px 6px 2px;}
 .upd-row[data-s="ready"],.upd-row[data-s="going"]{margin:0 6px 8px}
@@ -921,12 +937,12 @@ button.seatc{touch-action:none}
 .upd-row[data-s="latest"] .i-ok{opacity:1;transform:none}
 .upd-row[data-s="ready"]{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--green) 55%,transparent)}
 .upd-row[data-s="ready"] .upd-ic{color:var(--bg);background:var(--green)}
-.upd-row[data-s="ready"] .i-new{opacity:1;transform:none;animation:nudge 1.6s var(--out) .3s infinite}
+.upd-row[data-s="ready"] .i-new{opacity:1;transform:none;animation:updNudge 1.6s var(--out) .3s infinite}
 .upd-row[data-s="going"] .i-sync{animation:spin .7s linear infinite}
 .upd-row[data-s="going"] .btn{pointer-events:none}
 .upd-row[data-s="offline"] .btn{opacity:.45;pointer-events:none}
 .upd-row .txt-swap{animation:rise .3s var(--out) both}
-@keyframes nudge{0%,60%,100%{transform:none}30%{transform:translateY(2px)}}
+@keyframes updNudge{0%,60%,100%{transform:none}30%{transform:translateY(2px)}}
 @media (prefers-reduced-motion:reduce){.upd-row *{animation:none!important}}
 .rb-lbl~.has-dot::after{right:10px}
 /* installed: no browser habits */
@@ -1721,6 +1737,13 @@ a.sh-act{text-decoration:none}
 <div class="scrim" id="scrim" hidden></div>
 <p class="sr" id="srLive" aria-live="assertive"></p>
 
+<div class="upd-note" id="updNote" role="status" hidden>
+  <span class="upd-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
+  <span class="inst-t"><b>New version ready</b><span id="updNoteS">Takes a second</span></span>
+  <button class="btn primary" id="updNoteGo" type="button">Restart</button>
+  <button class="sq" id="updNoteX" type="button" aria-label="Later"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+</div>
+
 <section class="dlg pop" id="dlgSettings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
   <span class="grab" aria-hidden="true"></span>
   <div class="dlg-head"><h2 id="setTitle">Settings</h2><button class="sq" type="button" data-close aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
@@ -1735,7 +1758,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2151</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2207</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6520,14 +6543,14 @@ appSync();
 /* Each build stamps itself and writes the same stamp to version.json. An
    open page (a tab left open, a phone that keeps it in memory, a copy the
    browser kept) asks for that file, never from any cache, when it starts,
-   when you come back to it and every five minutes. If a newer build is out it
+   when you come back to it and every two minutes. If a newer build is out it
    loads it at the first moment nothing would be lost: no marks on the board,
    no dialog open and no online room. Until then the version card in Settings
    says an update is ready, a dot sits on the Settings button, and one tap
    restarts into the new build. The reload goes to a fresh address, so no
    cache can hand back the old page, and that marker is then tidied away. */
 (function staying(){
-  const BUILD="2026.11.27·2151";
+  const BUILD="2026.11.27·2207";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
@@ -6548,8 +6571,10 @@ appSync();
   const calm=()=>!openDlg&&!room&&!(mm&&mm.phase)&&(marks.X.length+marks.O.length===0||over);
   const midGame=()=>!!room||(!over&&marks.X.length+marks.O.length>0);
   /* a waiting update goes to the top of Settings; otherwise the card closes the list */
-  const home=row.parentNode,anchor=$("instRow");
-  function place(top){const want=top?anchor.nextSibling:null;if(top?row.previousElementSibling!==anchor:row.nextElementSibling)home.insertBefore(row,want)}
+  const home=row.parentNode,anchor=$("instRow"),spot=document.createComment("upd");
+  /* its usual place is marked once, so it always lands back above the phone's Done bar */
+  home.insertBefore(spot,row.nextSibling);
+  function place(top){const ref=top?anchor.nextSibling:spot;if(ref!==row&&ref.previousSibling!==row)home.insertBefore(row,ref)}
   function paint(){
     if(state==="checking"||state==="going")return;
     place(!!next);
@@ -6563,7 +6588,24 @@ appSync();
     const u=new URL(location.href);u.searchParams.set("v",next);location.replace(u.toString());
   }
   function go(){if(next&&tried()!==next&&calm())restart()}
-  function setNext(v){next=v;updReady=!!v;paint();try{appSync()}catch(e){}}
+  /* the notice: once per build, it drops in on its own while you play, so
+     you never have to go looking. Restart from it, or close it and the dot on
+     Settings keeps the reminder. */
+  const note=$("updNote");let noted=null;
+  try{noted=sessionStorage.getItem("xo.upd.seen")}catch(e){}
+  function showNote(on){
+    if(on===!note.hidden&&!note.classList.contains("leaving"))return;
+    clearTimeout(note._t);
+    if(on){note.classList.remove("leaving");note.hidden=false;$("updNoteS").textContent=midGame()?"Restarting ends this round":"Takes a second";}
+    else{note.classList.add("leaving");note._t=setTimeout(()=>{note.hidden=true;note.classList.remove("leaving")},still?0:260)}
+  }
+  function setNext(v){
+    next=v;updReady=!!v;paint();try{appSync()}catch(e){}
+    /* give the quiet update a moment first: if it can happen now, no notice is needed */
+    if(v&&noted!==v)setTimeout(()=>{if(next===v&&noted!==v&&state!=="going"){noted=v;try{sessionStorage.setItem("xo.upd.seen",v)}catch(e){}showNote(true)}},1800);
+  }
+  $("updNoteGo").addEventListener("click",()=>{showNote(false);state="ready";btn.click()});
+  $("updNoteX").addEventListener("click",()=>showNote(false));
   /* manual: a tap always looks, and always says what it found */
   function check(manual){
     if(busy||(!manual&&document.visibilityState==="hidden"))return Promise.resolve();
@@ -6586,6 +6628,7 @@ appSync();
   }
   btn.addEventListener("click",()=>{
     if(state==="ready"){
+      showNote(false);
       show("going","Restarting",`Loading ${pretty(next)}`,"Restarting",true);buzz(10);
       /* let the new worker settle first, so the fresh page finds fresh files */
       const sw=swReg&&(swReg.installing||swReg.waiting);
@@ -6599,7 +6642,7 @@ appSync();
   $("btnSettings").addEventListener("click",()=>{if(state==="latest"&&Date.now()-lastCheck>60000)state="";paint();if(Date.now()-lastCheck>60000)check(false)});
   addEventListener("offline",paint);
   paint();
-  setTimeout(()=>check(false),1200);setInterval(()=>check(false),300000);setInterval(go,1500);
+  setTimeout(()=>check(false),1200);setInterval(()=>check(false),120000);setInterval(go,1500);
   document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")check(false)});
   addEventListener("pageshow",e=>{if(e.persisted)check(false)});
   addEventListener("online",()=>{paint();check(false)});
