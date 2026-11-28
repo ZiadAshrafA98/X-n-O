@@ -1084,13 +1084,13 @@ body>canvas{z-index:57!important}
 .lbx-beam{position:absolute;left:50%;top:0;width:190px;height:116px;margin-left:-95px;clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);transform-origin:50% 0;
   background:linear-gradient(180deg,rgba(255,226,150,.4),rgba(255,226,150,.06) 85%,transparent);filter:blur(3px);
   -webkit-mask-image:linear-gradient(180deg,transparent,#000 40px);mask-image:linear-gradient(180deg,transparent,#000 40px);
-  animation:lbxOn .7s steps(1) both,lbxBeam .55s cubic-bezier(.22,1,.36,1) .05s both,lbxBreathe 4s ease-in-out 1.2s infinite}
+  will-change:opacity,transform;animation:lbxBeam .7s cubic-bezier(.22,1,.36,1) both,lbxBreathe 4s ease-in-out .7s infinite}
 .lbx-floor{position:absolute;left:50%;top:90px;width:180px;height:26px;margin-left:-90px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,226,150,.42),transparent);animation:lbxFade .5s ease .3s both}
 .lbx-stage i{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffe7a3;opacity:0;animation-name:lbxDust;animation-timing-function:linear;animation-iteration-count:infinite}
 .lbx-crown{position:absolute;left:50%;top:2px;width:40px;height:29px;margin-left:-20px;overflow:visible;filter:drop-shadow(0 0 12px rgba(255,214,110,.7));
-  animation:lbxDrop .65s cubic-bezier(.3,1.5,.5,1) .5s both,lbxBob 3s ease-in-out 1.3s infinite}
+  will-change:transform;animation:lbxDrop .65s cubic-bezier(.3,1.5,.5,1) .5s both,lbxBob 3s ease-in-out 1.15s infinite}
 .lbx-q{position:absolute;left:50%;top:30px;width:64px;margin-left:-32px;text-align:center;font:700 54px/62px var(--sans);color:#f6d57a;
-  text-shadow:0 0 18px rgba(255,214,110,.6),0 0 2px rgba(255,240,200,.9);animation:lbxQ .6s cubic-bezier(.22,1.2,.36,1) .3s both,lbxAsk 2.4s ease-in-out 1.1s infinite}
+  text-shadow:0 0 18px rgba(255,214,110,.6),0 0 2px rgba(255,240,200,.9);will-change:opacity,transform;animation:lbxQ .55s cubic-bezier(.22,1.2,.36,1) .3s both,lbxAsk 2.6s ease-in-out .85s infinite}
 .lbx-tag{position:absolute;z-index:1;left:50%;top:102px;transform:translateX(-50%);padding:3px 11px;border-radius:99px;background:rgba(242,193,78,.14);
   font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#d9a632;white-space:nowrap;animation:lbxUp .4s cubic-bezier(.22,1,.36,1) .7s both}
 :root:not([data-theme="light"]) .lbx-tag{color:#f2c14e}
@@ -1102,15 +1102,14 @@ body>canvas{z-index:57!important}
 .lbx .lb-et{font-size:18px;line-height:24px;letter-spacing:-.02em;animation:lbxUp .45s cubic-bezier(.22,1,.36,1) .95s both}
 .lbx-sub{margin-top:4px;font-size:13.5px;color:var(--mute);animation:lbxUp .45s cubic-bezier(.22,1,.36,1) 1.02s both}
 .lbx .btn{margin-top:12px;padding:0 26px;animation:lbxUp .45s cubic-bezier(.22,1,.36,1) 1.1s both}
-@keyframes lbxOn{0%{opacity:0}12%{opacity:.6}20%{opacity:.15}32%{opacity:.85}42%{opacity:.4}55%,100%{opacity:1}}
-@keyframes lbxBeam{from{transform:scaleY(.15)}to{transform:none}}
-@keyframes lbxBreathe{0%,100%{opacity:.78}50%{opacity:1}}
+@keyframes lbxBeam{from{opacity:0;transform:scaleY(.2)}to{opacity:1;transform:none}}
+@keyframes lbxBreathe{0%,100%{opacity:1}50%{opacity:.8}}
 @keyframes lbxFade{from{opacity:0}}
 @keyframes lbxDust{0%{transform:translateY(0);opacity:0}25%{opacity:.8}100%{transform:translateY(42px);opacity:0}}
 @keyframes lbxDrop{from{opacity:0;transform:translateY(-26px) rotate(-14deg)}to{opacity:1;transform:none}}
 @keyframes lbxBob{0%,100%{transform:none}50%{transform:translateY(-4px)}}
-@keyframes lbxQ{from{opacity:0;transform:scale(.6);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
-@keyframes lbxAsk{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes lbxQ{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@keyframes lbxAsk{0%,100%{opacity:1;transform:none}50%{opacity:.82;transform:scale(1.04)}}
 @keyframes lbxUp{from{opacity:0;transform:translateY(8px)}}
 @media (prefers-reduced-motion:reduce){.lbx *{animation:none!important}.lbx-stage i{display:none}}
 .lb-foot{margin:14px 0 0;display:flex;justify-content:center}
@@ -1917,7 +1916,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·1330</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·1359</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6966,7 +6965,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.28·1330";
+  const BUILD="2026.11.28·1359";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
