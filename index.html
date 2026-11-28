@@ -1677,6 +1677,38 @@ a.sh-act{text-decoration:none}
   .card.room,.card.join{max-width:400px;justify-self:center}
 }
 /* the smallest phones on their side: a touch smaller buttons so each row stays one row */
+/* ---------- a phone on its side: three screens laid out across ---------- */
+@media (orientation:landscape) and (max-height:540px){
+  /* the result: everything a size down, so it sits inside the board's square */
+  .result{gap:6px;padding:12px 16px;border-radius:28px}
+  .result .orb{width:44px;height:44px}
+  .res-title{font-size:clamp(22px,calc(var(--bs) * .085),30px);letter-spacing:-.03em}
+  .res-score{font-size:13px}
+  .res-rec{font-size:12px;margin:0}
+  .res-rec.best{padding:4px 10px}
+  .res-actions{gap:6px;width:min(100%,230px);margin-top:2px}
+  .result .btn{height:40px;font-size:14px}
+  .result .btn.big{height:44px}
+  /* learn to play: the coaching on the left, the board on the right at the panel's full height */
+  #dlgLearn{width:min(740px,calc(100vw - 24px));display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:22px;
+    grid-template-rows:auto auto minmax(0,1fr) auto;grid-template-areas:"head board" "dots board" "say board" "foot board";padding:14px 14px 14px 18px}
+  #dlgLearn>.dlg-head{grid-area:head;padding:4px 0 10px}
+  #dlgLearn .learn-dots{grid-area:dots;justify-content:flex-start;margin:0 0 16px}
+  #dlgLearn .learn-say{grid-area:say;margin:0;max-width:none;text-align:left;height:auto}
+  #dlgLearn .learn-say b{font-size:20px;white-space:normal}
+  #dlgLearn .learn-say span{font-size:15px}
+  #dlgLearn .learn-foot{grid-area:foot;justify-content:flex-start;margin:0}
+  #dlgLearn .learn-board{grid-area:board;align-self:center;--bs:min(calc(100dvh - 52px),380px)}
+  /* the leaderboard: what it is and the levels on the left, the list on the right, top to bottom */
+  #dlgBoard.lbd{width:min(780px,calc(100vw - 24px));display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);column-gap:18px;
+    grid-template-rows:auto auto auto minmax(0,1fr);grid-template-areas:"head list" "sub list" "seg list" "foot list"}
+  #dlgBoard>.dlg-head{grid-area:head;padding:4px 0 10px 6px}
+  #dlgBoard .lb-sub{grid-area:sub;margin:0 6px 14px;font-size:13px;line-height:1.45}
+  #dlgBoard #lbLevels{grid-area:seg;align-self:start}
+  #dlgBoard .lb-wrap{grid-area:list;min-height:0;height:100%}
+  #dlgBoard .lb-foot{grid-area:foot;align-self:end;margin:12px 0 0}
+  #dlgBoard .lb-foot .lb-hint{font-size:12px;align-items:flex-start;text-align:left}
+}
 @media (orientation:landscape) and (max-height:540px) and (max-width:720px){
   .icons{gap:4px}.icons .ibtn,.win-pill{width:34px;height:34px}
   .icons svg{width:17px;height:17px}
@@ -1830,7 +1862,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0053</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0101</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6878,7 +6910,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.28·0053";
+  const BUILD="2026.11.28·0101";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
