@@ -846,7 +846,7 @@ button.seatc{touch-action:none}
 .lbd .seg{margin:0 0 12px}
 /* the list keeps one height whatever it holds, so the sheet never resizes */
 .lb-list{list-style:none;margin:0;padding:2px;display:flex;flex-direction:column;gap:6px;height:clamp(220px,40dvh,400px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
-.lb-row{flex:none;min-width:0;display:grid;grid-template-columns:28px 40px minmax(0,1fr) 60px 56px;align-items:center;gap:12px;padding:10px 14px;border-radius:16px;animation:rise .45s var(--spring-soft) both;animation-delay:calc(var(--i,0) * 35ms)}
+.lb-row{flex:none;min-width:0;display:grid;grid-template-columns:28px 40px minmax(0,1fr) 60px 56px;align-items:center;gap:12px;padding:10px 14px;border-radius:16px;animation:rise .45s var(--spring-soft) both;animation-delay:calc(min(var(--i,0),9) * 40ms)}
 .lb-row .orb{width:40px;height:40px}
 .lb-rank{font:600 14px var(--mono);color:var(--faint);text-align:center}
 .lb-row.top .lb-rank{color:var(--ink)}
@@ -1830,7 +1830,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0005</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0053</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -2898,7 +2898,16 @@ function lbRender(fromSkeleton){
   skels.slice(rows.length).forEach((sk,k)=>setTimeout(()=>{if(!sk.isConnected)return;
     sk.animate([{opacity:1,height:sk.offsetHeight+"px"},{opacity:0,height:"0px",paddingTop:"0px",paddingBottom:"0px",marginTop:"-6px"}],{duration:300,easing:"cubic-bezier(.32,.72,0,1)",fill:"forwards"}).onfinish=()=>sk.remove()},rows.length*90+k*40));
 }
-$("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;lbLevel=b.dataset.v;setSeg($("lbLevels"),lbLevel,true);if(lbCache!==undefined)lbRender()});
+/* another level: the rows on show step aside together, and the new ones rise
+   in one after another from the top. The level already showing does nothing. */
+let lbSwitchT=0;
+$("lbLevels").addEventListener("click",e=>{const b=e.target.closest("button");if(!b||b.dataset.v===lbLevel)return;
+  lbLevel=b.dataset.v;setSeg($("lbLevels"),lbLevel,true);if(lbCache===undefined)return;
+  const ul=$("lbList"),old=[...ul.children];clearTimeout(lbSwitchT);
+  if(still||!old.length||ul.querySelector(".lb-skel")){lbRender();return}
+  old.forEach(li=>{li.getAnimations().forEach(a=>a.cancel());li.animate([{opacity:1,transform:"none"},{opacity:0,transform:"translateY(-6px) scale(.985)"}],{duration:150,easing:"cubic-bezier(.4,0,1,1)",fill:"forwards"})});
+  lbSwitchT=setTimeout(()=>{ul.scrollTop=0;lbRender()},150);
+});
 $("btnBoard").addEventListener("click",e=>openBoard(e.currentTarget));
 /* ---------- The list's own scroll indicator ----------
    The browser's scrollbar takes room from the rows when it shows up and
@@ -6174,18 +6183,30 @@ document.addEventListener("keydown",e=>{
    control, as long as its content is scrolled to the top */
 /* inner scrolling areas (the computer's chat, its question row) scroll; only the handle and plain parts of the sheet put it away */
 const NO_DRAG="button,input,textarea,select,a,video,.seg,.seat-menu,.creators,.sh-card,.comp-term";
+/* a list inside the sheet that scrolls on its own (the leaderboard): while
+   it is scrolled down, a pull scrolls it back up; only at its top does the
+   pull take the sheet */
+function scrolledIn(t,d){
+  for(let el=t;el&&el!==d;el=el.parentElement){
+    if(el.scrollHeight>el.clientHeight+1&&/(auto|scroll)/.test(getComputedStyle(el).overflowY)&&el.scrollTop>0)return el;
+  }
+  return null;
+}
 document.querySelectorAll(".dlg").forEach(d=>{
-  let y0=null,x0=0,dy=0,live=false,lastY=0,lastT=0,vel=0;
+  let y0=null,x0=0,dy=0,live=false,lastY=0,lastT=0,vel=0,inner=null;
   const begin=(x,y,t)=>{
     if(!narrowMQ.matches||openDlg!==d)return false;
     const handle=t.closest(".grab,.dlg-head");
-    if(!handle&&(t.closest(NO_DRAG)||d.scrollTop>0))return false;
+    if(!handle&&(t.closest(NO_DRAG)||d.scrollTop>0||scrolledIn(t,d)))return false;
+    /* the scrolling list under the finger, if any: checked again as the pull begins */
+    inner=null;for(let el=t;el&&el!==d;el=el.parentElement){if(el.scrollHeight>el.clientHeight+1&&/(auto|scroll)/.test(getComputedStyle(el).overflowY)){inner=el;break}}
     y0=y;x0=x;dy=0;live=false;vel=0;lastY=y;lastT=performance.now();return true;
   };
   const move=(x,y,e)=>{
     if(y0==null)return;
     const ddy=y-y0;
-    if(e&&e.cancelable&&ddy>0&&d.scrollTop<=0)e.preventDefault();
+    if(!live&&inner&&inner.scrollTop>0){y0=null;return}
+    if(e&&e.cancelable&&ddy>0&&d.scrollTop<=0&&!(inner&&inner.scrollTop>0))e.preventDefault();
     if(!live){
       if(Math.abs(x-x0)>10&&Math.abs(x-x0)>Math.abs(ddy)){y0=null;return}
       if(ddy<-6){y0=null;return}
@@ -6857,7 +6878,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.28·0005";
+  const BUILD="2026.11.28·0053";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
