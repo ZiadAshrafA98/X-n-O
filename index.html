@@ -1708,6 +1708,23 @@ a.sh-act{text-decoration:none}
   #dlgBoard .lb-wrap{grid-area:list;min-height:0;height:100%}
   #dlgBoard .lb-foot{grid-area:foot;align-self:end;margin:12px 0 0}
   #dlgBoard .lb-foot .lb-hint{font-size:12px;align-items:flex-start;text-align:left}
+  /* the computer's file: who it is and its record on the left, the interrogation down the right */
+  #dlgComputer.comp{width:min(780px,calc(100vw - 24px));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);column-gap:18px;
+    grid-template-rows:auto minmax(0,1fr) auto auto minmax(0,1.3fr);grid-template-areas:"head term" ". term" "id term" "rec term" ". term";padding:14px 16px 16px}
+  #dlgComputer>.dlg-head{grid-area:head}
+  #dlgComputer .comp-id{grid-area:id;align-self:center;padding-top:6px}
+  #dlgComputer .comp-rec{grid-area:rec;align-self:start;margin:14px 4px 0}
+  #dlgComputer .comp-term{grid-area:term;margin:0;display:flex;flex-direction:column;min-height:0}
+  #dlgComputer .comp-log{flex:1;height:auto;min-height:0}
+  #dlgComputer .comp-asks{flex:none}
+  /* how it works: the boards a size down, and the tutorial and the makers share one row under them */
+  #dlgRules{display:flex;flex-wrap:wrap;align-content:flex-start;align-items:center;column-gap:8px;bottom:auto!important;top:50%!important;translate:0 -50%!important;max-height:calc(100dvh - 24px)}
+  #dlgRules>.dlg-head,#dlgRules>.rules-grid{flex:1 1 100%}
+  #dlgRules .rule{padding:12px 6px 10px;gap:8px}
+  #dlgRules .mini{grid-template-columns:repeat(3,28px)}
+  #dlgRules .mini i{width:28px;height:28px;font-size:14px;border-radius:8px}
+  #dlgRules .learn-play{margin:10px 0 0 4px;height:40px}
+  #dlgRules .made-by{margin:10px 0 0 auto}
 }
 @media (orientation:landscape) and (max-height:540px) and (max-width:720px){
   .icons{gap:4px}.icons .ibtn,.win-pill{width:34px;height:34px}
@@ -1862,7 +1879,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0101</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0105</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -6658,7 +6675,12 @@ function cyberBuild(d){
       return{x,y,w:el.offsetWidth,h:el.offsetHeight}};
     const F=at(face),Tm=at(term);
     const fx=F.x,fy=F.y+F.h/2,tx=Tm.x,ty=Tm.y,by=ty+(bar?bar.offsetHeight/2:16),mx=Math.max(7,tx-6);
-    const wd=`M${fx-3} ${fy}H${mx+6}L${mx} ${fy+6}V${by-6}L${mx+6} ${by}H${tx+8}`;
+    let wd=`M${fx-3} ${fy}H${mx+6}L${mx} ${fy+6}V${by-6}L${mx+6} ${by}H${tx+8}`;
+    /* side by side (a phone on its side): the terminal is to the right, so the cable goes round the
+       left column: out to the edge, down under the record, across the gap and up into the light */
+    const rec=d.querySelector(".comp-rec");
+    if(tx>F.x+F.w&&rec){const R=at(rec),ex=Math.max(7,F.x-12),ly=R.y+R.h+16,gx=tx-9;
+      wd=`M${fx-3} ${fy}H${ex+6}L${ex} ${fy+6}V${ly-6}L${ex+6} ${ly}H${gx-6}L${gx} ${ly-6}V${by+6}L${gx+6} ${by}H${tx+8}`}
     wire=`<path class="tr w" pathLength="1" d="${wd}"/><circle class="nd" cx="${fx-3}" cy="${fy}" r="2.2"/><circle class="nd" cx="${tx+8}" cy="${by}" r="2.2"/><path class="wsp" pathLength="1" d="${wd}"/><path class="wsp" pathLength="1" d="${wd}"/>`;
     /* the terminal's mounting ticks */
     const L=tx-3,R=tx+Tm.w+3,Tt=ty-3,B=ty+Tm.h+3,k=9;
@@ -6910,7 +6932,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.28·0101";
+  const BUILD="2026.11.28·0105";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
