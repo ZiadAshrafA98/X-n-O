@@ -1075,6 +1075,44 @@ body>canvas{z-index:57!important}
 .lb-empty>span{max-width:300px}
 .lb-note{max-width:300px;font-size:12px;color:var(--faint)}
 @media (prefers-reduced-motion:reduce){.lb-skel .sk,.lb-seat *{animation:none!important}}
+/* ---------- the empty board: who's going to be first? ---------- */
+/* the intro plays once: the light switches on, the question mark fades up in it,
+   the crown drops in, then the tag, the open places and the words follow; after
+   that only a slow idle (the light breathing, dust drifting, the crown bobbing) */
+.lb-empty.lbx{animation:none;gap:0;padding:0 0 4px;justify-content:center}
+.lbx-stage{position:relative;width:100%;height:124px;flex:none}
+.lbx-beam{position:absolute;left:50%;top:0;width:190px;height:116px;margin-left:-95px;clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);transform-origin:50% 0;
+  background:linear-gradient(180deg,rgba(255,226,150,.4),rgba(255,226,150,.06) 85%,transparent);filter:blur(3px);
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 40px);mask-image:linear-gradient(180deg,transparent,#000 40px);
+  animation:lbxOn .7s steps(1) both,lbxBeam .55s cubic-bezier(.22,1,.36,1) .05s both,lbxBreathe 4s ease-in-out 1.2s infinite}
+.lbx-floor{position:absolute;left:50%;top:90px;width:180px;height:26px;margin-left:-90px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,226,150,.42),transparent);animation:lbxFade .5s ease .3s both}
+.lbx-stage i{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffe7a3;opacity:0;animation-name:lbxDust;animation-timing-function:linear;animation-iteration-count:infinite}
+.lbx-crown{position:absolute;left:50%;top:2px;width:40px;height:29px;margin-left:-20px;overflow:visible;filter:drop-shadow(0 0 12px rgba(255,214,110,.7));
+  animation:lbxDrop .65s cubic-bezier(.3,1.5,.5,1) .5s both,lbxBob 3s ease-in-out 1.3s infinite}
+.lbx-q{position:absolute;left:50%;top:30px;width:64px;margin-left:-32px;text-align:center;font:700 54px/62px var(--sans);color:#f6d57a;
+  text-shadow:0 0 18px rgba(255,214,110,.6),0 0 2px rgba(255,240,200,.9);animation:lbxQ .6s cubic-bezier(.22,1.2,.36,1) .3s both,lbxAsk 2.4s ease-in-out 1.1s infinite}
+.lbx-tag{position:absolute;z-index:1;left:50%;top:102px;transform:translateX(-50%);padding:3px 11px;border-radius:99px;background:rgba(242,193,78,.14);
+  font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#d9a632;white-space:nowrap;animation:lbxUp .4s cubic-bezier(.22,1,.36,1) .7s both}
+:root:not([data-theme="light"]) .lbx-tag{color:#f2c14e}
+.lbx-rows{width:min(300px,86%);display:flex;flex-direction:column;gap:5px;margin:10px 0 12px}
+.lbx-row{height:28px;border-radius:10px;border:1px dashed var(--chip-2);background:var(--tile);display:flex;align-items:center;gap:11px;padding:0 12px;
+  font-size:12.5px;color:var(--faint);animation:lbxUp .45s cubic-bezier(.22,1,.36,1) calc(.8s + var(--d) * .08s) both}
+.lbx-row b{width:16px;text-align:center;font-weight:600;color:var(--faint)}
+.lbx-seat{width:20px;height:20px;border-radius:50%;border:1.5px dashed var(--chip-2)}
+.lbx .lb-et{font-size:18px;line-height:24px;letter-spacing:-.02em;animation:lbxUp .45s cubic-bezier(.22,1,.36,1) .95s both}
+.lbx-sub{margin-top:4px;font-size:13.5px;color:var(--mute);animation:lbxUp .45s cubic-bezier(.22,1,.36,1) 1.02s both}
+.lbx .btn{margin-top:12px;padding:0 26px;animation:lbxUp .45s cubic-bezier(.22,1,.36,1) 1.1s both}
+@keyframes lbxOn{0%{opacity:0}12%{opacity:.6}20%{opacity:.15}32%{opacity:.85}42%{opacity:.4}55%,100%{opacity:1}}
+@keyframes lbxBeam{from{transform:scaleY(.15)}to{transform:none}}
+@keyframes lbxBreathe{0%,100%{opacity:.78}50%{opacity:1}}
+@keyframes lbxFade{from{opacity:0}}
+@keyframes lbxDust{0%{transform:translateY(0);opacity:0}25%{opacity:.8}100%{transform:translateY(42px);opacity:0}}
+@keyframes lbxDrop{from{opacity:0;transform:translateY(-26px) rotate(-14deg)}to{opacity:1;transform:none}}
+@keyframes lbxBob{0%,100%{transform:none}50%{transform:translateY(-4px)}}
+@keyframes lbxQ{from{opacity:0;transform:scale(.6);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes lbxAsk{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes lbxUp{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:reduce){.lbx *{animation:none!important}.lbx-stage i{display:none}}
 .lb-foot{margin:14px 0 0;display:flex;justify-content:center}
 /* a small note, as a pill: no line between it and the board */
 .lb-hint{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:7px 12px 7px 10px;border-radius:99px;background:var(--chip);font-size:12px;line-height:1.35;color:var(--mute);text-align:left}
@@ -1879,7 +1917,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·0109</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.28·1330</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -2887,25 +2925,21 @@ function rowHTML(r,i){
     <span class="lb-name">${esc(r.n)}${r.id===lbId?'<small>You</small>':""}</span>
     <span class="lb-stat"><b>${r.best}</b><small>in a row</small></span><span class="lb-stat"><b>${r.fast||"–"}</b><small>fastest</small></span></li>`;
 }
-/* An empty board is an invitation: an empty podium with the top step waiting
-   for someone, and a button that starts exactly that game. */
+/* An empty board is an invitation: a spotlight switches on over a glowing
+   question mark, the crown drops in above it, nobody's name in 2nd or 3rd,
+   and a button that starts exactly the game that puts you there. */
 function emptyHTML(){
   const lv=LEVEL_NAME[lbLevel];
-  const note="";
-  /* your own avatar rises into the empty first place, takes the crown, and steps back to try again */
-  return`<li class="lb-empty"><svg class="lb-seat" viewBox="0 0 200 150" aria-hidden="true">
-      <defs><clipPath id="lbAvClip"><circle cx="0" cy="0" r="13"/></clipPath></defs>
-      <rect x="28" y="20" width="144" height="36" rx="12" class="ls-row r1"/><rect x="28" y="62" width="144" height="32" rx="11" class="ls-row"/><rect x="28" y="100" width="144" height="32" rx="11" class="ls-row"/>
-      <circle cx="48" cy="38" r="9" fill="#f2c14e"/><text x="48" y="42" class="ls-rk">1</text>
-      <circle cx="76" cy="38" r="13" class="ls-slot"/>
-      <text x="48" y="82" class="ls-rk2">2</text><circle cx="76" cy="78" r="11" class="ls-ghost"/><rect x="96" y="74" width="46" height="8" rx="4" class="ls-ghost"/>
-      <text x="48" y="120" class="ls-rk2">3</text><circle cx="76" cy="116" r="11" class="ls-ghost"/><rect x="96" y="112" width="34" height="8" rx="4" class="ls-ghost"/>
-      <rect x="96" y="33" width="50" height="9" rx="4.5" class="ls-name"/>
-      <g class="ls-me"><g transform="translate(76 38)">${myAv?`<image href="${avUri(myAv)}" x="-13" y="-13" width="26" height="26" clip-path="url(#lbAvClip)"/>`:`<circle r="13" fill="var(--chip-2)"/>`}<circle r="13" fill="none" stroke="#f2c14e" stroke-width="2"/></g></g>
-      <g class="ls-crown"><g transform="translate(76 18) scale(.55)"><path d="M-14 9-16-6l7 6 9-11 9 11 7-6-2 15Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.6" stroke-linejoin="round"/><path d="M-13 7h26" stroke="#fff3c4" stroke-width="1.3" opacity=".7"/><circle cy="-13" r="2" fill="#fff3c4"/></g></g>
-    </svg>
-    <b class="lb-et">The top spot on ${lv} is open</b>
-    <button class="btn primary" type="button" data-play>Play the computer · ${lv}</button>${note}</li>`;
+  const dust=[[44,30,3.4,0],[54,14,4.1,1.1],[59,40,3.7,2],[47,50,4.4,.6],[56,22,3.2,2.6]].map(([x,t,d,dl])=>`<i style="left:${x}%;top:${t}px;animation-duration:${d}s;animation-delay:${1+dl}s"></i>`).join("");
+  const row=(n,i)=>`<div class="lbx-row" style="--d:${i}"><b>${n}</b><span class="lbx-seat"></span><span>open</span></div>`;
+  return`<li class="lb-empty lbx">
+    <div class="lbx-stage" aria-hidden="true"><span class="lbx-beam"></span><span class="lbx-floor"></span>${dust}
+      <svg class="lbx-crown" viewBox="-18 -14 36 26"><path d="M-14 9-16-6l7 6 9-11 9 11 7-6-2 15Z" fill="#f2c14e" stroke="#7a5512" stroke-width="1.6" stroke-linejoin="round"/><path d="M-13 7h26" stroke="#fff3c4" stroke-width="1.3" opacity=".7"/><circle cx="0" cy="-11" r="2" fill="#fff3c4"/></svg>
+      <span class="lbx-q">?</span><span class="lbx-tag">1st · open</span></div>
+    <div class="lbx-rows" aria-hidden="true">${row(2,0)}${row(3,1)}</div>
+    <b class="lb-et">Who's going to be first?</b>
+    <span class="lbx-sub">One win on ${lv} puts your name here.</span>
+    <button class="btn primary" type="button" data-play>Be the first</button></li>`;
 }
 async function openBoard(btn){
   lbLevel=lbLevel||opt.level||"perfect";setSeg($("lbLevels"),lbLevel,false);
@@ -6932,7 +6966,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.28·0109";
+  const BUILD="2026.11.28·1330";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
