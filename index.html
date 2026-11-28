@@ -969,7 +969,9 @@ body>canvas{z-index:57!important}
 .learn-dots i{width:6px;height:6px;border-radius:99px;background:var(--chip-2);transition:width .35s cubic-bezier(.22,1,.36,1),background-color .3s}
 .learn-dots i.past{background:color-mix(in srgb,var(--green) 55%,var(--chip-2))}
 .learn-dots i.on{width:20px;background:var(--green)}
-.learn-say{margin:0 auto 14px;max-width:340px;min-height:58px;text-align:center;display:flex;flex-direction:column;gap:4px}
+/* one height for every step (a title and up to three lines), so the sheet never changes size as the words do */
+.learn-say{margin:0 auto 14px;max-width:340px;height:calc(24px + 4px + 3 * 14px * 1.4);text-align:center;display:flex;flex-direction:column;justify-content:flex-start;gap:4px;overflow:hidden}
+.learn-say b{line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .learn-say b{font-size:18px;font-weight:600;letter-spacing:-.01em}
 .learn-say span{font-size:14px;line-height:1.4;color:var(--mute)}
 .learn-board{--bs:min(300px,calc(100vw - 72px),calc(100dvh - 330px));width:var(--bs);height:var(--bs);margin:0 auto}
@@ -1828,7 +1830,7 @@ a.sh-act{text-decoration:none}
   <div class="foot stag"><button class="btn" id="resetScore" type="button" style="width:100%">Reset score</button></div>
   <div class="upd-row stag" id="updRow" data-s="idle" aria-live="polite">
     <span class="upd-ic" aria-hidden="true"><svg class="i-sync" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.6-4.4L4 8"/><path d="M4 3.5V8h4.5"/><path d="M4 13a8 8 0 0 0 14.6 4.4L20 16"/><path d="M20 20.5V16h-4.5"/></svg><svg class="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><svg class="i-new" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10.5 5 5 5-5"/><path d="M5 20h14"/></svg></span>
-    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2354</span></span>
+    <span class="inst-t"><b id="updT">Up to date</b><span id="updS">Version 2026.11.27·2359</span></span>
     <button class="btn" id="updBtn" type="button">Check</button>
   </div>
 </section>
@@ -1847,7 +1849,7 @@ a.sh-act{text-decoration:none}
   <div class="learn-dots" id="lnDots" aria-hidden="true"></div>
   <p class="learn-say" id="lnSay" aria-live="polite"><b id="lnT"></b><span id="lnS"></span></p>
   <div class="board learn-board" id="lnBoard" role="grid" aria-label="Practice board"></div>
-  <div class="learn-foot"><button class="btn" id="lnSkip" type="button">Skip</button><button class="btn primary" id="lnNext" type="button" hidden>Play now</button></div>
+  <div class="learn-foot"><button class="btn" id="lnSkip" type="button">Skip tutorial</button><button class="btn primary" id="lnNext" type="button" hidden>Play now</button></div>
 </section>
 
 <div class="learn-offer" id="learnOffer" role="status" hidden>
@@ -5989,11 +5991,14 @@ addEventListener("beforeunload",e=>{if(leaveCost()){e.preventDefault();e.returnV
   }
   $("loGo").addEventListener("click",()=>open(offer.dataset.rule||"M"));
   $("loX").addEventListener("click",()=>{mark("offer."+(offer.dataset.rule||"M"));hideOffer()});
-  /* new here: once, when the game has settled after its intro */
+  /* new here: the tutorial opens by itself once the intro has gone, with
+     Skip tutorial for anyone who would rather just play. Not when the visit
+     is a link into an online room, and only once. */
   const firstLook=()=>setTimeout(()=>{
-    if(seen("M")||seen("offer.M")||roundsDone>0||mode==="online")return;
-    mark("offer.M");showOffer("M","New here?","Learn to play in 30 seconds");
-  },1200);
+    if(seen("M")||seen("offer.M")||roundsDone>0||mode==="online"||openDlg)return;
+    try{if(new URLSearchParams(location.search).has("room"))return}catch(e){}
+    mark("offer.M");open("M");
+  },700);
   /* (the intro is sometimes skipped without a word, so wait for it to be gone) */
   const afterIntro=()=>{if(document.getElementById("splash"))setTimeout(afterIntro,300);else firstLook()};
   afterIntro();
@@ -6852,7 +6857,7 @@ appSync();
    it can never bounce back to the old one, then loads it at a fresh address
    and says "Updated" once it is in. */
 (function staying(){
-  const BUILD="2026.11.27·2354";
+  const BUILD="2026.11.27·2359";
   const row=$("updRow"),bT=$("updT"),bS=$("updS"),btn=$("updBtn");
   /* 2026.11.27·1403 reads as 27 Nov · 14:03 */
   const pretty=v=>{const m=/^(\d{4})\.(\d\d)\.(\d\d)·(\d\d)(\d\d)$/.exec(v||"");if(!m)return v;
